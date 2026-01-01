@@ -14,7 +14,7 @@ export const AppRoutes = () => {
       <Route
         path="/dashboard"
         element={
-          <ProtectedRoute>
+          <ProtectedRoute allowedRoles={["ADMIN", "STAFF"]} redirectTo="/login">
             <div className="p-6">Dashboard</div>
           </ProtectedRoute>
         }
