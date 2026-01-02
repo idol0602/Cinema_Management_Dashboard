@@ -2,6 +2,7 @@ import { Routes, Route, Navigate } from "react-router-dom";
 import { ProtectedRoute } from "./ProtectedRoute";
 import MovieListPage from "../pages/Movies/MovieList";
 import LoginPage from "../pages/Auth/Login";
+import MainLayout from "@/pages/MainLayout";
 
 export const AppRoutes = () => {
   return (
@@ -15,7 +16,7 @@ export const AppRoutes = () => {
         path="/dashboard"
         element={
           <ProtectedRoute allowedRoles={["ADMIN", "STAFF"]} redirectTo="/login">
-            <div className="p-6">Dashboard</div>
+            <MainLayout>OKE</MainLayout>
           </ProtectedRoute>
         }
       />
@@ -44,7 +45,9 @@ export const AppRoutes = () => {
         path="/movies"
         element={
           <ProtectedRoute allowedRoles={["ADMIN", "STAFF"]}>
-            <MovieListPage />
+            <MainLayout>
+              <MovieListPage></MovieListPage>
+            </MainLayout>
           </ProtectedRoute>
         }
       />
