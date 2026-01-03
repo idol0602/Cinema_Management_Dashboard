@@ -1,6 +1,5 @@
 import axios from 'axios';
-import type { AxiosInstance, AxiosError } from 'axios';
-import type { ApiError } from '../types';
+import type { AxiosInstance } from 'axios';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
@@ -12,7 +11,6 @@ const api: AxiosInstance = axios.create({
   },
 });
 
-// Request interceptor - adicionar token ao header
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('token');
@@ -26,12 +24,10 @@ api.interceptors.request.use(
   }
 );
 
-// Response interceptor - handle errors
 api.interceptors.response.use(
   (response) => response,
-  (error: AxiosError<ApiError>) => {
+  (error) => {
     if (error.response?.status === 401) {
-      // Token expirou ou inválido
       localStorage.removeItem('token');
       localStorage.removeItem('user');
       window.location.href = '/login';
@@ -42,17 +38,16 @@ api.interceptors.response.use(
 
 export default api;
 
-// Helper functions
-export const handleApiError = (error: unknown): ApiError => {
+export const handleApiError = (error: unknown) => {
   if (axios.isAxiosError(error)) {
     return {
-      message: error.response?.data?.message || error.message || 'Erro na requisição',
+      message: error.response?.data?.message || error.message || 'Request error',
       statusCode: error.response?.status || 500,
       error: error.response?.data,
     };
   }
   return {
-    message: 'Erro desconhecido',
+    message: 'Unknown error',
     statusCode: 500,
     error,
   };

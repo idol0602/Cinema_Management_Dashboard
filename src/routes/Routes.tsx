@@ -1,95 +1,52 @@
 import { Routes, Route, Navigate } from "react-router-dom";
-import { ProtectedRoute } from "./ProtectedRoute";
-import MovieListPage from "../pages/Movies/MovieList";
 import LoginPage from "../pages/Auth/Login";
-import MainLayout from "@/pages/MainLayout";
+import { ProtectedRoute } from "@/routes/ProtectedRoute";
+import DashboardLayout from "@/layouts/DashboardLayout";
 
 export const AppRoutes = () => {
   return (
     <Routes>
       {/* Public Routes */}
-      <Route path="/" element={<Navigate to="/dashboard" replace />} />
       <Route path="/login" element={<LoginPage />} />
 
-      {/* Private Routes - Chỉ cần đăng nhập */}
+      {/* Protected Routes with Dashboard Layout */}
       <Route
-        path="/dashboard"
         element={
           <ProtectedRoute allowedRoles={["ADMIN", "STAFF"]} redirectTo="/login">
-            <MainLayout>OKE</MainLayout>
+            <DashboardLayout />
           </ProtectedRoute>
         }
-      />
+      >
+        {/* Dashboard Home */}
+        <Route path="/dashboard" element={<>DASHBOARD HOME</>} />
 
-      <Route
-        path="/profile"
-        element={
-          <ProtectedRoute>
-            <div className="p-6">Profile</div>
-          </ProtectedRoute>
-        }
-      />
+        {/* Movies Management */}
+        <Route path="/movies" element={<>MOVIES PAGE</>} />
+        <Route path="/movie-types" element={<>MOVIE TYPES PAGE</>} />
 
-      {/* Admin Only Routes */}
-      <Route
-        path="/users"
-        element={
-          <ProtectedRoute allowedRoles={["ADMIN"]}>
-            <div className="p-6">User Management (Admin Only)</div>
-          </ProtectedRoute>
-        }
-      />
+        {/* Show Times & Rooms */}
+        <Route path="/show-times" element={<>SHOW TIMES PAGE</>} />
+        <Route path="/rooms" element={<>ROOMS PAGE</>} />
 
-      {/* Admin + Staff Routes */}
-      <Route
-        path="/movies"
-        element={
-          <ProtectedRoute allowedRoles={["ADMIN", "STAFF"]}>
-            <MainLayout>
-              <MovieListPage></MovieListPage>
-            </MainLayout>
-          </ProtectedRoute>
-        }
-      />
+        {/* Services */}
+        <Route path="/combos" element={<>COMBOS PAGE</>} />
+        <Route path="/menu-items" element={<>MENU ITEMS PAGE</>} />
+        <Route path="/discounts" element={<>DISCOUNTS PAGE</>} />
+        <Route path="/events" element={<>EVENTS PAGE</>} />
 
-      <Route
-        path="/rooms"
-        element={
-          <ProtectedRoute allowedRoles={["ADMIN", "STAFF"]}>
-            <div className="p-6">Room Management</div>
-          </ProtectedRoute>
-        }
-      />
+        {/* Content Management */}
+        <Route path="/posts" element={<>POSTS PAGE</>} />
+        <Route path="/slides" element={<>SLIDES PAGE</>} />
 
-      <Route
-        path="/show-times"
-        element={
-          <ProtectedRoute allowedRoles={["ADMIN", "STAFF"]}>
-            <div className="p-6">Show Times</div>
-          </ProtectedRoute>
-        }
-      />
+        {/* User Management */}
+        <Route path="/users" element={<>USERS PAGE</>} />
+      </Route>
 
-      <Route
-        path="/combos"
-        element={
-          <ProtectedRoute allowedRoles={["ADMIN", "STAFF"]}>
-            <div className="p-6">Combos</div>
-          </ProtectedRoute>
-        }
-      />
+      {/* Redirects */}
+      <Route path="/" element={<Navigate to="/dashboard" replace />} />
+      <Route index element={<Navigate to="/dashboard" replace />} />
 
-      {/* Staff Only Routes (nếu cần) */}
-      <Route
-        path="/tickets"
-        element={
-          <ProtectedRoute allowedRoles={["STAFF", "ADMIN"]}>
-            <div className="p-6">Tickets</div>
-          </ProtectedRoute>
-        }
-      />
-
-      {/* Fallback */}
+      {/* 404 - Redirect to Dashboard */}
       <Route path="*" element={<Navigate to="/dashboard" replace />} />
     </Routes>
   );

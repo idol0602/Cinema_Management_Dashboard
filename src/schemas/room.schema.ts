@@ -1,15 +1,13 @@
 import { z } from "zod";
 
-export const roomSchema = z.object({
-  name: z.string().min(1, "Room name is required"),
-  format: z.enum(["2D", "3D", "IMAX"], {
-    errorMap: () => ({ message: "Invalid format" }),
-  }),
+export const createRoomSchema = z.object({
+  name: z.string().min(1, "Name is required"),
+  format: z.enum(["2D", "3D", "IMAX"]),
   location: z.string().optional(),
-  is_active: z.boolean().optional(),
+  is_active: z.boolean().default(true).optional(),
 });
 
-export const updateRoomSchema = roomSchema.partial();
+export const updateRoomSchema = createRoomSchema.partial();
 
-export type RoomFormData = z.infer<typeof roomSchema>;
+export type CreateRoomFormData = z.infer<typeof createRoomSchema>;
 export type UpdateRoomFormData = z.infer<typeof updateRoomSchema>;

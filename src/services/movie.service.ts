@@ -1,84 +1,116 @@
-import api, { handleApiError } from './api';
-import type { Movie, CreateMovieDTO, UpdateMovieDTO, MovieResponse, MovieDetailResponse, ApiResponse } from '../types';
+import api, { handleApiError } from "./api.ts"
+import type {serviceResponse} from "../types/api.type.ts"
+import type { movieType } from "@/types/movie.type.ts"
+import type {PaginationQuery, PaginatedResponse} from "@/types/pagination.type.ts"
 
 export const movieService = {
+    getAll: async () : Promise<serviceResponse> => {
+        try {
+            const response = await api.get('/movies/all')
+            return {
+                data: response.data.data,
+                success : true,
+                error: response.data.error
+            }
+        } catch (error) {
+            const apiError = handleApiError(error);
+            return {
+                data:[],
+                success: false,
+                error: apiError.message
+            }
+        }
+    },
 
-  getAll: async (): Promise<MovieResponse> => {
+    getById: async (id: string) : Promise<serviceResponse> => {
+        try {
+            const response = await api.get(`/movies/${id}`);
+            return {
+                data: response.data.data,
+                success : true,
+                error: response.data.error,
+            };
+        } catch (error) {
+            const apiError = handleApiError(error);
+            return {
+                data: {},
+                success : false,
+                error: apiError.message
+            }
+        }
+    },
+
+    create: async (data: movieType) : Promise<serviceResponse> => {
     try {
-      const response = await api.get<ApiResponse<Movie[]>>('/movies');
+      const response = await api.post('/movies', data);
       return {
         data: response.data.data,
-        error: response.data.error,
-      };
-    } catch (error) {
-      const apiError = handleApiError(error);
-      return {
-        data: [],
-        error: apiError.message,
-      };
-    }
-  },
-
-  getById: async (id: string): Promise<MovieDetailResponse> => {
-    try {
-      const response = await api.get<ApiResponse<Movie>>(`/movies/${id}`);
-      return {
-        data: response.data.data,
-        error: response.data.error,
-      };
-    } catch (error) {
-      const apiError = handleApiError(error);
-      return {
-        data: {} as Movie,
-        error: apiError.message,
-      };
-    }
-  },
-
-  create: async (data: CreateMovieDTO): Promise<MovieDetailResponse> => {
-    try {
-      const response = await api.post<ApiResponse<Movie>>('/movies', data);
-      return {
-        data: response.data.data,
-        error: response.data.error,
-      };
-    } catch (error) {
-      const apiError = handleApiError(error);
-      return {
-        data: {} as Movie,
-        error: apiError.message,
-      };
-    }
-  },
-
-  update: async (id: string, data: UpdateMovieDTO): Promise<MovieDetailResponse> => {
-    try {
-      const response = await api.put<ApiResponse<Movie>>(`/movies/${id}`, data);
-      return {
-        data: response.data.data,
-        error: response.data.error,
-      };
-    } catch (error) {
-      const apiError = handleApiError(error);
-      return {
-        data: {} as Movie,
-        error: apiError.message,
-      };
-    }
-  },
-
-  delete: async (id: string): Promise<{ success: boolean; error?: string }> => {
-    try {
-      await api.delete(`/movies/${id}`);
-      return {
         success: true,
+        error: response.data.error,
       };
     } catch (error) {
       const apiError = handleApiError(error);
       return {
+        data: {},
         success: false,
         error: apiError.message,
       };
     }
   },
-};
+
+  update: async (id: string, data: movieType) : Promise<serviceResponse>  => {
+    try {
+      const response = await api.put(`/movies/${id}`, data);
+      return {
+        data: response.data.data,
+        success: true,
+        error: response.data.error,
+      };
+    } catch (error) {
+      const apiError = handleApiError(error);
+      return {
+        data: {},
+        success: false,
+        error: apiError.message,
+      };
+    }
+  },
+
+  delete: async (id: string) : Promise<serviceResponse> => {
+    try {
+      await api.delete(`/movies/${id}`);
+      return {
+        data: {},
+        success: true,
+        error: ""
+      };
+    } catch (error) {
+      const apiError = handleApiError(error);
+      return {
+        data: {},
+        success: false,
+        error: apiError.message,
+      };
+    }
+  },
+
+  findAndPaginate: async(query: PaginationQuery): Promise<PaginatedResponse> => {
+    try {
+        const response = await api.get("/movies", { params: query });
+        return {
+            data: response.data.data,
+            success: true,
+            error: response.data.error || "",
+            meta: response.data.meta,
+            links: response.data.links
+        };
+    } catch (error) {
+        const apiError = handleApiError(error);
+        return {
+            data: [],
+            success: false,
+            error: apiError.message
+        };
+    }
+  }
+}

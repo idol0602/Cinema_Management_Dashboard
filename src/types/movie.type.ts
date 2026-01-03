@@ -1,0 +1,13 @@
+export interface movieType {
+    title: string,
+    director: string,
+    description?: string,
+    release_date?: string,
+    duration?: number,
+    rating?: number,
+    image?: string,
+    thumbnail?: string,
+    trailer?: string,
+    movie_type_id: string,
+    is_active?: boolean
+}

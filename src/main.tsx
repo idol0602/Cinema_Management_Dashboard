@@ -1,8 +1,8 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { BrowserRouter } from "react-router-dom";
-import { AppRoutes } from "./routes";
-import { AuthProvider } from "./context/AuthContext";
+import { AppRoutes } from "./routes/Routes";
+import { AuthProvider } from "./context/AuthProvider";
 import "./index.css";
 
 createRoot(document.getElementById("root")!).render(

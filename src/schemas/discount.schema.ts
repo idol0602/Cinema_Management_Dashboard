@@ -1,12 +1,12 @@
 import { z } from "zod";
 
-export const discountSchema = z.object({
+export const createDiscountSchema = z.object({
   event_id: z.string().optional(),
   name: z.string().min(1).optional(),
   description: z.string().optional(),
   discount_percent: z.number().optional(),
-  valid_from: z.string().optional(),
-  valid_to: z.string().optional(),
+  valid_from: z.string().default(new Date(Date.now()).toISOString()).optional(),
+  valid_to: z.string().default(new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()).optional(),
   is_active: z.boolean().default(true).optional(),
 }).superRefine((data, ctx) => {
   if (data.valid_from && data.valid_to) {
@@ -21,7 +21,7 @@ export const discountSchema = z.object({
   }
 });
 
-export const updateDiscountSchema = discountSchema.partial();
+export const updateDiscountSchema = createDiscountSchema.partial();
 
-export type DiscountFormData = z.infer<typeof discountSchema>;
+export type CreateDiscountFormData = z.infer<typeof createDiscountSchema>;
 export type UpdateDiscountFormData = z.infer<typeof updateDiscountSchema>;

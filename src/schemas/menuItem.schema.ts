@@ -1,16 +1,16 @@
 import { z } from "zod";
 
-export const menuItemSchema = z.object({
-  name: z.string().min(1),
+export const createMenuItemSchema = z.object({
+  name: z.string().min(1, "Name is required"),
   description: z.string().optional(),
-  price: z.number().gt(0),
+  price: z.number().gt(0, "Price must be greater than 0"),
   item_type: z.enum(["FOOD", "DRINK", "GIFT"]),
   image: z.string().optional(),
   num_instock: z.number().int().default(0).optional(),
   is_active: z.boolean().default(true).optional(),
 });
 
-export const updateMenuItemSchema = menuItemSchema.partial();
+export const updateMenuItemSchema = createMenuItemSchema.partial();
 
-export type MenuItemFormData = z.infer<typeof menuItemSchema>;
+export type CreateMenuItemFormData = z.infer<typeof createMenuItemSchema>;
 export type UpdateMenuItemFormData = z.infer<typeof updateMenuItemSchema>;

@@ -1,21 +1,14 @@
 import { Navigate } from "react-router-dom";
-import { useAuth } from "../hooks/useAuth";
-import type { UserRole } from "../types";
-
-interface ProtectedRouteProps {
-  children: React.ReactNode;
-  allowedRoles?: UserRole[];
-  redirectTo?: string;
-}
+import type { ProtectedRouteProps } from "@/types/router.type";
+import { useAuth } from "@/hooks/useAuth";
 
 export const ProtectedRoute = ({
   children,
   allowedRoles,
   redirectTo = "/dashboard",
 }: ProtectedRouteProps) => {
-  const { isAuthenticated, user, isLoading } = useAuth();
+  const { isLoading, user, isAuthenticated } = useAuth();
 
-  // Loading state
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-screen">
@@ -27,17 +20,14 @@ export const ProtectedRoute = ({
     );
   }
 
-  // Kiểm tra đăng nhập
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
   }
 
-  // Nếu không chỉ định roles → Chỉ cần đăng nhập
   if (!allowedRoles || allowedRoles.length === 0) {
     return <>{children}</>;
   }
 
-  // Kiểm tra role
   if (!user?.role || !allowedRoles.includes(user.role)) {
     return <Navigate to={redirectTo} replace />;
   }
