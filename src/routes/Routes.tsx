@@ -2,6 +2,7 @@ import { Routes, Route, Navigate } from "react-router-dom";
 import LoginPage from "../pages/Auth/Login";
 import { ProtectedRoute } from "@/routes/ProtectedRoute";
 import DashboardLayout from "@/layouts/DashboardLayout";
+import MovieList from "@/pages/Movies/MovieList";
 
 export const AppRoutes = () => {
   return (
@@ -21,7 +22,7 @@ export const AppRoutes = () => {
         <Route path="/dashboard" element={<>DASHBOARD HOME</>} />
 
         {/* Movies Management */}
-        <Route path="/movies" element={<>MOVIES PAGE</>} />
+        <Route path="/movies" element={<MovieList />} />
         <Route path="/movie-types" element={<>MOVIE TYPES PAGE</>} />
 
         {/* Show Times & Rooms */}

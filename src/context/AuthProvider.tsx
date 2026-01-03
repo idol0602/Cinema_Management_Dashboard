@@ -3,6 +3,7 @@ import type { User } from "@/types/user.type.ts";
 import { authService } from "@/services/auth.service.ts";
 import { AuthContext } from "./AuthContext.tsx";
 import { isTokenExpired } from "@/utils/token.ts";
+import { toast } from "sonner";
 
 interface AuthProviderProps {
   children: ReactNode;
@@ -44,6 +45,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       const { data, error } = await authService.login({ email, password });
 
       if (error) {
+        toast.error("Có lỗi xảy ra!");
         throw new Error(error);
       }
 
@@ -53,6 +55,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       setIsAuthenticated(true);
       localStorage.setItem("user", JSON.stringify(user));
       localStorage.setItem("token", token);
+      toast.success("Đăng nhập thành công!");
     } catch (error) {
       console.error("Login failed:", error);
       throw error;
@@ -67,6 +70,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     setIsAuthenticated(false);
     localStorage.removeItem("user");
     localStorage.removeItem("token");
+    toast.success("Đăng xuất thành công!");
   }, []);
 
   const value = {

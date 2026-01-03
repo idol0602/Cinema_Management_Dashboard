@@ -1,41 +1,42 @@
-import type { serviceResponse } from "./api.type";
-
+// Query parameters for pagination
 export interface PaginationQuery {
   page?: number;
   limit?: number;
-  sortBy?: string;
-  sortOrder?: 'ASC' | 'DESC';
+  sortBy?: string; // Format: "column:ASC" or "column:DESC"
   search?: string;
-  // Filterable columns
-  title?: string;
-  director?: string;
-  rating?: number;
-  release_date?: string;
-  duration?: number;
-  movie_type_id?: string;
-  is_active?: boolean;
+  searchBy?: string | string[];
+  filter?: Record<string, any>;
 }
 
+// Meta information from backend response
 export interface PaginationMeta {
-  total: number;
-  per_page: number;
-  current_page: number;
-  last_page: number;
-  first_page: number;
-  first_page_url: string;
-  last_page_url: string;
-  next_page_url: string | null;
-  previous_page_url: string | null;
+  itemsPerPage: number;
+  totalItems: number;
+  currentPage: number;
+  totalPages: number;
+  sortBy?: string[][];
+  search?: string;
+  searchBy?: string | string[];
+  filter?: Record<string, any>;
 }
 
+// Links for navigation
 export interface PaginationLinks {
-  first: string;
-  last: string;
-  prev: string | null;
-  next: string | null;
+  first?: string;
+  previous?: string;
+  current: string;
+  next?: string;
+  last?: string;
 }
 
-export interface PaginatedResponse extends serviceResponse {
-  meta?: PaginationMeta;
-  links?: PaginationLinks;
+// Generic paginated response
+export interface PaginatedResponse<T = unknown> {
+  success: boolean;
+  data: T[];
+  meta: PaginationMeta;
+  links: PaginationLinks;
+  message: string;
 }
+
+// Helper type for extracting data type
+export type PaginatedData<T> = T extends PaginatedResponse<infer U> ? U : never;

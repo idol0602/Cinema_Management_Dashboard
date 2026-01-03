@@ -2,9 +2,10 @@ import api, { handleApiError } from "./api.ts"
 import type {serviceResponse} from "../types/api.type.ts"
 import type { movieType } from "@/types/movie.type.ts"
 import type {PaginationQuery, PaginatedResponse} from "@/types/pagination.type.ts"
+import type {importResponse} from "@/types/importResponse.type.ts"
 
 export const movieService = {
-    getAll: async () : Promise<serviceResponse> => {
+  getAll: async () : Promise<serviceResponse> => {
         try {
             const response = await api.get('/movies/all')
             return {
@@ -22,7 +23,7 @@ export const movieService = {
         }
     },
 
-    getById: async (id: string) : Promise<serviceResponse> => {
+  getById: async (id: string) : Promise<serviceResponse> => {
         try {
             const response = await api.get(`/movies/${id}`);
             return {
@@ -40,7 +41,7 @@ export const movieService = {
         }
     },
 
-    create: async (data: movieType) : Promise<serviceResponse> => {
+  create: async (data: movieType) : Promise<serviceResponse> => {
     try {
       const response = await api.post('/movies', data);
       return {
@@ -111,6 +112,30 @@ export const movieService = {
             success: false,
             error: apiError.message
         };
+    }
+  },
+
+  importFromExcel: async(filePath: string): Promise<importResponse> => {
+    try {
+      const response = await api.post("/movies/import",filePath)
+      return {
+        success: response.data.success,
+        message: response.data.message,
+        data: {
+            imported: response.data.imported,
+            skipped: response.data.skipped
+        }
+      }
+    } catch (error) {
+      const apiError = handleApiError(error);
+      return {
+        success: false,
+        message: apiError.message,
+        data: {
+            imported: 0,
+            skipped: 0
+        }
+      }
     }
   }
 }
