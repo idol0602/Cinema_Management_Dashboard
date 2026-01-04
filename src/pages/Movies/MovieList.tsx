@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { movieService } from "@/services/movie.service";
+import { movieTypeService } from "@/services/movieType.service";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -38,6 +39,7 @@ import {
 import type { movieType } from "@/types/movie.type";
 import type { movieTypeType } from "@/types/movieType.type";
 import type { PaginationMeta } from "@/types/pagination.type";
+import { moviePaginateConfig } from "@/config/paginate/movie.config";
 
 const MovieList = () => {
   const [movies, setMovies] = useState<movieType[]>([]);
@@ -51,27 +53,33 @@ const MovieList = () => {
     currentPage: 1,
     totalPages: 0,
   });
-
   // Fetch movie types
   const fetchMovieTypes = async () => {
     try {
-      // TODO: Implement movieTypeService.getAll()
-      // Tạm thời giả lập data
-      setMovieTypes([{ id: "1", type: "Tình cảm" }]);
+      const response = await movieTypeService.getAll();
+      setMovieTypes(response.data as movieTypeType[]);
     } catch (error) {
       console.error("Error fetching movie types:", error);
     }
   };
 
-  // Fetch movies với pagination
-  const fetchMovies = async (page = 1, search = "") => {
+  const findAndPaginate = async (
+    page = 1,
+    limit = 10,
+    sortBy = "release_date:DESC",
+    search = undefined,
+    searchBy = undefined,
+    filter = { is_active: true }
+  ) => {
     setLoading(true);
     try {
       const response = await movieService.findAndPaginate({
         page,
-        limit: 10,
-        search: search || undefined,
-        sortBy: "release_date:DESC",
+        limit,
+        sortBy,
+        search,
+        searchBy,
+        filter,
       });
 
       if (response.success && response.data) {
@@ -92,13 +100,13 @@ const MovieList = () => {
 
   useEffect(() => {
     fetchMovieTypes();
-    fetchMovies(currentPage, searchQuery);
+    findAndPaginate(currentPage);
   }, [currentPage]);
 
   // Handle search
   const handleSearch = () => {
     setCurrentPage(1);
-    fetchMovies(1, searchQuery);
+    findAndPaginate(1, 10, null, searchQuery, null, null);
   };
 
   // Handle search on Enter key
@@ -265,6 +273,9 @@ const MovieList = () => {
                         </TableCell>
                         <TableCell>
                           <div className="font-medium">{movie.director}</div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="font-medium">{movie.country}</div>
                         </TableCell>
                         <TableCell>
                           <Badge variant="secondary" className="font-medium">
@@ -441,6 +452,7 @@ const TableSkeleton = () => {
             <TableHead className="w-[80px]">Poster</TableHead>
             <TableHead className="min-w-[200px]">Thông Tin Phim</TableHead>
             <TableHead>Đạo Diễn</TableHead>
+            <TableHead>Quốc Gia</TableHead>
             <TableHead>Thể Loại</TableHead>
             <TableHead>Phát Hành</TableHead>
             <TableHead>Thời Lượng</TableHead>

@@ -11,7 +11,7 @@ export const registerSchema = z.object({
   phone: z.string().optional(),
   password: z.string().min(6, "Password must be at least 6 characters"),
   confirmPassword: z.string(),
-  role: z.enum(["CUSTOMER", "STAFF", "ADMIN"]).default("CUSTOMER").optional(),
+  role: z.enum(["CUSTOMER", "STAFF", "ADMIN"]).default("CUSTOMER"),
 }).refine((data) => data.password === data.confirmPassword, {
   message: "Passwords do not match",
   path: ["confirmPassword"],

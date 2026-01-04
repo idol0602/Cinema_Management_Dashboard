@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 export const createComboItemInTicketSchema = z.object({
-  ticket_id: z.string().min(1, "Ticket ID is required"),
+  order_id: z.string().min(1, "Order ID is required"),
   combo_id: z.string().min(1, "Combo ID is required"),
 });
 

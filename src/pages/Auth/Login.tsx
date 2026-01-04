@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Film, Loader2 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
@@ -17,7 +17,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 
 export default function LoginPage() {
   const navigate = useNavigate();
-  const { login } = useAuth();
+  const { login, isAuthenticated, isLoading: authLoading } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const [formData, setFormData] = useState({
@@ -25,6 +25,12 @@ export default function LoginPage() {
     password: "",
     remember: false,
   });
+
+  useEffect(() => {
+    if (isAuthenticated && !authLoading) {
+      navigate("/dashboard", { replace: true });
+    }
+  }, [isAuthenticated, authLoading, navigate]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;

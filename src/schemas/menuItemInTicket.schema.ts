@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 export const createMenuItemInTicketSchema = z.object({
-  ticket_id: z.string().min(1, "Ticket ID is required"),
+  order_id: z.string().min(1, "Order ID is required"),
   item_id: z.string().min(1, "Item ID is required"),
   quantity: z.number().int().min(1, "Quantity must be at least 1"),
   unit_price: z.number().gt(0, "Unit price must be greater than 0"),

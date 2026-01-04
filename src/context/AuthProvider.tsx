@@ -13,30 +13,37 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
-  const [isLoading, setLoading] = useState<boolean>(false);
+  const [isLoading, setLoading] = useState<boolean>(true); // Đổi thành true
 
   useEffect(() => {
-    const savedToken = localStorage.getItem("token");
-    const savedUser = localStorage.getItem("user");
+    const initAuth = () => {
+      const savedToken = localStorage.getItem("token");
+      const savedUser = localStorage.getItem("user");
 
-    if (savedToken && savedUser) {
-      // Kiểm tra token đã hết hạn chưa
-      if (isTokenExpired(savedToken)) {
-        localStorage.removeItem("token");
-        localStorage.removeItem("user");
-        return;
+      if (savedToken && savedUser) {
+        // Kiểm tra token đã hết hạn chưa
+        if (isTokenExpired(savedToken)) {
+          localStorage.removeItem("token");
+          localStorage.removeItem("user");
+          setLoading(false);
+          return;
+        }
+
+        try {
+          setUser(JSON.parse(savedUser));
+          setToken(savedToken);
+          setIsAuthenticated(true);
+        } catch (error) {
+          console.log(error);
+          localStorage.removeItem("user");
+          localStorage.removeItem("token");
+        }
       }
 
-      try {
-        setUser(JSON.parse(savedUser));
-        setToken(savedToken);
-        setIsAuthenticated(true);
-      } catch (error) {
-        console.log(error);
-        localStorage.removeItem("user");
-        localStorage.removeItem("token");
-      }
-    }
+      setLoading(false); // Đặt loading = false sau khi kiểm tra xong
+    };
+
+    initAuth();
   }, []);
 
   const login = useCallback(async (email: string, password: string) => {
