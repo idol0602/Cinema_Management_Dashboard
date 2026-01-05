@@ -1,21 +1,52 @@
 export const moviePaginateConfig = {
-  sortableColumns: [
-    "title",
-    "release_date",
-    "created_at",
-    "rating",
-    "duration",
-  ],
-  searchableColumns: ["title", "description", "director"],
-  filterableColumns: {
-    title: true,
-    director: true,
-    rating: true,
-    release_date: true,
-    duration: true,
-    movie_type_id: true,
-    is_active: true,
+  // dùng combobox chọn tiêu chí sort
+  sortableColumns : [
+  {
+    value: "title",
+    label: "Tiêu đề",
   },
+  {
+    value: "release_date",
+    label: "Ngày công chiếu",
+  },
+  {
+    value: "rating",
+    label: "Đánh giá",
+  },
+  {
+    value: "duration",
+    label: "Thời lượng",
+  },
+],
+
+searchableColumns : [
+  {
+    value: "title",
+    label: "Tiêu đề",
+  },
+  {
+    value: "description",
+    label: "Mô tả",
+  },
+  {
+    value: "director",
+    label: "Đạo diễn",
+  },
+  ],
+  // dùng combobox chọn tiêu chí lọc
+  filterableColumns: {
+    is_active: [
+      {
+      value: "true",
+      label: "Đang hoạt động",
+      },
+      {
+      value: "false",
+      label: "Ngưng hoạt động",
+      },
+    ],
+  },
+
   defaultSortBy: [["release_date", "DESC"]],
   defaultLimit: 10,
   maxLimit: 50,

@@ -2,6 +2,9 @@ import { useState, useEffect } from "react";
 import { movieService } from "@/services/movie.service";
 import { movieTypeService } from "@/services/movieType.service";
 import { toast } from "sonner";
+import { MovieCreateDialog } from "@/components/movies/MovieCreateDialog";
+import { MovieEditDialog } from "@/components/movies/MovieEditDialog";
+import { MovieDetailDialog } from "@/components/movies/MovieDetailDialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -21,6 +24,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Combobox } from "@/components/ui/combobox";
 import {
   Plus,
   Search,
@@ -47,13 +51,23 @@ const MovieList = () => {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
+  const [statusColumn, setStatusColumn] = useState("");
+  const [searchColumn, setSearchColumn] = useState("");
+  const [sortColumn, setSortColumn] = useState("");
+  const [movieTypeColumn, setMovieTypeColumn] = useState("");
+  const [orderColumn, setOrderColumn] = useState("");
   const [meta, setMeta] = useState<PaginationMeta>({
     itemsPerPage: 10,
     totalItems: 0,
     currentPage: 1,
     totalPages: 0,
   });
-  // Fetch movie types
+
+  // Dialog states
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [detailDialogOpen, setDetailDialogOpen] = useState(false);
+  const [selectedMovie, setSelectedMovie] = useState<movieType | null>(null);
+
   const fetchMovieTypes = async () => {
     try {
       const response = await movieTypeService.getAll();
@@ -100,37 +114,103 @@ const MovieList = () => {
 
   useEffect(() => {
     fetchMovieTypes();
-    findAndPaginate(currentPage);
+    handleSearch();
   }, [currentPage]);
 
-  // Handle search
   const handleSearch = () => {
-    setCurrentPage(1);
-    findAndPaginate(1, 10, null, searchQuery, null, null);
+    let sortBy = "release_date:DESC";
+    if (sortColumn && orderColumn) {
+      sortBy = `${sortColumn}:${orderColumn}`;
+    } else if (sortColumn) {
+      sortBy = `${sortColumn}:DESC`;
+    }
+
+    const filter: Record<string, any> = {};
+    if (statusColumn) {
+      filter.is_active = statusColumn === "true";
+    }
+    if (movieTypeColumn) {
+      filter.movie_type_id = movieTypeColumn;
+    }
+
+    findAndPaginate(
+      currentPage,
+      10,
+      sortBy,
+      searchQuery || undefined,
+      searchColumn || undefined,
+      Object.keys(filter).length > 0 ? filter : undefined
+    );
   };
 
   // Handle search on Enter key
   const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter") {
+      setCurrentPage(1);
       handleSearch();
     }
   };
 
-  // Placeholder functions cho CRUD (sẽ implement sau)
-  const handleCreate = () => {
-    toast.info("Chức năng tạo mới phim đang được phát triển");
+  // Handle create movie
+  const handleCreateSubmit = async (data: any) => {
+    try {
+      const response = await movieService.create(data);
+      if (response.success) {
+        toast.success("Tạo phim mới thành công!");
+        handleSearch(); // Refresh list
+      } else {
+        toast.error("Không thể tạo phim mới");
+      }
+    } catch (error) {
+      toast.error("Có lỗi xảy ra khi tạo phim");
+      console.error(error);
+    }
   };
 
   const handleEdit = (movie: movieType) => {
-    toast.info(`Chỉnh sửa phim: ${movie.title}`);
+    setSelectedMovie(movie);
+    setEditDialogOpen(true);
   };
 
-  const handleDelete = (movie: movieType) => {
-    toast.info(`Xóa phim: ${movie.title}`);
+  const handleEditSubmit = async (data: any) => {
+    if (!selectedMovie) return;
+
+    try {
+      const response = await movieService.update(selectedMovie.id, data);
+      if (response.success) {
+        toast.success("Cập nhật phim thành công!");
+        handleSearch(); // Refresh list
+      } else {
+        toast.error("Không thể cập nhật phim");
+      }
+    } catch (error) {
+      toast.error("Có lỗi xảy ra khi cập nhật phim");
+      console.error(error);
+    }
+  };
+
+  const handleDelete = async (movie: movieType) => {
+    if (!confirm(`Bạn có chắc chắn muốn xóa phim "${movie.title}" không?`)) {
+      return;
+    }
+
+    try {
+      const response = await movieService.delete(movie.id);
+      if (response.success) {
+        toast.success("Xóa phim thành công!");
+        handleSearch(); // Refresh list
+      } else {
+        toast.error("Không thể xóa phim");
+      }
+    } catch (error) {
+      toast.error("Có lỗi xảy ra khi xóa phim");
+      console.error(error);
+    }
   };
 
   const handleView = (movie: movieType) => {
-    toast.info(`Xem chi tiết phim: ${movie.title}`);
+    setSelectedMovie(movie);
+    setDetailDialogOpen(true);
   };
 
   // Get movie type name by id
@@ -177,10 +257,16 @@ const MovieList = () => {
                 <Upload className="h-4 w-4 mr-2" />
                 Import Excel
               </Button>
-              <Button onClick={handleCreate}>
-                <Plus className="h-4 w-4 mr-2" />
-                Thêm Phim Mới
-              </Button>
+              <MovieCreateDialog
+                movieTypes={movieTypes}
+                onSubmit={handleCreateSubmit}
+                trigger={
+                  <Button>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Thêm Phim Mới
+                  </Button>
+                }
+              />
             </div>
           </div>
         </CardHeader>
@@ -197,6 +283,48 @@ const MovieList = () => {
                 className="pl-10"
               />
             </div>
+            <Combobox
+              datas={movieTypes.map((item) => ({
+                value: item.id + "",
+                label: item.type,
+              }))}
+              placeholder="Thể loại"
+              onChange={setMovieTypeColumn}
+              value={movieTypeColumn}
+            ></Combobox>
+            <Combobox
+              datas={moviePaginateConfig.filterableColumns.is_active}
+              placeholder="Trạng thái"
+              onChange={setStatusColumn}
+              value={statusColumn}
+            ></Combobox>
+            <Combobox
+              datas={moviePaginateConfig.searchableColumns}
+              placeholder="Tìm theo"
+              onChange={setSearchColumn}
+              value={searchColumn}
+            ></Combobox>
+            <Combobox
+              datas={moviePaginateConfig.sortableColumns}
+              placeholder="Sắp xếp theo"
+              onChange={setSortColumn}
+              value={sortColumn}
+            ></Combobox>
+            <Combobox
+              datas={[
+                {
+                  value: "ASC",
+                  label: "tăng dần",
+                },
+                {
+                  value: "DESC",
+                  label: "giảm dần",
+                },
+              ]}
+              placeholder="Thứ tự"
+              onChange={setOrderColumn}
+              value={orderColumn}
+            ></Combobox>
             <Button onClick={handleSearch}>Tìm kiếm</Button>
           </div>
 
@@ -437,11 +565,26 @@ const MovieList = () => {
           )}
         </CardContent>
       </Card>
+
+      {/* Dialogs */}
+      <MovieEditDialog
+        movie={selectedMovie}
+        movieTypes={movieTypes}
+        open={editDialogOpen}
+        onOpenChange={setEditDialogOpen}
+        onSubmit={handleEditSubmit}
+      />
+
+      <MovieDetailDialog
+        movie={selectedMovie}
+        movieTypes={movieTypes}
+        open={detailDialogOpen}
+        onOpenChange={setDetailDialogOpen}
+      />
     </div>
   );
 };
 
-// Skeleton Loading Component
 const TableSkeleton = () => {
   return (
     <div className="rounded-md border">
