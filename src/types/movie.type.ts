@@ -11,5 +11,6 @@ export interface movieType {
     thumbnail?: string,
     trailer?: string,
     movie_type_id: string,
-    is_active?: boolean
+    is_active?: boolean,
+    created_at?: string
 }

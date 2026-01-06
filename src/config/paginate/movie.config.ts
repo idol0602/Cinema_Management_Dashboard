@@ -17,6 +17,10 @@ export const moviePaginateConfig = {
     value: "duration",
     label: "Thời lượng",
   },
+  {
+    value: "created_at",
+    label: "Ngày tạo",
+  },
 ],
 
 searchableColumns : [
@@ -47,7 +51,7 @@ searchableColumns : [
     ],
   },
 
-  defaultSortBy: [["release_date", "DESC"]],
+  defaultSortBy: [["created_at", "DESC"]],
   defaultLimit: 10,
   maxLimit: 50,
 };

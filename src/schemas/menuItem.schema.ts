@@ -8,6 +8,7 @@ export const createMenuItemSchema = z.object({
   image: z.string().optional(),
   num_instock: z.number().int().default(0).optional(),
   is_active: z.boolean().default(true).optional(),
+  created_at: z.string().default(new Date().toISOString()).optional(),
 });
 
 export const updateMenuItemSchema = createMenuItemSchema.partial();

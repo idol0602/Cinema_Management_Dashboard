@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { MovieCreateDialog } from "@/components/movies/MovieCreateDialog";
 import { MovieEditDialog } from "@/components/movies/MovieEditDialog";
 import { MovieDetailDialog } from "@/components/movies/MovieDetailDialog";
+import { MovieImportDialog } from "@/components/Dialog/MovieImportDialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -80,7 +81,9 @@ const MovieList = () => {
   const findAndPaginate = async (
     page = 1,
     limit = 10,
-    sortBy = "release_date:DESC",
+    sortBy = moviePaginateConfig.defaultSortBy[0] +
+      ":" +
+      moviePaginateConfig.defaultSortBy[1],
     search = undefined,
     searchBy = undefined,
     filter = { is_active: true }
@@ -118,7 +121,10 @@ const MovieList = () => {
   }, [currentPage]);
 
   const handleSearch = () => {
-    let sortBy = "release_date:DESC";
+    let sortBy =
+      moviePaginateConfig.defaultSortBy[0] +
+      ":" +
+      moviePaginateConfig.defaultSortBy[1];
     if (sortColumn && orderColumn) {
       sortBy = `${sortColumn}:${orderColumn}`;
     } else if (sortColumn) {
@@ -219,8 +225,21 @@ const MovieList = () => {
     return type ? type.type : "Chưa xác định";
   };
 
-  const handleImport = () => {
-    toast.info("Chức năng import Excel đang được phát triển");
+  const handleImport = async (file: File) => {
+    try {
+      const response = await movieService.importFromExcel(file);
+      if (response.success) {
+        toast.success(
+          `Import thành công! ${response.data.imported} phim đã được nhập, ${response.data.skipped} phim bị bỏ qua.`
+        );
+        handleSearch(); // Refresh list
+      } else {
+        toast.error(response.message || "Không thể import file Excel");
+      }
+    } catch (error) {
+      toast.error("Có lỗi xảy ra khi import file");
+      console.error(error);
+    }
   };
 
   // Format date
@@ -253,10 +272,15 @@ const MovieList = () => {
               </CardDescription>
             </div>
             <div className="flex gap-2">
-              <Button onClick={handleImport} variant="outline">
-                <Upload className="h-4 w-4 mr-2" />
-                Import Excel
-              </Button>
+              <MovieImportDialog
+                onSubmit={handleImport}
+                trigger={
+                  <Button variant="outline">
+                    <Upload className="h-4 w-4 mr-2" />
+                    Import Excel
+                  </Button>
+                }
+              />
               <MovieCreateDialog
                 movieTypes={movieTypes}
                 onSubmit={handleCreateSubmit}
@@ -481,15 +505,19 @@ const MovieList = () => {
                             >
                               <Edit className="h-4 w-4" />
                             </Button>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => handleDelete(movie)}
-                              title="Xóa"
-                              className="text-destructive hover:text-destructive"
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
+                            {movie.is_active === false ? (
+                              <></>
+                            ) : (
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => handleDelete(movie)}
+                                title="Xóa"
+                                className="text-destructive hover:text-destructive"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            )}
                           </div>
                         </TableCell>
                       </TableRow>

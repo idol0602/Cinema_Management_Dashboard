@@ -115,15 +115,25 @@ export const movieService = {
     }
   },
 
-  importFromExcel: async(filePath: string): Promise<importResponse> => {
+  importFromExcel: async(file: File): Promise<importResponse> => {
     try {
-      const response = await api.post("/movies/import",filePath)
+      const formData = new FormData();
+      formData.append('file', file);
+      
+      const response = await api.post("/movies/import", formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+
+      console.log(response)
+
       return {
         success: response.data.success,
         message: response.data.message,
         data: {
-            imported: response.data.imported,
-            skipped: response.data.skipped
+            imported: response.data.data.imported,
+            skipped: response.data.data.skipped
         }
       }
     } catch (error) {
