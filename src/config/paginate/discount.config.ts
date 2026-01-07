@@ -1,20 +1,59 @@
 export const discountPaginateConfig = {
-  sortableColumns: [
-    "name",
-    "discount_percent",
-    "valid_from",
-    "valid_to",
-    "created_at",
-  ],
-  searchableColumns: ["name", "description"],
-  filterableColumns: {
-    event_id: true,
-    discount_percent: true,
-    valid_from: true,
-    valid_to: true,
-    is_active: true,
+  // dùng combobox chọn tiêu chí sort
+  sortableColumns : [
+  {
+    value: "name",
+    label: "Tên giảm giá",
   },
+  {
+    value: "discount_percent",
+    label: "Phần trăm giảm giá",
+  },
+  {
+    value: "valid_from",
+    label: "Ngày bắt đầu",
+  },
+  {
+    value: "valid_to",
+    label: "Ngày kết thúc",
+  },
+  {
+    value: "created_at",
+    label: "Ngày tạo",
+  },
+],
+
+searchableColumns : [
+  {
+    value: "name",
+    label: "Tên giảm giá",
+  },
+  {
+    value: "description",
+    label: "Mô tả",
+  },
+  ],
+  // dùng combobox chọn tiêu chí lọc
+  filterableColumns: {
+    event_id: [
+      {
+      value: "true",
+      label: "Có sự kiện",
+      },
+    ],
+    is_active: [
+      {
+      value: "true",
+      label: "Đang hoạt động",
+      },
+      {
+      value: "false",
+      label: "Ngưng hoạt động",
+      },
+    ],
+  },
+
   defaultSortBy: [["created_at", "DESC"]],
-  defaultLimit: 15,
+  defaultLimit: 10,
   maxLimit: 50,
 };

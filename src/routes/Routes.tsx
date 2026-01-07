@@ -3,6 +3,7 @@ import LoginPage from "../pages/Auth/Login";
 import { ProtectedRoute } from "@/routes/ProtectedRoute";
 import DashboardLayout from "@/layouts/DashboardLayout";
 import MovieList from "@/pages/Movies/MovieList";
+import SQLAgent from "@/pages/SQLAgent/SQLAgent";
 
 export const AppRoutes = () => {
   return (
@@ -10,7 +11,37 @@ export const AppRoutes = () => {
       {/* Public Routes */}
       <Route path="/login" element={<LoginPage />} />
 
-      {/* Protected Routes with Dashboard Layout */}
+      {/* ADMIN */}
+      <Route
+        element={
+          <ProtectedRoute allowedRoles={["ADMIN"]} redirectTo="/login">
+            <DashboardLayout />
+          </ProtectedRoute>
+        }
+      >
+        <Route path="/discounts" element={<>DISCOUNTS PAGE</>} />
+
+        {/* Content Management */}
+        <Route path="/posts" element={<>POSTS PAGE</>} />
+        <Route path="/slides" element={<>SLIDES PAGE</>} />
+
+        {/* User Management */}
+        <Route path="/users" element={<>USERS PAGE</>} />
+        <Route path="/agent" element={<SQLAgent></SQLAgent>} />
+      </Route>
+
+      {/* STAFF */}
+      <Route
+        element={
+          <ProtectedRoute allowedRoles={["STAFF"]} redirectTo="/login">
+            <DashboardLayout />
+          </ProtectedRoute>
+        }
+      >
+        <Route path="/ticket" element={<>BUY TICKET ONLY STAFF</>} />
+      </Route>
+
+      {/* ADMIN AND STAFF */}
       <Route
         element={
           <ProtectedRoute allowedRoles={["ADMIN", "STAFF"]} redirectTo="/login">
@@ -19,12 +50,9 @@ export const AppRoutes = () => {
         }
       >
         {/* Dashboard Home */}
-        <Route path="/dashboard" element={<>DASHBOARD HOME</>} />
-
-        {/* Movies Management */}
         <Route path="/movies" element={<MovieList />} />
+        {/* Movies Management */}
         <Route path="/movie-types" element={<>MOVIE TYPES PAGE</>} />
-
         {/* Show Times & Rooms */}
         <Route path="/show-times" element={<>SHOW TIMES PAGE</>} />
         <Route path="/rooms" element={<>ROOMS PAGE</>} />
@@ -32,15 +60,8 @@ export const AppRoutes = () => {
         {/* Services */}
         <Route path="/combos" element={<>COMBOS PAGE</>} />
         <Route path="/menu-items" element={<>MENU ITEMS PAGE</>} />
-        <Route path="/discounts" element={<>DISCOUNTS PAGE</>} />
         <Route path="/events" element={<>EVENTS PAGE</>} />
-
-        {/* Content Management */}
-        <Route path="/posts" element={<>POSTS PAGE</>} />
-        <Route path="/slides" element={<>SLIDES PAGE</>} />
-
-        {/* User Management */}
-        <Route path="/users" element={<>USERS PAGE</>} />
+        <Route path="/dashboard" element={<>DASHBOARD HOME</>} />
       </Route>
 
       {/* Redirects */}

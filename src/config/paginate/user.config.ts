@@ -1,16 +1,59 @@
 export const userPaginateConfig = {
-  sortableColumns: ["name", "email", "created_at", "role", "points"],
-  searchableColumns: ["name", "email", "phone"],
-  filterableColumns: {
-    name: true,
-    email: true,
-    phone: true,
-    role: true,
-    points: true,
-    is_active: true,
-    created_at: true,
+  // dùng combobox chọn tiêu chí sort
+  sortableColumns : [
+  {
+    value: "name",
+    label: "Tên người dùng",
   },
+  {
+    value: "created_at",
+    label: "Ngày tạo",
+  },
+  {
+    value: "points",
+    label: "Điểm",
+  },
+],
+
+searchableColumns : [
+  {
+    value: "name",
+    label: "Tên người dùng",
+  },
+  {
+    value: "email",
+    label: "Email",
+  },
+  {
+    value: "phone",
+    label: "Số điện thoại",
+  },
+  ],
+  // dùng combobox chọn tiêu chí lọc
+  filterableColumns: {
+    role: [
+      {
+      value: "admin",
+      label: "Quản trị viên",
+      },
+      {
+      value: "user",
+      label: "Người dùng",
+      },
+    ],
+    is_active: [
+      {
+      value: "true",
+      label: "Đang hoạt động",
+      },
+      {
+      value: "false",
+      label: "Ngưng hoạt động",
+      },
+    ],
+  },
+
   defaultSortBy: [["created_at", "DESC"]],
-  defaultLimit: 20,
+  defaultLimit: 10,
   maxLimit: 100,
 };

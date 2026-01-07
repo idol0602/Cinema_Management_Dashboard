@@ -1,13 +1,41 @@
 export const postPaginateConfig = {
-  sortableColumns: ["title", "created_at", "user_id"],
-  searchableColumns: ["title", "content"],
-  filterableColumns: {
-    title: true,
-    user_id: true,
-    is_active: true,
-    created_at: true,
+  // dùng combobox chọn tiêu chí sort
+  sortableColumns : [
+  {
+    value: "title",
+    label: "Tiêu đề",
   },
+  {
+    value: "created_at",
+    label: "Ngày tạo",
+  },
+],
+
+searchableColumns : [
+  {
+    value: "title",
+    label: "Tiêu đề",
+  },
+  {
+    value: "content",
+    label: "Nội dung",
+  },
+  ],
+  // dùng combobox chọn tiêu chí lọc
+  filterableColumns: {
+    is_active: [
+      {
+      value: "true",
+      label: "Đang hoạt động",
+      },
+      {
+      value: "false",
+      label: "Ngưng hoạt động",
+      },
+    ],
+  },
+
   defaultSortBy: [["created_at", "DESC"]],
-  defaultLimit: 15,
+  defaultLimit: 10,
   maxLimit: 50,
 };

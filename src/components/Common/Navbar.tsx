@@ -11,103 +11,134 @@ import {
   FileText,
   Image,
   Percent,
+  Bot,
+  Ticket,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/hooks/useAuth";
 
 const navItems = [
+  {
+    name: "Tickets",
+    path: "/ticket",
+    icon: Ticket,
+    label: "Mua vé",
+    allow: ["STAFF"],
+  },
   {
     name: "Movies",
     path: "/movies",
     icon: Film,
     label: "Phim",
+    allow: ["ADMIN", "STAFF"],
   },
   {
     name: "Movie Types",
     path: "/movie-types",
     icon: FileType,
     label: "Thể loại phim",
+    allow: ["ADMIN", "STAFF"],
   },
   {
     name: "Show Times",
     path: "/show-times",
     icon: Calendar,
     label: "Suất chiếu",
+    allow: ["ADMIN", "STAFF"],
   },
   {
     name: "Rooms",
     path: "/rooms",
     icon: DoorOpen,
     label: "Phòng chiếu",
+    allow: ["ADMIN", "STAFF"],
   },
   {
     name: "Combos",
     path: "/combos",
     icon: Package,
     label: "Combo",
+    allow: ["ADMIN", "STAFF"],
   },
   {
     name: "Menu Items",
     path: "/menu-items",
     icon: UtensilsCrossed,
     label: "Menu Items",
+    allow: ["ADMIN", "STAFF"],
   },
   {
     name: "Discounts",
     path: "/discounts",
     icon: Percent,
     label: "Giảm giá",
+    allow: ["ADMIN"],
   },
   {
     name: "Events",
     path: "/events",
     icon: PartyPopper,
     label: "Sự kiện",
+    allow: ["ADMIN", "STAFF"],
   },
   {
     name: "Posts",
     path: "/posts",
     icon: FileText,
     label: "Bài viết",
+    allow: ["ADMIN"],
   },
   {
     name: "Slides",
     path: "/slides",
     icon: Image,
     label: "Slide Banner",
+    allow: ["ADMIN"],
   },
   {
     name: "Users",
     path: "/users",
     icon: Users,
     label: "Người dùng",
+    allow: ["ADMIN"],
+  },
+  {
+    name: "Agent",
+    path: "/agent",
+    icon: Bot,
+    label: "AI Agent SQL",
+    allow: ["ADMIN"],
   },
 ];
 
 function Navbar() {
+  const { user, isAuthenticated } = useAuth();
   return (
     <nav className="border-b bg-background">
       <div className="container px-4">
-        <div className="flex items-center gap-1 overflow-x-auto py-2 scrollbar-hide">
+        <div className="flex items-center gap-1 overflow-x-auto py-2">
           {navItems.map((item) => {
             const Icon = item.icon;
-            return (
-              <NavLink
-                key={item.path}
-                to={item.path}
-                className={({ isActive }) =>
-                  cn(
-                    "flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors whitespace-nowrap",
-                    "hover:bg-accent hover:text-accent-foreground",
-                    isActive
-                      ? "bg-primary text-primary-foreground"
-                      : "text-muted-foreground"
-                  )
-                }
-              >
-                <Icon className="h-4 w-4" />
-                <span>{item.label}</span>
-              </NavLink>
-            );
+            if (item.allow.includes(user?.role as string)) {
+              return (
+                <NavLink
+                  key={item.path}
+                  to={item.path}
+                  className={({ isActive }) =>
+                    cn(
+                      "flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors whitespace-nowrap",
+                      "hover:bg-accent hover:text-accent-foreground",
+                      isActive
+                        ? "bg-primary text-primary-foreground"
+                        : "text-muted-foreground"
+                    )
+                  }
+                >
+                  <Icon className="h-4 w-4" />
+                  <span>{item.label}</span>
+                </NavLink>
+              );
+            }
           })}
         </div>
       </div>

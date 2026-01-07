@@ -58,7 +58,7 @@ const MovieList = () => {
   const [movieTypeColumn, setMovieTypeColumn] = useState("");
   const [orderColumn, setOrderColumn] = useState("");
   const [meta, setMeta] = useState<PaginationMeta>({
-    itemsPerPage: 10,
+    itemsPerPage: moviePaginateConfig.defaultLimit,
     totalItems: 0,
     currentPage: 1,
     totalPages: 0,
@@ -80,7 +80,7 @@ const MovieList = () => {
 
   const findAndPaginate = async (
     page = 1,
-    limit = 10,
+    limit = moviePaginateConfig.defaultLimit,
     sortBy = moviePaginateConfig.defaultSortBy[0] +
       ":" +
       moviePaginateConfig.defaultSortBy[1],
@@ -141,7 +141,7 @@ const MovieList = () => {
 
     findAndPaginate(
       currentPage,
-      10,
+      moviePaginateConfig.defaultLimit,
       sortBy,
       searchQuery || undefined,
       searchColumn || undefined,

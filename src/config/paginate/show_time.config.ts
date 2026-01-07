@@ -1,14 +1,58 @@
 export const showTimePaginateConfig = {
-  sortableColumns: ["start_time", "end_time", "day_type", "created_at"],
-  searchableColumns: [],
-  filterableColumns: {
-    movie_id: true,
-    room_id: true,
-    day_type: true,
-    start_time: true,
-    is_active: true,
+  // dùng combobox chọn tiêu chí sort
+  sortableColumns : [
+  {
+    value: "start_time",
+    label: "Giờ bắt đầu",
   },
-  defaultSortBy: [["start_time", "ASC"]],
-  defaultLimit: 20,
+  {
+    value: "end_time",
+    label: "Giờ kết thúc",
+  },
+  {
+    value: "created_at",
+    label: "Ngày tạo",
+  },
+],
+
+searchableColumns : [],
+  // dùng combobox chọn tiêu chí lọc
+  filterableColumns: {
+    movie_id: [
+      {
+      value: "true",
+      label: "Có phim",
+      },
+    ],
+    room_id: [
+      {
+      value: "true",
+      label: "Có phòng",
+      },
+    ],
+    day_type: [
+      {
+      value: "weekday",
+      label: "Ngày thường",
+      },
+      {
+      value: "weekend",
+      label: "Cuối tuần",
+      },
+    ],
+    is_active: [
+      {
+      value: "true",
+      label: "Đang hoạt động",
+      },
+      {
+      value: "false",
+      label: "Ngưng hoạt động",
+      },
+    ],
+  },
+
+  defaultSortBy: [["created_at", "DESC"]],
+  defaultLimit: 10,
   maxLimit: 100,
 };

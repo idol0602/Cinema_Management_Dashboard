@@ -1,13 +1,49 @@
 export const eventPaginateConfig = {
-  sortableColumns: ["name", "start_date", "end_date", "created_at"],
-  searchableColumns: ["name", "description"],
-  filterableColumns: {
-    name: true,
-    start_date: true,
-    end_date: true,
-    is_active: true,
+  // dùng combobox chọn tiêu chí sort
+  sortableColumns : [
+  {
+    value: "name",
+    label: "Tên sự kiện",
   },
-  defaultSortBy: [["start_date", "DESC"]],
+  {
+    value: "start_date",
+    label: "Ngày bắt đầu",
+  },
+  {
+    value: "end_date",
+    label: "Ngày kết thúc",
+  },
+  {
+    value: "created_at",
+    label: "Ngày tạo",
+  },
+],
+
+searchableColumns : [
+  {
+    value: "name",
+    label: "Tên sự kiện",
+  },
+  {
+    value: "description",
+    label: "Mô tả",
+  },
+  ],
+  // dùng combobox chọn tiêu chí lọc
+  filterableColumns: {
+    is_active: [
+      {
+      value: "true",
+      label: "Đang hoạt động",
+      },
+      {
+      value: "false",
+      label: "Ngưng hoạt động",
+      },
+    ],
+  },
+
+  defaultSortBy: [["created_at", "DESC"]],
   defaultLimit: 10,
   maxLimit: 50,
 };

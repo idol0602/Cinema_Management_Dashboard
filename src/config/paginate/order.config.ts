@@ -1,20 +1,20 @@
-export const movieTypePaginateConfig = {
+export const orderPaginationConfig = {
   // dùng combobox chọn tiêu chí sort
   sortableColumns : [
   {
-    value: "type",
-    label: "Thể loại",
-  },
-  {
     value: "created_at",
     label: "Ngày tạo",
+  },
+  {
+    value: "total_price",
+    label: "Tổng giá",
   },
 ],
 
 searchableColumns : [
   {
-    value: "type",
-    label: "Thể loại",
+    value: "user_id",
+    label: "Mã người dùng",
   },
   ],
   // dùng combobox chọn tiêu chí lọc

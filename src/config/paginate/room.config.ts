@@ -1,12 +1,55 @@
 export const roomPaginateConfig = {
-  sortableColumns: ["name", "format", "created_at"],
-  searchableColumns: ["name", "location"],
-  filterableColumns: {
-    format: true,
-    location: true,
-    is_active: true,
+  // dùng combobox chọn tiêu chí sort
+  sortableColumns : [
+  {
+    value: "name",
+    label: "Tên phòng",
   },
-  defaultSortBy: [["name", "ASC"]],
-  defaultLimit: 15,
+  {
+    value: "created_at",
+    label: "Ngày tạo",
+  },
+],
+
+searchableColumns : [
+  {
+    value: "name",
+    label: "Tên phòng",
+  },
+  {
+    value: "location",
+    label: "Vị trí",
+  },
+  ],
+  // dùng combobox chọn tiêu chí lọc
+  filterableColumns: {
+    format: [
+      {
+      value: "2D",
+      label: "2D",
+      },
+      {
+      value: "3D",
+      label: "3D",
+      },
+      {
+      value: "IMAX",
+      label: "IMAX",
+      },
+    ],
+    is_active: [
+      {
+      value: "true",
+      label: "Đang hoạt động",
+      },
+      {
+      value: "false",
+      label: "Ngưng hoạt động",
+      },
+    ],
+  },
+
+  defaultSortBy: [["created_at", "DESC"]],
+  defaultLimit: 10,
   maxLimit: 100,
 };

@@ -1,14 +1,59 @@
 export const menuItemPaginateConfig = {
-  sortableColumns: ["name", "price", "item_type", "num_instock", "created_at"],
-  searchableColumns: ["name", "description"],
-  filterableColumns: {
-    name: true,
-    item_type: true,
-    price: true,
-    num_instock: true,
-    is_active: true,
+  // dùng combobox chọn tiêu chí sort
+  sortableColumns : [
+  {
+    value: "name",
+    label: "Tên món",
   },
-  defaultSortBy: [["name", "ASC"]],
-  defaultLimit: 15,
+  {
+    value: "price",
+    label: "Giá",
+  },
+  {
+    value: "created_at",
+    label: "Ngày tạo",
+  },
+  {
+    value: "num_instock",
+    label: "Số lượng tồn",
+  },
+],
+
+searchableColumns : [
+  {
+    value: "name",
+    label: "Tên món",
+  },
+  {
+    value: "description",
+    label: "Mô tả",
+  },
+  ],
+  // dùng combobox chọn tiêu chí lọc
+  filterableColumns: {
+    item_type: [
+      {
+      value: "food",
+      label: "Đồ ăn",
+      },
+      {
+      value: "drink",
+      label: "Đồ uống",
+      },
+    ],
+    is_active: [
+      {
+      value: "true",
+      label: "Đang hoạt động",
+      },
+      {
+      value: "false",
+      label: "Ngưng hoạt động",
+      },
+    ],
+  },
+
+  defaultSortBy: [["created_at", "DESC"]],
+  defaultLimit: 10,
   maxLimit: 50,
 };
