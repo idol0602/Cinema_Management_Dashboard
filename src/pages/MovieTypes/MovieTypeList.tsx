@@ -34,12 +34,16 @@ import {
   Film,
 } from "lucide-react";
 import { Combobox } from "@/components/ui/combobox";
+import { MovieTypeCreateDialog } from "@/components/movieTypes/MovieTypeCreateDialig";
+import { MovieTypeEditDialog } from "@/components/movieTypes/MovieTypeEditDialog";
+import { MovieTypeDetailDialog } from "@/components/movieTypes/MovieTypeDetailDialog";
 
 const MovieTypeList = () => {
   const [movieTypes, setMovieTypes] = useState<movieTypeType[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
+  const [statusColumn, setStatusColumn] = useState("");
   const [searchColumn, setSearchColumn] = useState("");
   const [sortColumn, setSortColumn] = useState("");
   const [orderColumn, setOrderColumn] = useState("");
@@ -50,6 +54,13 @@ const MovieTypeList = () => {
     totalPages: 0,
   });
 
+  //form dialog states
+  const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [detailDialogOpen, setDetailDialogOpen] = useState(false);
+  const [selectedMovieType, setSelectedMovieType] =
+    useState<movieTypeType | null>(null);
+
   const findAndPaginate = async (
     page = 1,
     limit = movieTypePaginateConfig.defaultLimit,
@@ -57,7 +68,8 @@ const MovieTypeList = () => {
       ":" +
       movieTypePaginateConfig.defaultSortBy[0][1],
     search = undefined,
-    searchBy = undefined
+    searchBy = undefined,
+    filter = {}
   ) => {
     setLoading(true);
     try {
@@ -67,6 +79,7 @@ const MovieTypeList = () => {
         sortBy,
         search,
         searchBy,
+        filter,
       });
 
       if (response.success && response.data) {
@@ -100,12 +113,17 @@ const MovieTypeList = () => {
       sortBy = `${sortColumn}:DESC`;
     }
 
+    const filter: Record<string, any> = {};
+    if (statusColumn) {
+      filter.is_active = statusColumn === "true";
+    }
     findAndPaginate(
       currentPage,
       movieTypePaginateConfig.defaultLimit,
       sortBy,
       searchQuery || undefined,
-      searchColumn || undefined
+      searchColumn || undefined,
+      Object.keys(filter).length > 0 ? filter : undefined
     );
   };
 
@@ -139,6 +157,53 @@ const MovieTypeList = () => {
     return new Date(dateString).toLocaleDateString("vi-VN");
   };
 
+  const handleCreateSubmit = async (data: movieTypeType) => {
+    try {
+      const response = await movieTypeService.create(data);
+      if (response.success) {
+        toast.success("Thêm thể loại phim thành công");
+        handleSearch();
+      } else {
+        toast.error("Có lỗi xảy ra khi tạo thể loại phim");
+        return;
+      }
+      toast.success("Thêm thể loại phim thành công");
+    } catch (error) {
+      toast.error("Có lỗi xảy ra khi tạo thể loại phim");
+      console.error(error);
+    }
+  };
+
+  const handleEditSubmit = async (data: movieTypeType) => {
+    try {
+      const response = await movieTypeService.update(
+        selectedMovieType?.id as string,
+        data
+      );
+      if (response.success) {
+        toast.success("Cập nhật thể loại phim thành công");
+        setEditDialogOpen(false);
+        handleSearch();
+      } else {
+        toast.error("Có lỗi xảy ra khi cập nhật thể loại phim");
+        return;
+      }
+    } catch (error) {
+      toast.error("Có lỗi xảy ra khi cập nhật thể loại phim");
+      console.error(error);
+    }
+  };
+
+  const handleEdit = (movieType: movieTypeType) => {
+    setSelectedMovieType(movieType);
+    setEditDialogOpen(true);
+  };
+
+  const handleView = (movieType: movieTypeType) => {
+    setSelectedMovieType(movieType);
+    setDetailDialogOpen(true);
+  };
+
   return (
     <div className="container mx-auto py-6 space-y-6">
       <Card>
@@ -153,7 +218,7 @@ const MovieTypeList = () => {
                 Quản lý danh sách thể loại phim và thông tin chi tiết
               </CardDescription>
             </div>
-            <Button>
+            <Button onClick={() => setCreateDialogOpen(true)}>
               <Plus className="h-4 w-4 mr-2" />
               Thêm Thể Loại Mới
             </Button>
@@ -172,6 +237,12 @@ const MovieTypeList = () => {
                 className="pl-10"
               />
             </div>
+            <Combobox
+              datas={movieTypePaginateConfig.filterableColumns.is_active}
+              placeholder="Trạng thái"
+              onChange={setStatusColumn}
+              value={statusColumn}
+            ></Combobox>
             <Combobox
               datas={movieTypePaginateConfig.searchableColumns}
               placeholder="Tìm theo"
@@ -215,6 +286,7 @@ const MovieTypeList = () => {
                       <TableHead className="w-[50px]">#</TableHead>
                       <TableHead>Thể Loại</TableHead>
                       <TableHead>Ngày Tạo</TableHead>
+                      <TableHead>Trạng Thái</TableHead>
                       <TableHead className="text-center">Thao Tác</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -234,12 +306,29 @@ const MovieTypeList = () => {
                         <TableCell>
                           {formatDate(movieType.created_at)}
                         </TableCell>
+                        <TableCell className="text-center">
+                          {movieType.is_active !== false ? (
+                            <Badge variant="default" className="bg-green-500">
+                              Hoạt động
+                            </Badge>
+                          ) : (
+                            <Badge variant="destructive">Ngừng</Badge>
+                          )}
+                        </TableCell>
                         <TableCell>
                           <div className="flex items-center justify-center gap-2">
-                            <Button variant="ghost" size="icon">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleView(movieType)}
+                            >
                               <Eye className="h-4 w-4" />
                             </Button>
-                            <Button variant="ghost" size="icon">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleEdit(movieType)}
+                            >
                               <Pencil className="h-4 w-4" />
                             </Button>
                             <Button
@@ -324,6 +413,24 @@ const MovieTypeList = () => {
           )}
         </CardContent>
       </Card>
+      <MovieTypeCreateDialog
+        open={createDialogOpen}
+        onOpenChange={setCreateDialogOpen}
+        onSubmit={handleCreateSubmit}
+      />
+
+      <MovieTypeEditDialog
+        movieType={selectedMovieType}
+        open={editDialogOpen}
+        onOpenChange={setEditDialogOpen}
+        onSubmit={handleEditSubmit}
+      />
+
+      <MovieTypeDetailDialog
+        movieType={selectedMovieType}
+        open={detailDialogOpen}
+        onOpenChange={setDetailDialogOpen}
+      />
     </div>
   );
 };
@@ -337,7 +444,7 @@ const TableSkeleton = () => {
             <TableHead className="w-[50px]">#</TableHead>
             <TableHead>Thể Loại</TableHead>
             <TableHead>Ngày Tạo</TableHead>
-            <TableHead>Ngày Cập Nhật</TableHead>
+            <TableHead>Trạng Thái</TableHead>
             <TableHead className="text-center">Thao Tác</TableHead>
           </TableRow>
         </TableHeader>

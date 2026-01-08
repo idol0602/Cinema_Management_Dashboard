@@ -16,6 +16,7 @@ import {
 import {
   Form,
   FormControl,
+  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -23,6 +24,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Switch } from "@/components/ui/switch";
 import { Plus, Tag, Loader2 } from "lucide-react";
 
 interface MovieTypeCreateDialogProps {
@@ -42,14 +44,13 @@ export function MovieTypeCreateDialog({
     resolver: zodResolver(createMovieTypeSchema),
     defaultValues: {
       type: "",
+      is_active: true,
     },
   });
 
   const handleSubmit = async (data: CreateMovieTypeFormData) => {
     setIsSubmitting(true);
     try {
-      // TODO: Implement API call
-      console.log("Form data:", data);
       onSubmit?.(data);
 
       // Close dialog and reset form

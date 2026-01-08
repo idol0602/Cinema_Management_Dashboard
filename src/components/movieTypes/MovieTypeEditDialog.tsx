@@ -16,6 +16,7 @@ import {
 import {
   Form,
   FormControl,
+  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -23,6 +24,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Switch } from "@/components/ui/switch";
 import { Save, Tag, Loader2 } from "lucide-react";
 import type { movieTypeType } from "@/types/movieType.type";
 
@@ -45,6 +47,7 @@ export function MovieTypeEditDialog({
     resolver: zodResolver(updateMovieTypeSchema),
     defaultValues: {
       type: "",
+      is_active: true,
     },
   });
 
@@ -53,6 +56,7 @@ export function MovieTypeEditDialog({
     if (movieType && open) {
       form.reset({
         type: movieType.type,
+        is_active: movieType.is_active !== false,
       });
     }
   }, [movieType, open, form]);
@@ -60,9 +64,12 @@ export function MovieTypeEditDialog({
   const handleSubmit = async (data: UpdateMovieTypeFormData) => {
     setIsSubmitting(true);
     try {
-      // TODO: Implement API call
-      console.log("Update form data:", data);
-      onSubmit?.(data);
+      // Include id in the data
+      const updateData = {
+        ...data,
+        id: movieType?.id,
+      };
+      onSubmit?.(updateData as any);
 
       // Close dialog
       onOpenChange(false);
@@ -107,6 +114,28 @@ export function MovieTypeEditDialog({
                     />
                   </FormControl>
                   <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {/* Is Active */}
+            <FormField
+              control={form.control}
+              name="is_active"
+              render={({ field }) => (
+                <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                  <div className="space-y-0.5">
+                    <FormLabel className="text-base">Trạng Thái</FormLabel>
+                    <FormDescription>
+                      Kích hoạt thể loại để hiển thị trong danh sách
+                    </FormDescription>
+                  </div>
+                  <FormControl>
+                    <Switch
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                    />
+                  </FormControl>
                 </FormItem>
               )}
             />

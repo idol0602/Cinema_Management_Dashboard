@@ -91,7 +91,7 @@ const MovieList = () => {
       moviePaginateConfig.defaultSortBy[1],
     search = undefined,
     searchBy = undefined,
-    filter = { is_active: true }
+    filter = {}
   ) => {
     setLoading(true);
     try {

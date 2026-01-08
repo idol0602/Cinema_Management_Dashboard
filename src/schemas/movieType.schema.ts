@@ -2,6 +2,7 @@ import { z } from "zod";
 
 export const createMovieTypeSchema = z.object({
   type: z.string().min(1, "Type is required"),
+  is_active: z.boolean().default(true).optional(),
   created_at: z.string().default(new Date().toISOString()).optional(),
 });
 

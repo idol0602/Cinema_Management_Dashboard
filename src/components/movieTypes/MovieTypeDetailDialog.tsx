@@ -87,6 +87,23 @@ export function MovieTypeDetailDialog({
 
           <Separator />
 
+          {/* Status */}
+          <div className="flex items-center justify-between p-4 bg-muted rounded-lg">
+            <div>
+              <p className="text-sm font-medium">Trạng Thái</p>
+              <p className="text-xs text-muted-foreground">
+                Trạng thái hiển thị trong hệ thống
+              </p>
+            </div>
+            {movieType.is_active !== false ? (
+              <Badge className="bg-green-500">Đang Hoạt Động</Badge>
+            ) : (
+              <Badge variant="destructive">Ngừng Hoạt Động</Badge>
+            )}
+          </div>
+
+          <Separator />
+
           {/* Additional Info */}
           <div className="p-4 bg-muted rounded-lg">
             <p className="text-sm text-muted-foreground">
