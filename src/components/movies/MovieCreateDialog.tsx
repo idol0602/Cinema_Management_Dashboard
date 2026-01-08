@@ -9,7 +9,6 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import {
   Form,
@@ -45,16 +44,17 @@ import type { movieTypeType } from "@/types/movieType.type";
 
 interface MovieCreateDialogProps {
   movieTypes: movieTypeType[];
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
   onSubmit?: (data: MovieFormData) => void;
-  trigger?: React.ReactNode;
 }
 
 export function MovieCreateDialog({
   movieTypes,
+  open,
+  onOpenChange,
   onSubmit,
-  trigger,
 }: MovieCreateDialogProps) {
-  const [open, setOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [imagePreview, setImagePreview] = useState<string>("");
   const [thumbnailPreview, setThumbnailPreview] = useState<string>("");
@@ -85,7 +85,7 @@ export function MovieCreateDialog({
       onSubmit?.(data);
 
       // Close dialog and reset form
-      setOpen(false);
+      onOpenChange(false);
       form.reset();
       setImagePreview("");
       setThumbnailPreview("");
@@ -121,15 +121,7 @@ export function MovieCreateDialog({
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        {trigger || (
-          <Button>
-            <Plus className="h-4 w-4 mr-2" />
-            Thêm Phim Mới
-          </Button>
-        )}
-      </DialogTrigger>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
@@ -287,29 +279,6 @@ export function MovieCreateDialog({
                       />
                     </FormControl>
                     <FormDescription>Tối thiểu 45 phút</FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              {/* Rating */}
-              <FormField
-                control={form.control}
-                name="rating"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Đánh Giá (0-10)</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="number"
-                        step="0.1"
-                        min="0"
-                        max="10"
-                        placeholder="8.5"
-                        {...field}
-                        onChange={(e) => field.onChange(Number(e.target.value))}
-                      />
-                    </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -497,7 +466,7 @@ export function MovieCreateDialog({
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => setOpen(false)}
+                onClick={() => onOpenChange(false)}
                 disabled={isSubmitting}
               >
                 Hủy

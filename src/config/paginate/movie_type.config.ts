@@ -18,7 +18,18 @@ searchableColumns : [
   },
   ],
   // dùng combobox chọn tiêu chí lọc
-  filterableColumns: {},
+  filterableColumns: {
+    is_active: [
+      {
+      value: "true",
+      label: "Đang hoạt động",
+      },
+      {
+      value: "false",
+      label: "Ngưng hoạt động",
+      },
+    ],
+  },
 
   defaultSortBy: [["created_at", "DESC"]],
   defaultLimit: 10,

@@ -3,7 +3,13 @@ import LoginPage from "../pages/Auth/Login";
 import { ProtectedRoute } from "@/routes/ProtectedRoute";
 import DashboardLayout from "@/layouts/DashboardLayout";
 import MovieList from "@/pages/Movies/MovieList";
+import MovieTypesList from "@/pages/MovieTypes/MovieTypeList";
 import SQLAgent from "@/pages/SQLAgent/SQLAgent";
+import PostList from "@/pages/Posts/PostList";
+import SlideList from "@/pages/Slides/SlideList";
+import UserList from "@/pages/Users/UserList";
+import RoomList from "@/pages/Rooms/RoomList";
+import MenuItemList from "@/pages/MenuItems/MenuItemList";
 
 export const AppRoutes = () => {
   return (
@@ -22,11 +28,11 @@ export const AppRoutes = () => {
         <Route path="/discounts" element={<>DISCOUNTS PAGE</>} />
 
         {/* Content Management */}
-        <Route path="/posts" element={<>POSTS PAGE</>} />
-        <Route path="/slides" element={<>SLIDES PAGE</>} />
+        <Route path="/posts" element={<PostList />} />
+        <Route path="/slides" element={<SlideList />} />
 
         {/* User Management */}
-        <Route path="/users" element={<>USERS PAGE</>} />
+        <Route path="/users" element={<UserList />} />
         <Route path="/agent" element={<SQLAgent></SQLAgent>} />
       </Route>
 
@@ -52,14 +58,14 @@ export const AppRoutes = () => {
         {/* Dashboard Home */}
         <Route path="/movies" element={<MovieList />} />
         {/* Movies Management */}
-        <Route path="/movie-types" element={<>MOVIE TYPES PAGE</>} />
+        <Route path="/movie-types" element={<MovieTypesList />} />
         {/* Show Times & Rooms */}
         <Route path="/show-times" element={<>SHOW TIMES PAGE</>} />
-        <Route path="/rooms" element={<>ROOMS PAGE</>} />
+        <Route path="/rooms" element={<RoomList />} />
 
         {/* Services */}
         <Route path="/combos" element={<>COMBOS PAGE</>} />
-        <Route path="/menu-items" element={<>MENU ITEMS PAGE</>} />
+        <Route path="/menu-items" element={<MenuItemList />} />
         <Route path="/events" element={<>EVENTS PAGE</>} />
         <Route path="/dashboard" element={<>DASHBOARD HOME</>} />
       </Route>

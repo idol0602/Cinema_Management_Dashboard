@@ -33,12 +33,16 @@ searchableColumns : [
   filterableColumns: {
     role: [
       {
-      value: "admin",
+      value: "ADMIN",
       label: "Quản trị viên",
       },
       {
-      value: "user",
-      label: "Người dùng",
+      value: "STAFF",
+      label: "Nhân viên",
+      },
+      {
+      value: "CUSTOMER",
+      label: "Khách hàng",
       },
     ],
     is_active: [

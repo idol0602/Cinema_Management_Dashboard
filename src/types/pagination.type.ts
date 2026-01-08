@@ -33,9 +33,10 @@ export interface PaginationLinks {
 export interface PaginatedResponse<T = unknown> {
   success: boolean;
   data: T[];
-  meta: PaginationMeta;
-  links: PaginationLinks;
-  message: string;
+  meta?: PaginationMeta;
+  links?: PaginationLinks;
+  message?: string;
+  error: string;
 }
 
 // Helper type for extracting data type

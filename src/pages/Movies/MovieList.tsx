@@ -65,18 +65,23 @@ const MovieList = () => {
   });
 
   // Dialog states
+  const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [detailDialogOpen, setDetailDialogOpen] = useState(false);
   const [selectedMovie, setSelectedMovie] = useState<movieType | null>(null);
 
   const fetchMovieTypes = async () => {
     try {
-      const response = await movieTypeService.getAll();
+      const response = await movieTypeService.findAll();
       setMovieTypes(response.data as movieTypeType[]);
     } catch (error) {
       console.error("Error fetching movie types:", error);
     }
   };
+
+  useEffect(() => {
+    fetchMovieTypes();
+  }, []);
 
   const findAndPaginate = async (
     page = 1,
@@ -116,7 +121,6 @@ const MovieList = () => {
   };
 
   useEffect(() => {
-    fetchMovieTypes();
     handleSearch();
   }, [currentPage]);
 
@@ -158,7 +162,7 @@ const MovieList = () => {
   };
 
   // Handle create movie
-  const handleCreateSubmit = async (data: any) => {
+  const handleCreateSubmit = async (data: movieType) => {
     try {
       const response = await movieService.create(data);
       if (response.success) {
@@ -178,11 +182,14 @@ const MovieList = () => {
     setEditDialogOpen(true);
   };
 
-  const handleEditSubmit = async (data: any) => {
+  const handleEditSubmit = async (data: movieType) => {
     if (!selectedMovie) return;
 
     try {
-      const response = await movieService.update(selectedMovie.id, data);
+      const response = await movieService.update(
+        selectedMovie.id as string,
+        data
+      );
       if (response.success) {
         toast.success("Cập nhật phim thành công!");
         handleSearch(); // Refresh list
@@ -201,7 +208,7 @@ const MovieList = () => {
     }
 
     try {
-      const response = await movieService.delete(movie.id);
+      const response = await movieService.delete(movie.id as string);
       if (response.success) {
         toast.success("Xóa phim thành công!");
         handleSearch(); // Refresh list
@@ -281,16 +288,10 @@ const MovieList = () => {
                   </Button>
                 }
               />
-              <MovieCreateDialog
-                movieTypes={movieTypes}
-                onSubmit={handleCreateSubmit}
-                trigger={
-                  <Button>
-                    <Plus className="h-4 w-4 mr-2" />
-                    Thêm Phim Mới
-                  </Button>
-                }
-              />
+              <Button onClick={() => setCreateDialogOpen(true)}>
+                <Plus className="h-4 w-4 mr-2" />
+                Thêm Phim Mới
+              </Button>
             </div>
           </div>
         </CardHeader>
@@ -595,6 +596,13 @@ const MovieList = () => {
       </Card>
 
       {/* Dialogs */}
+      <MovieCreateDialog
+        movieTypes={movieTypes}
+        open={createDialogOpen}
+        onOpenChange={setCreateDialogOpen}
+        onSubmit={handleCreateSubmit}
+      />
+
       <MovieEditDialog
         movie={selectedMovie}
         movieTypes={movieTypes}

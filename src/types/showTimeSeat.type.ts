@@ -1,0 +1,23 @@
+export type SeatStatus = "AVAILABLE" | "HOLDING" | "BOOKED" | "FIXING";
+
+export interface ShowTimeSeatType {
+  id?: string;
+  show_time_id: string;
+  seat_id: string;
+  status_seat?: SeatStatus;
+  created_at?: string;
+}
+
+export interface CreateShowTimeSeatType {
+  show_time_id: string;
+  seat_id: string;
+  status_seat?: SeatStatus;
+  created_at?: string;
+}
+
+export interface UpdateShowTimeSeatType {
+  show_time_id?: string;
+  seat_id?: string;
+  status_seat?: SeatStatus;
+  created_at?: string;
+}

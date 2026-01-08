@@ -33,12 +33,16 @@ searchableColumns : [
   filterableColumns: {
     item_type: [
       {
-      value: "food",
+      value: "FOOD",
       label: "Đồ ăn",
       },
       {
-      value: "drink",
+      value: "DRINK",
       label: "Đồ uống",
+      },
+      {
+      value: "GIFT",
+      label: "Quà tặng",
       },
     ],
     is_active: [
