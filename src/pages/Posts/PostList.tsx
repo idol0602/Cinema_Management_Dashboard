@@ -34,8 +34,13 @@ import {
   FileText,
 } from "lucide-react";
 import { Combobox } from "@/components/ui/combobox";
+import { PostCreateDialog } from "@/components/posts/PostCreateDialog";
+import { PostEditDialog } from "@/components/posts/PostEditDialog";
+import { PostDetailDialog } from "@/components/posts/PostDetailDialog";
+import { useAuth } from "@/hooks/useAuth";
 
 const PostList = () => {
+  const { user } = useAuth();
   const [posts, setPosts] = useState<PostType[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
@@ -50,6 +55,12 @@ const PostList = () => {
     currentPage: 1,
     totalPages: 0,
   });
+
+  // Dialog states
+  const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [detailDialogOpen, setDetailDialogOpen] = useState(false);
+  const [selectedPost, setSelectedPost] = useState<PostType | null>(null);
 
   const findAndPaginate = async (
     page = 1,
@@ -125,6 +136,41 @@ const PostList = () => {
     }
   };
 
+  const handleCreate = async (data: any) => {
+    try {
+      data.user_id = user?.id;
+      const response = await postService.create(data);
+      if (response.success) {
+        toast.success("Thêm bài viết mới thành công!");
+        handleSearch();
+      } else {
+        toast.error("Không thể thêm bài viết");
+      }
+    } catch (error) {
+      toast.error("Có lỗi xảy ra khi thêm bài viết");
+      console.error(error);
+    }
+  };
+
+  const handleUpdate = async (data: any) => {
+    if (!selectedPost) return;
+    try {
+      const response = await postService.update(
+        selectedPost.id as string,
+        data
+      );
+      if (response.success) {
+        toast.success("Cập nhật bài viết thành công!");
+        handleSearch();
+      } else {
+        toast.error("Không thể cập nhật bài viết");
+      }
+    } catch (error) {
+      toast.error("Có lỗi xảy ra khi cập nhật bài viết");
+      console.error(error);
+    }
+  };
+
   const handleDelete = async (post: PostType) => {
     if (!confirm(`Bạn có chắc chắn muốn xóa bài viết "${post.title}" không?`)) {
       return;
@@ -142,6 +188,16 @@ const PostList = () => {
       toast.error("Có lỗi xảy ra khi xóa bài viết");
       console.error(error);
     }
+  };
+
+  const handleViewDetail = (post: PostType) => {
+    setSelectedPost(post);
+    setDetailDialogOpen(true);
+  };
+
+  const handleEdit = (post: PostType) => {
+    setSelectedPost(post);
+    setEditDialogOpen(true);
   };
 
   const formatDate = (dateString?: string) => {
@@ -170,7 +226,7 @@ const PostList = () => {
                 Quản lý danh sách bài viết và thông tin chi tiết
               </CardDescription>
             </div>
-            <Button>
+            <Button onClick={() => setCreateDialogOpen(true)}>
               <Plus className="h-4 w-4 mr-2" />
               Thêm Bài Viết Mới
             </Button>
@@ -285,10 +341,18 @@ const PostList = () => {
                         </TableCell>
                         <TableCell>
                           <div className="flex items-center justify-center gap-2">
-                            <Button variant="ghost" size="icon">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleViewDetail(post)}
+                            >
                               <Eye className="h-4 w-4" />
                             </Button>
-                            <Button variant="ghost" size="icon">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleEdit(post)}
+                            >
                               <Pencil className="h-4 w-4" />
                             </Button>
                             <Button
@@ -373,6 +437,24 @@ const PostList = () => {
           )}
         </CardContent>
       </Card>
+
+      {/* Dialogs */}
+      <PostCreateDialog
+        open={createDialogOpen}
+        onOpenChange={setCreateDialogOpen}
+        onSubmit={handleCreate}
+      />
+      <PostEditDialog
+        post={selectedPost}
+        open={editDialogOpen}
+        onOpenChange={setEditDialogOpen}
+        onSubmit={handleUpdate}
+      />
+      <PostDetailDialog
+        post={selectedPost}
+        open={detailDialogOpen}
+        onOpenChange={setDetailDialogOpen}
+      />
     </div>
   );
 };

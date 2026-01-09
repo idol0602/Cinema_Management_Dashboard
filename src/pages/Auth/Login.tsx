@@ -50,7 +50,9 @@ export default function LoginPage() {
       await login(formData.email, formData.password);
       navigate("/dashboard");
     } catch (err: any) {
-      setError(err?.response?.data?.message || "Email ou senha incorretos");
+      setError(
+        err?.response?.data?.message || "Email hoặc mật khẩu không đúng"
+      );
     } finally {
       setIsLoading(false);
     }

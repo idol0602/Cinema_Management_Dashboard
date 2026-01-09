@@ -78,7 +78,6 @@ export function UserEditDialog({
   const handleSubmit = async (data: UpdateUserFormData) => {
     setIsSubmitting(true);
     try {
-      console.log("Update form data:", data);
       onSubmit?.(data);
 
       onOpenChange(false);
@@ -208,9 +207,7 @@ export function UserEditDialog({
                       type="number"
                       placeholder="0"
                       {...field}
-                      onChange={(e) =>
-                        field.onChange(parseInt(e.target.value) || 0)
-                      }
+                      onChange={(e) => field.onChange(parseInt(e.target.value))}
                     />
                   </FormControl>
                   <FormDescription>Điểm thưởng của người dùng</FormDescription>

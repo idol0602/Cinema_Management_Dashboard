@@ -13,6 +13,8 @@ import {
   Percent,
   Bot,
   Ticket,
+  Settings,
+  ShoppingBag,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
@@ -109,13 +111,27 @@ const navItems = [
     label: "AI Agent SQL",
     allow: ["ADMIN"],
   },
+  {
+    name: "Orders",
+    path: "/orders",
+    icon: ShoppingBag,
+    label: "Đơn hàng",
+    allow: ["ADMIN", "STAFF"],
+  },
+  {
+    name: "Settings",
+    path: "/settings",
+    icon: Settings,
+    label: "Cài đặt",
+    allow: ["ADMIN"],
+  },
 ];
 
 function Navbar() {
-  const { user, isAuthenticated } = useAuth();
+  const { user } = useAuth();
   return (
-    <nav className="border-b bg-background">
-      <div className="container px-4">
+    <nav className="border-b bg-background w-full">
+      <div className="px-4">
         <div className="flex items-center gap-1 overflow-x-auto py-2">
           {navItems.map((item) => {
             const Icon = item.icon;

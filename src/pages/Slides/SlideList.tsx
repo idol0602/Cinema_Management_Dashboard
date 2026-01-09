@@ -35,6 +35,9 @@ import {
   PlayCircle,
 } from "lucide-react";
 import { Combobox } from "@/components/ui/combobox";
+import { SlideCreateDialog } from "@/components/slides/SlideCreateDialog";
+import { SlideEditDialog } from "@/components/slides/SlideEditDialog";
+import { SlideDetailDialog } from "@/components/slides/SlideDetailDialog";
 
 const SlideList = () => {
   const [slides, setSlides] = useState<SlideType[]>([]);
@@ -51,6 +54,12 @@ const SlideList = () => {
     currentPage: 1,
     totalPages: 0,
   });
+
+  // Dialog states
+  const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [detailDialogOpen, setDetailDialogOpen] = useState(false);
+  const [selectedSlide, setSelectedSlide] = useState<SlideType | null>(null);
 
   const findAndPaginate = async (
     page = 1,
@@ -126,6 +135,40 @@ const SlideList = () => {
     }
   };
 
+  const handleCreate = async (data: any) => {
+    try {
+      const response = await slideService.create(data);
+      if (response.success) {
+        toast.success("Thêm slide banner mới thành công!");
+        handleSearch();
+      } else {
+        toast.error("Không thể thêm slide banner");
+      }
+    } catch (error) {
+      toast.error("Có lỗi xảy ra khi thêm slide banner");
+      console.error(error);
+    }
+  };
+
+  const handleUpdate = async (data: any) => {
+    if (!selectedSlide) return;
+    try {
+      const response = await slideService.update(
+        selectedSlide.id as string,
+        data
+      );
+      if (response.success) {
+        toast.success("Cập nhật slide banner thành công!");
+        handleSearch();
+      } else {
+        toast.error("Không thể cập nhật slide banner");
+      }
+    } catch (error) {
+      toast.error("Có lỗi xảy ra khi cập nhật slide banner");
+      console.error(error);
+    }
+  };
+
   const handleDelete = async (slide: SlideType) => {
     if (!confirm(`Bạn có chắc chắn muốn xóa slide "${slide.title}" không?`)) {
       return;
@@ -143,6 +186,16 @@ const SlideList = () => {
       toast.error("Có lỗi xảy ra khi xóa slide banner");
       console.error(error);
     }
+  };
+
+  const handleViewDetail = (slide: SlideType) => {
+    setSelectedSlide(slide);
+    setDetailDialogOpen(true);
+  };
+
+  const handleEdit = (slide: SlideType) => {
+    setSelectedSlide(slide);
+    setEditDialogOpen(true);
   };
 
   const formatDate = (dateString?: string) => {
@@ -171,7 +224,7 @@ const SlideList = () => {
                 Quản lý danh sách slide banner và thông tin chi tiết
               </CardDescription>
             </div>
-            <Button>
+            <Button onClick={() => setCreateDialogOpen(true)}>
               <Plus className="h-4 w-4 mr-2" />
               Thêm Slide Mới
             </Button>
@@ -268,10 +321,10 @@ const SlideList = () => {
                           )}
                         </TableCell>
                         <TableCell className="font-semibold max-w-xs">
-                          {truncateText(slide.title, 30)}
+                          {truncateText(slide.title as string, 30)}
                         </TableCell>
                         <TableCell className="max-w-md text-muted-foreground">
-                          {truncateText(slide.content, 50)}
+                          {truncateText(slide.content as string, 50)}
                         </TableCell>
                         <TableCell>
                           {slide.trailer ? (
@@ -300,10 +353,18 @@ const SlideList = () => {
                         </TableCell>
                         <TableCell>
                           <div className="flex items-center justify-center gap-2">
-                            <Button variant="ghost" size="icon">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleViewDetail(slide)}
+                            >
                               <Eye className="h-4 w-4" />
                             </Button>
-                            <Button variant="ghost" size="icon">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleEdit(slide)}
+                            >
                               <Pencil className="h-4 w-4" />
                             </Button>
                             <Button
@@ -388,6 +449,24 @@ const SlideList = () => {
           )}
         </CardContent>
       </Card>
+
+      {/* Dialogs */}
+      <SlideCreateDialog
+        open={createDialogOpen}
+        onOpenChange={setCreateDialogOpen}
+        onSubmit={handleCreate}
+      />
+      <SlideEditDialog
+        slide={selectedSlide}
+        open={editDialogOpen}
+        onOpenChange={setEditDialogOpen}
+        onSubmit={handleUpdate}
+      />
+      <SlideDetailDialog
+        slide={selectedSlide}
+        open={detailDialogOpen}
+        onOpenChange={setDetailDialogOpen}
+      />
     </div>
   );
 };

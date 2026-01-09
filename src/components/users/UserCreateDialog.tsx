@@ -63,7 +63,6 @@ export function UserCreateDialog({
   const handleSubmit = async (data: CreateUserFormData) => {
     setIsSubmitting(true);
     try {
-      console.log("Form data:", data);
       onSubmit?.(data);
 
       onOpenChange(false);

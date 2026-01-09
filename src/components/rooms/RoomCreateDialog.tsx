@@ -32,7 +32,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
-import { Plus, DoorOpen, Loader2 } from "lucide-react";
+import { DoorOpen, Loader2 } from "lucide-react";
 
 interface RoomCreateDialogProps {
   open: boolean;
@@ -40,7 +40,11 @@ interface RoomCreateDialogProps {
   onSubmit?: (data: CreateRoomFormData) => void;
 }
 
-export function RoomCreateDialog({ open, onOpenChange, onSubmit }: RoomCreateDialogProps) {
+export function RoomCreateDialog({
+  open,
+  onOpenChange,
+  onSubmit,
+}: RoomCreateDialogProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const form = useForm<CreateRoomFormData>({
@@ -71,7 +75,6 @@ export function RoomCreateDialog({ open, onOpenChange, onSubmit }: RoomCreateDia
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-      <DialogContent className="max-w-2xl">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <DoorOpen className="h-5 w-5" />

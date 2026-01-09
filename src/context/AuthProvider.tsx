@@ -50,9 +50,8 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     try {
       setLoading(true);
       const { data, error } = await authService.login({ email, password });
-
       if (error) {
-        toast.error("Có lỗi xảy ra!");
+        toast.error(error);
         throw new Error(error);
       }
 

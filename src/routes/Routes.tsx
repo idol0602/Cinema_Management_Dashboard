@@ -62,12 +62,15 @@ export const AppRoutes = () => {
         {/* Show Times & Rooms */}
         <Route path="/show-times" element={<>SHOW TIMES PAGE</>} />
         <Route path="/rooms" element={<RoomList />} />
+        <Route path="/rooms/:id/seats" element={<>ROOM DETAIL PAGE</>} />
 
         {/* Services */}
         <Route path="/combos" element={<>COMBOS PAGE</>} />
         <Route path="/menu-items" element={<MenuItemList />} />
         <Route path="/events" element={<>EVENTS PAGE</>} />
         <Route path="/dashboard" element={<>DASHBOARD HOME</>} />
+        <Route path="/orders" element={<>ORDERS PAGE</>} />
+        <Route path="/settings" element={<>SETTINGS PAGE</>} />
       </Route>
 
       {/* Redirects */}

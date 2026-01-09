@@ -1,4 +1,4 @@
-import { LogOut, Film } from "lucide-react";
+import { LogOut } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -27,15 +27,19 @@ function Header() {
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container flex h-16 items-center justify-between px-4">
         {/* Logo */}
-        <div className="flex items-center gap-2">
-          <div className="flex items-center justify-center w-10 h-10 bg-gradient-to-br from-purple-600 to-blue-500 rounded-lg">
-            <Film className="w-6 h-6 text-white" />
-          </div>
+        <div className="flex items-center gap-3">
+          <img
+            src="/logo.png"
+            alt="Meta Cinema"
+            className="h-12 w-auto object-contain"
+          />
           <div className="flex flex-col">
-            <h1 className="text-xl font-bold leading-none">
-              Cinema Management
+            <h1 className="text-xl font-bold leading-none bg-gradient-to-r from-amber-600 to-amber-800 bg-clip-text text-transparent">
+              META CINEMA
             </h1>
-            <span className="text-xs text-muted-foreground">Dashboard</span>
+            <span className="text-xs text-muted-foreground">
+              Quản Lý Hệ Thống
+            </span>
           </div>
         </div>
 
@@ -44,9 +48,7 @@ function Header() {
           {user && (
             <div className="flex items-center gap-3">
               <div className="hidden md:block text-right">
-                <p className="text-sm font-medium leading-none">
-                  {user.name}
-                </p>
+                <p className="text-sm font-medium leading-none">{user.name}</p>
                 <p className="text-xs text-muted-foreground mt-1">
                   {user.role}
                 </p>

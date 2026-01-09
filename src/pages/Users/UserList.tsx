@@ -32,10 +32,12 @@ import {
   Trash2,
   Eye,
   Users,
-  Shield,
   User as UserIcon,
 } from "lucide-react";
 import { Combobox } from "@/components/ui/combobox";
+import { UserCreateDialog } from "@/components/users/UserCreateDialog";
+import { UserEditDialog } from "@/components/users/UserEditDialog";
+import { UserDetailDialog } from "@/components/users/UserDetailDialog";
 
 const UserList = () => {
   const [users, setUsers] = useState<User[]>([]);
@@ -53,6 +55,12 @@ const UserList = () => {
     currentPage: 1,
     totalPages: 0,
   });
+
+  // Dialog states
+  const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [detailDialogOpen, setDetailDialogOpen] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<User | null>(null);
 
   const findAndPaginate = async (
     page = 1,
@@ -131,6 +139,40 @@ const UserList = () => {
     }
   };
 
+  const handleCreate = async (data: any) => {
+    try {
+      const response = await userService.create(data);
+      if (response.success) {
+        toast.success("Thêm người dùng mới thành công!");
+        handleSearch();
+      } else {
+        toast.error("Không thể thêm người dùng");
+      }
+    } catch (error) {
+      toast.error("Có lỗi xảy ra khi thêm người dùng");
+      console.error(error);
+    }
+  };
+
+  const handleUpdate = async (data: any) => {
+    if (!selectedUser) return;
+    try {
+      const response = await userService.update(
+        selectedUser.id as string,
+        data
+      );
+      if (response.success) {
+        toast.success("Cập nhật người dùng thành công!");
+        handleSearch();
+      } else {
+        toast.error("Không thể cập nhật người dùng");
+      }
+    } catch (error) {
+      toast.error("Có lỗi xảy ra khi cập nhật người dùng");
+      console.error(error);
+    }
+  };
+
   const handleDelete = async (user: User) => {
     if (
       !confirm(`Bạn có chắc chắn muốn xóa người dùng "${user.name}" không?`)
@@ -150,6 +192,16 @@ const UserList = () => {
       toast.error("Có lỗi xảy ra khi xóa người dùng");
       console.error(error);
     }
+  };
+
+  const handleViewDetail = (user: User) => {
+    setSelectedUser(user);
+    setDetailDialogOpen(true);
+  };
+
+  const handleEdit = (user: User) => {
+    setSelectedUser(user);
+    setEditDialogOpen(true);
   };
 
   const formatDate = (dateString?: string) => {
@@ -195,7 +247,7 @@ const UserList = () => {
                 Quản lý danh sách người dùng và thông tin chi tiết
               </CardDescription>
             </div>
-            <Button>
+            <Button onClick={() => setCreateDialogOpen(true)}>
               <Plus className="h-4 w-4 mr-2" />
               Thêm Người Dùng Mới
             </Button>
@@ -310,10 +362,18 @@ const UserList = () => {
                         </TableCell>
                         <TableCell>
                           <div className="flex items-center justify-center gap-2">
-                            <Button variant="ghost" size="icon">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleViewDetail(user)}
+                            >
                               <Eye className="h-4 w-4" />
                             </Button>
-                            <Button variant="ghost" size="icon">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleEdit(user)}
+                            >
                               <Pencil className="h-4 w-4" />
                             </Button>
                             <Button
@@ -398,6 +458,24 @@ const UserList = () => {
           )}
         </CardContent>
       </Card>
+
+      {/* Dialogs */}
+      <UserCreateDialog
+        open={createDialogOpen}
+        onOpenChange={setCreateDialogOpen}
+        onSubmit={handleCreate}
+      />
+      <UserEditDialog
+        user={selectedUser}
+        open={editDialogOpen}
+        onOpenChange={setEditDialogOpen}
+        onSubmit={handleUpdate}
+      />
+      <UserDetailDialog
+        user={selectedUser}
+        open={detailDialogOpen}
+        onOpenChange={setDetailDialogOpen}
+      />
     </div>
   );
 };

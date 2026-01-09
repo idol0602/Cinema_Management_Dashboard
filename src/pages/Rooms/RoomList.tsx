@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { roomService } from "@/services/room.service";
 import type { RoomType } from "@/types/room.type";
 import type { PaginationMeta } from "@/types/pagination.type";
@@ -32,10 +33,15 @@ import {
   Trash2,
   Eye,
   DoorOpen,
+  Armchair,
 } from "lucide-react";
 import { Combobox } from "@/components/ui/combobox";
+import { RoomCreateDialog } from "@/components/rooms/RoomCreateDialog";
+import { RoomEditDialog } from "@/components/rooms/RoomEditDialog";
+import { RoomDetailDialog } from "@/components/rooms/RoomDetailDialog";
 
 const RoomList = () => {
+  const navigate = useNavigate();
   const [rooms, setRooms] = useState<RoomType[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
@@ -51,6 +57,12 @@ const RoomList = () => {
     currentPage: 1,
     totalPages: 0,
   });
+
+  // Dialog states
+  const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [detailDialogOpen, setDetailDialogOpen] = useState(false);
+  const [selectedRoom, setSelectedRoom] = useState<RoomType | null>(null);
 
   const findAndPaginate = async (
     page = 1,
@@ -129,6 +141,40 @@ const RoomList = () => {
     }
   };
 
+  const handleCreate = async (data: any) => {
+    try {
+      const response = await roomService.create(data);
+      if (response.success) {
+        toast.success("Thêm phòng chiếu mới thành công!");
+        handleSearch();
+      } else {
+        toast.error("Không thể thêm phòng chiếu");
+      }
+    } catch (error) {
+      toast.error("Có lỗi xảy ra khi thêm phòng chiếu");
+      console.error(error);
+    }
+  };
+
+  const handleUpdate = async (data: any) => {
+    if (!selectedRoom) return;
+    try {
+      const response = await roomService.update(
+        selectedRoom.id as string,
+        data
+      );
+      if (response.success) {
+        toast.success("Cập nhật phòng chiếu thành công!");
+        handleSearch();
+      } else {
+        toast.error("Không thể cập nhật phòng chiếu");
+      }
+    } catch (error) {
+      toast.error("Có lỗi xảy ra khi cập nhật phòng chiếu");
+      console.error(error);
+    }
+  };
+
   const handleDelete = async (room: RoomType) => {
     if (!confirm(`Bạn có chắc chắn muốn xóa phòng "${room.name}" không?`)) {
       return;
@@ -146,6 +192,16 @@ const RoomList = () => {
       toast.error("Có lỗi xảy ra khi xóa phòng chiếu");
       console.error(error);
     }
+  };
+
+  const handleViewDetail = (room: RoomType) => {
+    setSelectedRoom(room);
+    setDetailDialogOpen(true);
+  };
+
+  const handleEdit = (room: RoomType) => {
+    setSelectedRoom(room);
+    setEditDialogOpen(true);
   };
 
   const formatDate = (dateString?: string) => {
@@ -176,7 +232,7 @@ const RoomList = () => {
                 Quản lý danh sách phòng chiếu và thông tin chi tiết
               </CardDescription>
             </div>
-            <Button>
+            <Button onClick={() => setCreateDialogOpen(true)}>
               <Plus className="h-4 w-4 mr-2" />
               Thêm Phòng Mới
             </Button>
@@ -279,16 +335,36 @@ const RoomList = () => {
                         </TableCell>
                         <TableCell>
                           <div className="flex items-center justify-center gap-2">
-                            <Button variant="ghost" size="icon">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleViewDetail(room)}
+                            >
                               <Eye className="h-4 w-4" />
                             </Button>
-                            <Button variant="ghost" size="icon">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() =>
+                                navigate(`/rooms/${room.id}/seats`)
+                              }
+                              title="Sơ đồ chỗ ngồi"
+                            >
+                              <Armchair className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleEdit(room)}
+                              title="Chỉnh sửa"
+                            >
                               <Pencil className="h-4 w-4" />
                             </Button>
                             <Button
                               variant="ghost"
                               size="icon"
                               onClick={() => handleDelete(room)}
+                              title="Xóa"
                             >
                               <Trash2 className="h-4 w-4 text-destructive" />
                             </Button>
@@ -367,6 +443,24 @@ const RoomList = () => {
           )}
         </CardContent>
       </Card>
+
+      {/* Dialogs */}
+      <RoomCreateDialog
+        open={createDialogOpen}
+        onOpenChange={setCreateDialogOpen}
+        onSubmit={handleCreate}
+      />
+      <RoomEditDialog
+        room={selectedRoom}
+        open={editDialogOpen}
+        onOpenChange={setEditDialogOpen}
+        onSubmit={handleUpdate}
+      />
+      <RoomDetailDialog
+        room={selectedRoom}
+        open={detailDialogOpen}
+        onOpenChange={setDetailDialogOpen}
+      />
     </div>
   );
 };

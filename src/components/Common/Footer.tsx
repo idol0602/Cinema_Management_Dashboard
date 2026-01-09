@@ -11,11 +11,13 @@ function Footer() {
           {/* Company Info */}
           <div className="space-y-3">
             <div className="flex items-center space-x-2">
-              <div className="flex items-center justify-center w-8 h-8 bg-gradient-to-br from-purple-600 to-blue-500 rounded-lg">
-                <Film className="w-5 h-5 text-white" />
-              </div>
-              <h3 className="text-white font-bold text-lg">
-                Cinema Management
+              <img
+                src="/logo.png"
+                alt="Meta Cinema"
+                className="h-10 w-auto object-contain"
+              />
+              <h3 className="text-white font-bold text-lg bg-gradient-to-r from-amber-400 to-amber-600 bg-clip-text text-transparent">
+                META CINEMA
               </h3>
             </div>
             <p className="text-sm text-gray-400">
@@ -145,7 +147,8 @@ function Footer() {
         <div className="mt-8 pt-8 border-t border-gray-800">
           <div className="flex flex-col md:flex-row justify-between items-center gap-4">
             <p className="text-sm text-gray-400">
-              © {currentYear} Cinema Management System. All rights reserved.
+              © {currentYear} Meta Cinema Management System. All rights
+              reserved.
             </p>
             <div className="flex gap-6 text-sm">
               <a href="#" className="hover:text-white transition-colors">

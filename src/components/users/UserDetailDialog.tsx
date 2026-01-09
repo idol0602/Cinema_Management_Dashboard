@@ -56,10 +56,6 @@ export function UserDetailDialog({
     }
   };
 
-  const getRoleIcon = (role: string) => {
-    return role === "ADMIN" ? Shield : UserIcon;
-  };
-
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
@@ -121,9 +117,7 @@ export function UserDetailDialog({
 
             <div className="space-y-4">
               <div className="flex items-start gap-3">
-                {getRoleIcon(user.role)({
-                  className: "h-5 w-5 text-muted-foreground mt-0.5",
-                })}
+                <UserIcon className="h-5 w-5 text-muted-foreground mt-0.5" />
                 <div className="flex-1">
                   <p className="text-sm font-medium text-muted-foreground">
                     Vai Trò

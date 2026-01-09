@@ -34,6 +34,9 @@ import {
   UtensilsCrossed,
 } from "lucide-react";
 import { Combobox } from "@/components/ui/combobox";
+import { MenuItemCreateDialog } from "@/components/menuItems/MenuItemCreateDialog";
+import { MenuItemEditDialog } from "@/components/menuItems/MenuItemEditDialog";
+import { MenuItemDetailDialog } from "@/components/menuItems/MenuItemDetailDialog";
 
 const MenuItemList = () => {
   const [menuItems, setMenuItems] = useState<MenuItemType[]>([]);
@@ -51,6 +54,14 @@ const MenuItemList = () => {
     currentPage: 1,
     totalPages: 0,
   });
+
+  // Dialog states
+  const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [detailDialogOpen, setDetailDialogOpen] = useState(false);
+  const [selectedMenuItem, setSelectedMenuItem] = useState<MenuItemType | null>(
+    null
+  );
 
   const findAndPaginate = async (
     page = 1,
@@ -129,6 +140,40 @@ const MenuItemList = () => {
     }
   };
 
+  const handleCreate = async (data: any) => {
+    try {
+      const response = await menuItemService.create(data);
+      if (response.success) {
+        toast.success("Thêm món ăn mới thành công!");
+        handleSearch();
+      } else {
+        toast.error("Không thể thêm món ăn");
+      }
+    } catch (error) {
+      toast.error("Có lỗi xảy ra khi thêm món ăn");
+      console.error(error);
+    }
+  };
+
+  const handleUpdate = async (data: any) => {
+    if (!selectedMenuItem) return;
+    try {
+      const response = await menuItemService.update(
+        selectedMenuItem.id as string,
+        data
+      );
+      if (response.success) {
+        toast.success("Cập nhật món ăn thành công!");
+        handleSearch();
+      } else {
+        toast.error("Không thể cập nhật món ăn");
+      }
+    } catch (error) {
+      toast.error("Có lỗi xảy ra khi cập nhật món ăn");
+      console.error(error);
+    }
+  };
+
   const handleDelete = async (item: MenuItemType) => {
     if (!confirm(`Bạn có chắc chắn muốn xóa món "${item.name}" không?`)) {
       return;
@@ -148,6 +193,16 @@ const MenuItemList = () => {
       toast.error("Có lỗi xảy ra khi xóa món ăn");
       console.error(error);
     }
+  };
+
+  const handleViewDetail = (item: MenuItemType) => {
+    setSelectedMenuItem(item);
+    setDetailDialogOpen(true);
+  };
+
+  const handleEdit = (item: MenuItemType) => {
+    setSelectedMenuItem(item);
+    setEditDialogOpen(true);
   };
 
   const formatDate = (dateString?: string) => {
@@ -190,7 +245,7 @@ const MenuItemList = () => {
                 Quản lý danh sách món ăn, đồ uống và thông tin chi tiết
               </CardDescription>
             </div>
-            <Button>
+            <Button onClick={() => setCreateDialogOpen(true)}>
               <Plus className="h-4 w-4 mr-2" />
               Thêm Món Mới
             </Button>
@@ -260,6 +315,7 @@ const MenuItemList = () => {
                   <TableHeader>
                     <TableRow>
                       <TableHead className="w-[50px]">#</TableHead>
+                      <TableHead>Ảnh</TableHead>
                       <TableHead>Tên Món</TableHead>
                       <TableHead>Loại</TableHead>
                       <TableHead>Giá</TableHead>
@@ -276,6 +332,13 @@ const MenuItemList = () => {
                           {(meta.currentPage - 1) * meta.itemsPerPage +
                             index +
                             1}
+                        </TableCell>
+                        <TableCell className="font-semibold">
+                          <img
+                            src={item.image}
+                            alt={item.name}
+                            className="h-10 w-10 object-cover rounded"
+                          />
                         </TableCell>
                         <TableCell className="font-semibold">
                           {item.name}
@@ -305,10 +368,18 @@ const MenuItemList = () => {
                         </TableCell>
                         <TableCell>
                           <div className="flex items-center justify-center gap-2">
-                            <Button variant="ghost" size="icon">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleViewDetail(item)}
+                            >
                               <Eye className="h-4 w-4" />
                             </Button>
-                            <Button variant="ghost" size="icon">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleEdit(item)}
+                            >
                               <Pencil className="h-4 w-4" />
                             </Button>
                             <Button
@@ -393,6 +464,24 @@ const MenuItemList = () => {
           )}
         </CardContent>
       </Card>
+
+      {/* Dialogs */}
+      <MenuItemCreateDialog
+        open={createDialogOpen}
+        onOpenChange={setCreateDialogOpen}
+        onSubmit={handleCreate}
+      />
+      <MenuItemEditDialog
+        menuItem={selectedMenuItem}
+        open={editDialogOpen}
+        onOpenChange={setEditDialogOpen}
+        onSubmit={handleUpdate}
+      />
+      <MenuItemDetailDialog
+        menuItem={selectedMenuItem}
+        open={detailDialogOpen}
+        onOpenChange={setDetailDialogOpen}
+      />
     </div>
   );
 };
@@ -404,6 +493,7 @@ const TableSkeleton = () => {
         <TableHeader>
           <TableRow>
             <TableHead className="w-[50px]">#</TableHead>
+            <TableHead>Ảnh</TableHead>
             <TableHead>Tên Món</TableHead>
             <TableHead>Loại</TableHead>
             <TableHead>Giá</TableHead>
@@ -416,6 +506,9 @@ const TableSkeleton = () => {
         <TableBody>
           {Array.from({ length: 5 }).map((_, index) => (
             <TableRow key={index}>
+              <TableCell>
+                <Skeleton className="h-4 w-8" />
+              </TableCell>
               <TableCell>
                 <Skeleton className="h-4 w-8" />
               </TableCell>
