@@ -1,5 +1,7 @@
 import { Routes, Route, Navigate } from "react-router-dom";
 import LoginPage from "../pages/Auth/Login";
+import { ForgotPasswordPage } from "../pages/Auth/ForgotPasswordPage";
+import { ResetPasswordPage } from "../pages/Auth/ResetPasswordPage";
 import { ProtectedRoute } from "@/routes/ProtectedRoute";
 import DashboardLayout from "@/layouts/DashboardLayout";
 import MovieList from "@/pages/Movies/MovieList";
@@ -16,6 +18,8 @@ export const AppRoutes = () => {
     <Routes>
       {/* Public Routes */}
       <Route path="/login" element={<LoginPage />} />
+      <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+      <Route path="/reset-password/:token" element={<ResetPasswordPage />} />
 
       {/* ADMIN */}
       <Route
