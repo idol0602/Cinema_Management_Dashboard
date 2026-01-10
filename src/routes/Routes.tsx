@@ -12,6 +12,7 @@ import SlideList from "@/pages/Slides/SlideList";
 import UserList from "@/pages/Users/UserList";
 import RoomList from "@/pages/Rooms/RoomList";
 import MenuItemList from "@/pages/MenuItems/MenuItemList";
+import SeatList from "@/pages/Seats/SeatList";
 
 export const AppRoutes = () => {
   return (
@@ -66,7 +67,7 @@ export const AppRoutes = () => {
         {/* Show Times & Rooms */}
         <Route path="/show-times" element={<>SHOW TIMES PAGE</>} />
         <Route path="/rooms" element={<RoomList />} />
-        <Route path="/rooms/:id/seats" element={<>ROOM DETAIL PAGE</>} />
+        <Route path="/rooms/:id/seats" element={<SeatList />} />
 
         {/* Services */}
         <Route path="/combos" element={<>COMBOS PAGE</>} />
