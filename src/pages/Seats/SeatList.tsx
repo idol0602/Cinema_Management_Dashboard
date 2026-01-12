@@ -2,6 +2,8 @@ import { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { seatService } from "@/services/seat.service";
 import { roomService } from "@/services/room.service";
+import { SeatCreateDialog } from "@/components/seats/SeatCreateDialog";
+import { SeatEditDialog } from "@/components/seats/SeatEditDialog";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -53,6 +55,9 @@ const SeatList = () => {
   const [searchColumn, setSearchColumn] = useState("");
   const [sortColumn, setSortColumn] = useState("");
   const [orderColumn, setOrderColumn] = useState("");
+  const [selectedSeat, setSelectedSeat] = useState<SeatType | null>(null);
+  const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [meta, setMeta] = useState<PaginationMeta>({
     itemsPerPage: seatPaginateConfig.defaultLimit,
     totalItems: 0,
@@ -175,9 +180,9 @@ const SeatList = () => {
     }
   };
 
-  const handleImport = async (file: File) => {
+  const handleImport = async (file: File, roomId: string) => {
     try {
-      const response = await seatService.importFromExcel(file);
+      const response = await seatService.importFromExcel(file, roomId);
       if (response.success) {
         toast.success(
           `Import thành công! ${response.data.imported} ghế đã được nhập, ${response.data.skipped} ghế bị bỏ qua.`
@@ -189,6 +194,56 @@ const SeatList = () => {
     } catch (error) {
       toast.error("Có lỗi xảy ra khi import file");
       console.error(error);
+    }
+  };
+
+  const handleCreateSubmit = async (data: any) => {
+    try {
+      const response = await seatService.create({
+        ...data,
+        room_id: roomId,
+      });
+      if (response.success) {
+        toast.success("Thêm ghế thành công!");
+        handleSearch();
+      } else {
+        toast.error("Không thể thêm ghế");
+      }
+    } catch (error) {
+      toast.error("Có lỗi xảy ra");
+      console.error(error);
+    }
+  };
+
+  const handleEditSubmit = async (data: any) => {
+    try {
+      const response = await seatService.update(data.id, data);
+      if (response.success) {
+        toast.success("Cập nhật ghế thành công!");
+        handleSearch();
+      } else {
+        toast.error("Không thể cập nhật ghế");
+      }
+    } catch (error) {
+      toast.error("Có lỗi xảy ra");
+      console.error(error);
+    }
+  };
+
+  const handleDelete = async (seatId: string, seatNumber: string) => {
+    if (window.confirm(`Bạn có chắc chắn muốn xóa ghế ${seatNumber} không?`)) {
+      try {
+        const response = await seatService.delete(seatId);
+        if (response.success) {
+          toast.success("Xóa ghế thành công!");
+          handleSearch();
+        } else {
+          toast.error("Không thể xóa ghế");
+        }
+      } catch (error) {
+        toast.error("Có lỗi xảy ra");
+        console.error(error);
+      }
     }
   };
 
@@ -226,7 +281,7 @@ const SeatList = () => {
                 </div>
                 <div className="flex gap-2">
                   <MovieImportDialog
-                    onSubmit={handleImport}
+                    onSubmit={(file) => handleImport(file, roomId as string)}
                     trigger={
                       <Button variant="outline">
                         <Upload className="h-4 w-4 mr-2" />
@@ -234,7 +289,7 @@ const SeatList = () => {
                       </Button>
                     }
                   />
-                  <Button>
+                  <Button onClick={() => setCreateDialogOpen(true)}>
                     <Plus className="h-4 w-4 mr-2" />
                     Thêm Ghế Mới
                   </Button>
@@ -349,10 +404,24 @@ const SeatList = () => {
                                   variant="ghost"
                                   size="icon"
                                   title="Chỉnh sửa"
+                                  onClick={() => {
+                                    setSelectedSeat(seat);
+                                    setEditDialogOpen(true);
+                                  }}
                                 >
                                   <Edit className="h-4 w-4" />
                                 </Button>
-                                <Button variant="ghost" size="icon" title="Xóa">
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  title="Xóa"
+                                  onClick={() =>
+                                    handleDelete(
+                                      seat.id as string,
+                                      seat.seat_number
+                                    )
+                                  }
+                                >
                                   <Trash2 className="h-4 w-4 text-red-500" />
                                 </Button>
                               </div>
@@ -468,7 +537,7 @@ const SeatList = () => {
 
                 {/* Seat Diagram */}
                 {room ? (
-                  <SeatDiagram roomId={roomId as string} seats={fullSeats} />
+                  <SeatDiagram seats={fullSeats} />
                 ) : (
                   <div className="text-center py-12">
                     <p className="text-muted-foreground">
@@ -481,17 +550,26 @@ const SeatList = () => {
           </Card>
         </TabsContent>
       </Tabs>
+
+      {/* Dialogs */}
+      <SeatCreateDialog
+        open={createDialogOpen}
+        onOpenChange={setCreateDialogOpen}
+        onSubmit={handleCreateSubmit}
+        roomId={roomId}
+      />
+
+      <SeatEditDialog
+        seat={selectedSeat || undefined}
+        open={editDialogOpen}
+        onOpenChange={setEditDialogOpen}
+        onSubmit={handleEditSubmit}
+      />
     </div>
   );
 };
 
-const SeatDiagram = ({
-  roomId,
-  seats,
-}: {
-  roomId: string;
-  seats: SeatType[];
-}) => {
+const SeatDiagram = ({ seats }: { seats: SeatType[] }) => {
   const roomSeats = seats;
 
   if (roomSeats.length === 0) {

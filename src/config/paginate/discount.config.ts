@@ -35,12 +35,6 @@ searchableColumns : [
   ],
   // dùng combobox chọn tiêu chí lọc
   filterableColumns: {
-    event_id: [
-      {
-      value: "true",
-      label: "Có sự kiện",
-      },
-    ],
     is_active: [
       {
       value: "true",

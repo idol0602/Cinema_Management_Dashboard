@@ -1,9 +1,9 @@
 import { z } from "zod";
 
 export const createShowTimeSchema = z.object({
-  movie_id: z.string().min(1, "Movie ID is required"),
-  room_id: z.string().min(1, "Room ID is required"),
-  start_time: z.string().min(1, "Start time is required"),
+  movie_id: z.string().min(1, "ID phim là bắt buộc"),
+  room_id: z.string().min(1, "ID phòng là bắt buộc"),
+  start_time: z.string().min(1, "Giờ bắt đầu là bắt buộc"),
   end_time: z.string().optional(),
   day_type: z.enum(["WEEKDAY", "WEEKEND"]),
   is_active: z.boolean().default(true).optional(),

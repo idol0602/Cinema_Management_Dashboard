@@ -1,5 +1,6 @@
 import api, { handleApiError } from "./api.ts";
 import type {loginType, authResponse} from "@/types/auth.type.ts"
+import type { User } from "@/types/user.type.ts";
 
 export const authService = {
     login: async(payload : loginType) : Promise<authResponse> => {
@@ -58,6 +59,33 @@ export const authService = {
             return {
                 success: false,
                 message: "",
+                error: apiError.message
+            };
+        }
+    },
+
+    updateProfile: async(userId: string, updatedData: Partial<User>) : Promise<authResponse> => {
+        try {
+            const response = await api.put(`/auth/update-profile/${userId}`, updatedData);
+            return {
+                data: response.data.data,
+                error: null
+            };
+        } catch (error) {
+            const apiError = handleApiError(error);
+            return {
+                data: {
+                    user: {
+                        name: "",
+                        email: "",
+                        phone: "",
+                        role: "",
+                        points: 0,
+                        is_active: false,
+                        created_at: ""
+                    },
+                    token: ""
+                },
                 error: apiError.message
             };
         }

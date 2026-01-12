@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 export const createRoomSchema = z.object({
-  name: z.string().min(1, "Name is required"),
+  name: z.string().min(1, "Tên phòng là bắt buộc"),
   format: z.enum(["2D", "3D", "IMAX"]),
   location: z.string().optional(),
   is_active: z.boolean().default(true).optional(),

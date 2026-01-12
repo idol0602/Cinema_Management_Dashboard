@@ -34,9 +34,9 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
           setToken(savedToken);
           setIsAuthenticated(true);
         } catch (error) {
-          console.log(error);
           localStorage.removeItem("user");
           localStorage.removeItem("token");
+          throw error;
         }
       }
 
@@ -63,7 +63,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       localStorage.setItem("token", token);
       toast.success("Đăng nhập thành công!");
     } catch (error) {
-      console.error("Login failed:", error);
+      toast.error("Đăng nhập thất bại!");
       throw error;
     } finally {
       setLoading(false);
@@ -79,6 +79,35 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     toast.success("Đăng xuất thành công!");
   }, []);
 
+  const updateProfile = useCallback(async (updatedUser: Partial<User>) => {
+    try {
+      setLoading(true);
+      const { id: userId, ...updatedData } = updatedUser;
+      const { data, error } = await authService.updateProfile(
+        userId as string,
+        updatedData
+      );
+      if (error) {
+        toast.error(error);
+        throw new Error(error);
+      }
+
+      const { user, token } = data;
+      console.log("token", token);
+      setUser(user as User);
+      setToken(token);
+      setIsAuthenticated(true);
+      localStorage.setItem("user", JSON.stringify(user));
+      localStorage.setItem("token", token);
+      toast.success("Cập nhật thông tin thành công!");
+    } catch (error) {
+      toast.error("Cập nhật thông tin thất bại!");
+      throw error;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
   const value = {
     user,
     token,
@@ -86,6 +115,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     isLoading,
     login,
     logout,
+    updateProfile,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

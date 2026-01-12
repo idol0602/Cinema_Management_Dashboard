@@ -1,8 +1,8 @@
 import { z } from "zod";
 
 export const createComboItemSchema = z.object({
-  combo_id: z.string().min(1, "Combo ID is required"),
-  menu_item_id: z.string().min(1, "Menu item ID is required"),
+  combo_id: z.string().min(1, "ID combo là bắt buộc"),
+  menu_item_id: z.string().min(1, "ID mặt hàng thực đơn là bắt buộc"),
   quantity: z.number().int().min(1).default(1).optional(),
   unit_price: z.number(),
   is_active: z.boolean().default(true).optional(),

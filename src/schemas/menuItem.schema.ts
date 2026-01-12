@@ -1,9 +1,9 @@
 import { z } from "zod";
 
 export const createMenuItemSchema = z.object({
-  name: z.string().min(1, "Name is required"),
+  name: z.string().min(1, "Tên mặt hàng là bắt buộc"),
   description: z.string().optional(),
-  price: z.number().gt(0, "Price must be greater than 0"),
+  price: z.number().gt(0, "Giá phải lớn hơn 0"),
   item_type: z.enum(["FOOD", "DRINK", "GIFT"]),
   image: z.string().optional(),
   num_instock: z.number().int().default(0).optional(),

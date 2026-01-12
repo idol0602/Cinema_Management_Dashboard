@@ -59,7 +59,12 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen">
+    <div
+      className="flex items-center justify-center min-h-screen"
+      style={{
+        backgroundImage: "url('/bg.jpg')",
+      }}
+    >
       <Card className="w-full max-w-md shadow-xl text-center">
         <CardHeader>
           <div className="flex justify-center mb-4">

@@ -13,6 +13,10 @@ import UserList from "@/pages/Users/UserList";
 import RoomList from "@/pages/Rooms/RoomList";
 import MenuItemList from "@/pages/MenuItems/MenuItemList";
 import SeatList from "@/pages/Seats/SeatList";
+import TicketPriceList from "@/pages/TicketPrices/TicketPriceList";
+import Profile from "@/pages/Profile/Profile";
+import DiscountList from "@/pages/Discounts/DiscountList";
+import EventList from "@/pages/Events/EventList";
 
 export const AppRoutes = () => {
   return (
@@ -30,7 +34,7 @@ export const AppRoutes = () => {
           </ProtectedRoute>
         }
       >
-        <Route path="/discounts" element={<>DISCOUNTS PAGE</>} />
+        <Route path="/discounts" element={<DiscountList />} />
 
         {/* Content Management */}
         <Route path="/posts" element={<PostList />} />
@@ -68,14 +72,15 @@ export const AppRoutes = () => {
         <Route path="/show-times" element={<>SHOW TIMES PAGE</>} />
         <Route path="/rooms" element={<RoomList />} />
         <Route path="/rooms/:id/seats" element={<SeatList />} />
+        <Route path="/ticket-prices" element={<TicketPriceList />} />
 
         {/* Services */}
         <Route path="/combos" element={<>COMBOS PAGE</>} />
         <Route path="/menu-items" element={<MenuItemList />} />
-        <Route path="/events" element={<>EVENTS PAGE</>} />
+        <Route path="/events" element={<EventList />} />
         <Route path="/dashboard" element={<>DASHBOARD HOME</>} />
         <Route path="/orders" element={<>ORDERS PAGE</>} />
-        <Route path="/settings" element={<>SETTINGS PAGE</>} />
+        <Route path="/profile" element={<Profile />} />
       </Route>
 
       {/* Redirects */}

@@ -133,18 +133,17 @@ export const seatService = {
     }
   },
 
-  importFromExcel: async(file: File): Promise<importResponse> => {
+  importFromExcel: async(file: File, roomId: string): Promise<importResponse> => {
     try {
       const formData = new FormData();
       formData.append('file', file);
+      formData.append('roomId', roomId);
       
       const response = await api.post("/seats/import", formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
       });
-
-      console.log(response)
 
       return {
         success: response.data.success,
