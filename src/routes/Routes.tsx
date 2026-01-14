@@ -18,7 +18,7 @@ import Profile from "@/pages/Profile/Profile";
 import DiscountList from "@/pages/Discounts/DiscountList";
 import EventList from "@/pages/Events/EventList";
 import ShowTimeList from "@/pages/ShowTimes/ShowTimeList";
-//oke
+//okee
 export const AppRoutes = () => {
   return (
     <Routes>
