@@ -41,6 +41,24 @@ export const movieService = {
         }
     },
 
+  getByName: async (name: string) : Promise<serviceResponse> => {
+    try {
+      const response = await api.get(`/movies/name?name=${name}`);
+      return {
+        data: response.data.data,
+        success: true,
+        error: response.data.error,
+      };
+    } catch (error) {
+      const apiError = handleApiError(error);
+      return {
+        data: {},
+        success: false,
+        error: apiError.message,
+      };
+    }
+  },
+
   create: async (data: movieType) : Promise<serviceResponse> => {
     try {
       const response = await api.post('/movies', data);

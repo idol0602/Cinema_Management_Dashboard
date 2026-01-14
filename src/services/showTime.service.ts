@@ -40,6 +40,24 @@ export const showTimeService = {
     }
   },
 
+  getByRoomId: async (roomId: string) : Promise<serviceResponse> => {
+    try {
+      const response = await api.get(`/room/${roomId}`);
+      return {
+        data: response.data.data,
+        success : true,
+        error: response.data.error,
+      };
+    } catch (error) {
+      const apiError = handleApiError(error);
+      return {
+        data: {},
+        success : false,
+        error: apiError.message
+      }
+    }
+  },
+
   create: async (data: CreateShowTimeType) : Promise<serviceResponse> => {
     try {
       const response = await api.post('/show-times', data);

@@ -15,21 +15,27 @@ export const showTimePaginateConfig = {
   },
 ],
 
-searchableColumns : [],
+  searchableColumns : [
+    {
+    value: "movies.title",
+    label: "Tiêu đề phim",
+  },
+  ],
   // dùng combobox chọn tiêu chí lọc
   filterableColumns: {
-    movie_id: [
-      {
-      value: "true",
-      label: "Có phim",
-      },
-    ],
-    room_id: [
-      {
-      value: "true",
-      label: "Có phòng",
-      },
-    ],
+    // movie_id: [
+    //   {
+    //   value: "true",
+    //   label: "Có phim",
+    //   },
+    // ],
+    // room_id: [
+    //   {
+    //   value: "true",
+    //   label: "Có phòng",
+    //   },
+    // ],
+    //start_time
     day_type: [
       {
       value: "weekday",
@@ -55,4 +61,15 @@ searchableColumns : [],
   defaultSortBy: [["created_at", "DESC"]],
   defaultLimit: 10,
   maxLimit: 100,
+  joinTableFields: {
+    movies: [
+      "id",
+      "title",
+      "thumbnail",
+      "description",
+      "release_date",
+      "duration",
+    ],
+    rooms: ["id", "name"],
+  },
 };

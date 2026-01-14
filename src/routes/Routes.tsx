@@ -17,6 +17,7 @@ import TicketPriceList from "@/pages/TicketPrices/TicketPriceList";
 import Profile from "@/pages/Profile/Profile";
 import DiscountList from "@/pages/Discounts/DiscountList";
 import EventList from "@/pages/Events/EventList";
+import ShowTimeList from "@/pages/ShowTimes/ShowTimeList";
 
 export const AppRoutes = () => {
   return (
@@ -69,7 +70,7 @@ export const AppRoutes = () => {
         {/* Movies Management */}
         <Route path="/movie-types" element={<MovieTypesList />} />
         {/* Show Times & Rooms */}
-        <Route path="/show-times" element={<>SHOW TIMES PAGE</>} />
+        <Route path="/show-times" element={<ShowTimeList />} />
         <Route path="/rooms" element={<RoomList />} />
         <Route path="/rooms/:id/seats" element={<SeatList />} />
         <Route path="/ticket-prices" element={<TicketPriceList />} />
