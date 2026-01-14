@@ -19,6 +19,7 @@ import DiscountList from "@/pages/Discounts/DiscountList";
 import EventList from "@/pages/Events/EventList";
 import ShowTimeList from "@/pages/ShowTimes/ShowTimeList";
 
+//test commit
 export const AppRoutes = () => {
   return (
     <Routes>
