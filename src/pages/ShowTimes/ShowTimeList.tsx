@@ -50,9 +50,8 @@ import { ShowTimeCreateDialog } from "@/components/showTimes/ShowTimeCreateDialo
 import { ShowTimeDetailDialog } from "@/components/showTimes/ShowTimeDetailDialog";
 
 const ShowTimeList = () => {
-  // const debounceRef = useRef(null);
   const [showTimes, setShowTimes] = useState<ShowTimeType[]>([]);
-  const [movies, setMovies] = useState<movieType[]>([]);
+  const [movieCreate, setMovieCreate] = useState<movieType[]>([]);
   const [rooms, setRooms] = useState<RoomType[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
@@ -85,28 +84,19 @@ const ShowTimeList = () => {
     }
   };
 
-  useEffect(() => {
-    fetchRooms();
-  }, []);
-
-  const fetchMovies = async (times: ShowTimeType[]) => {
+  const fetchMovieCreate = async () => {
     try {
-      if (times.length === 0) return;
-      const movies = await Promise.all(
-        times.map((showTime) =>
-          movieService
-            .getById(String(showTime.movie_id))
-            .then((res) => {
-              return res.data[0] as movieType;
-            })
-            .catch(() => null)
-        )
-      );
-      setMovies(movies as movieType[]);
+      const movies = await movieService.getAll();
+      setMovieCreate(movies.data as movieType[]);
     } catch (error) {
       console.error("Error fetching movies:", error);
     }
   };
+
+  useEffect(() => {
+    fetchRooms();
+    fetchMovieCreate();
+  }, []);
 
   const findAndPaginate = async (
     page = 1,
@@ -130,7 +120,6 @@ const ShowTimeList = () => {
       if (response.success && response.data) {
         const data = response.data as ShowTimeType[];
         setShowTimes(data);
-        await fetchMovies(data);
         if (response.meta) {
           setMeta(response.meta);
         }
@@ -662,7 +651,7 @@ const ShowTimeList = () => {
       <ShowTimeCreateDialog
         open={createDialogOpen}
         onOpenChange={setCreateDialogOpen}
-        movies={movies}
+        movies={movieCreate}
         rooms={rooms}
         onSubmit={() => {
           handleSearch();

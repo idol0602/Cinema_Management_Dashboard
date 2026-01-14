@@ -25,12 +25,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Combobox } from "@/components/ui/combobox";
-import { Calendar } from "@/components/ui/calendar";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
+import { DatePickerInput } from "@/components/ui/date-picker-input";
 import { format, parse } from "date-fns";
 import { CalendarIcon } from "lucide-react";
 
@@ -190,32 +185,13 @@ export default function DiscountCreateDialog({
                   <FormItem>
                     <FormLabel>Ngày Bắt Đầu</FormLabel>
                     <FormControl>
-                      <Popover>
-                        <PopoverTrigger asChild>
-                          <Button
-                            variant="outline"
-                            className="w-full justify-start text-left font-normal"
-                          >
-                            <CalendarIcon className="mr-2 h-4 w-4" />
-                            {date ? format(date, "dd/MM/yyyy") : "Chọn ngày"}
-                          </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0" align="start">
-                          <Calendar
-                            mode="single"
-                            selected={date}
-                            onSelect={(selectedDate) => {
-                              if (selectedDate) {
-                                field.onChange(
-                                  format(selectedDate, "yyyy-MM-dd")
-                                );
-                              }
-                            }}
-                            disabled={(date) => date > new Date("2100-01-01")}
-                            initialFocus
-                          />
-                        </PopoverContent>
-                      </Popover>
+                      <DatePickerInput
+                        value={date}
+                        onChange={(dateString) => {
+                          field.onChange(dateString);
+                        }}
+                        placeholder="Chọn ngày bắt đầu"
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -237,32 +213,13 @@ export default function DiscountCreateDialog({
                   <FormItem>
                     <FormLabel>Ngày Kết Thúc</FormLabel>
                     <FormControl>
-                      <Popover>
-                        <PopoverTrigger asChild>
-                          <Button
-                            variant="outline"
-                            className="w-full justify-start text-left font-normal"
-                          >
-                            <CalendarIcon className="mr-2 h-4 w-4" />
-                            {date ? format(date, "dd/MM/yyyy") : "Chọn ngày"}
-                          </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0" align="start">
-                          <Calendar
-                            mode="single"
-                            selected={date}
-                            onSelect={(selectedDate) => {
-                              if (selectedDate) {
-                                field.onChange(
-                                  format(selectedDate, "yyyy-MM-dd")
-                                );
-                              }
-                            }}
-                            disabled={(date) => date > new Date("2100-01-01")}
-                            initialFocus
-                          />
-                        </PopoverContent>
-                      </Popover>
+                      <DatePickerInput
+                        value={date}
+                        onChange={(dateString) => {
+                          field.onChange(dateString);
+                        }}
+                        placeholder="Chọn ngày kết thúc"
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

@@ -19,14 +19,14 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 
-interface data {
-  value: string;
-  label: string;
+interface Data {
+  value: string; // ID
+  label: string; // text search
 }
 
 interface ComboboxProps {
-  datas: data[];
-  value: string;
+  datas: Data[];
+  value: string; // ID đang chọn
   onChange: (value: string) => void;
   placeholder?: string;
 }
@@ -39,6 +39,10 @@ export function Combobox({
 }: ComboboxProps) {
   const [open, setOpen] = React.useState(false);
 
+  const selectedLabel = value
+    ? datas.find((d) => d.value === value)?.label
+    : "";
+
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
@@ -48,7 +52,7 @@ export function Combobox({
           aria-expanded={open}
           className="w-[200px] justify-between"
         >
-          {value ? datas.find((d) => d.value === value)?.label : placeholder}
+          {selectedLabel || placeholder}
           <ChevronsUpDown className="opacity-50" />
         </Button>
       </PopoverTrigger>
@@ -58,16 +62,18 @@ export function Combobox({
           <CommandInput placeholder="Search..." className="h-9" />
           <CommandList>
             <CommandEmpty>No data found.</CommandEmpty>
+
             <CommandGroup>
+              {/* Tất cả */}
               <CommandItem
-                key={""}
-                value={""}
-                onSelect={(current) => {
-                  onChange(current === value ? "" : current);
+                key="all"
+                value="Tất cả"
+                onSelect={() => {
+                  onChange("");
                   setOpen(false);
                 }}
               >
-                {"Tất cả"}
+                Tất cả
                 <Check
                   className={cn(
                     "ml-auto",
@@ -75,12 +81,14 @@ export function Combobox({
                   )}
                 />
               </CommandItem>
+
+              {/* Data items */}
               {datas.map((item) => (
                 <CommandItem
                   key={item.value}
-                  value={item.value}
-                  onSelect={(current) => {
-                    onChange(current === value ? "" : current);
+                  value={item.label}
+                  onSelect={() => {
+                    onChange(item.value);
                     setOpen(false);
                   }}
                 >
