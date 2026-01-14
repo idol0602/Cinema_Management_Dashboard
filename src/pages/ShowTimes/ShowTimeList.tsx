@@ -46,6 +46,8 @@ import type { movieType } from "@/types/movie.type";
 import type { PaginationMeta } from "@/types/pagination.type";
 import { showTimePaginateConfig } from "@/config/paginate/show_time.config";
 import { MovieImportDialog } from "@/components/Dialog/MovieImportDialog";
+import { ShowTimeCreateDialog } from "@/components/showTimes/ShowTimeCreateDialog";
+import { ShowTimeDetailDialog } from "@/components/showTimes/ShowTimeDetailDialog";
 
 const ShowTimeList = () => {
   // const debounceRef = useRef(null);
@@ -68,10 +70,11 @@ const ShowTimeList = () => {
   });
 
   // Dialog states
-  //   const [createDialogOpen, setCreateDialogOpen] = useState(false);
-  //   const [editDialogOpen, setEditDialogOpen] = useState(false);
-  //   const [detailDialogOpen, setDetailDialogOpen] = useState(false);
-  //   const [selectedMovie, setSelectedMovie] = useState<movieType | null>(null);
+  const [detailDialogOpen, setDetailDialogOpen] = useState(false);
+  const [selectedShowTime, setSelectedShowTime] = useState<ShowTimeType | null>(
+    null
+  );
+  const [createDialogOpen, setCreateDialogOpen] = useState(false);
 
   const fetchRooms = async () => {
     try {
@@ -284,6 +287,40 @@ const ShowTimeList = () => {
     return new Date(dateString).toLocaleDateString("vi-VN");
   };
 
+  // Parse ISO datetime to date and time
+  const parseDateTime = (dateTimeString?: string) => {
+    if (!dateTimeString) return { date: "N/A", time: "N/A" };
+    const date = new Date(dateTimeString);
+    return {
+      date: date.toLocaleDateString("vi-VN"),
+      time: date.toLocaleTimeString("vi-VN", {
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: false,
+      }),
+    };
+  };
+
+  // Get badge color based on day type
+  const getDayTypeBadge = (dayType?: string) => {
+    if (!dayType) return <Badge variant="outline">N/A</Badge>;
+
+    if (dayType.toLowerCase() === "weekend") {
+      return (
+        <Badge className="bg-purple-500 hover:bg-purple-600 text-white">
+          {dayType}
+        </Badge>
+      );
+    } else if (dayType.toLowerCase() === "weekday") {
+      return (
+        <Badge className="bg-blue-500 hover:bg-blue-600 text-white">
+          {dayType}
+        </Badge>
+      );
+    }
+    return <Badge variant="outline">{dayType}</Badge>;
+  };
+
   // Format duration (minutes to hours:minutes)
   const formatDuration = (minutes?: number) => {
     if (!minutes) return "N/A";
@@ -319,7 +356,7 @@ const ShowTimeList = () => {
               />
               <Button
                 onClick={() => {
-                  // setCreateDialogOpen(true);
+                  setCreateDialogOpen(true);
                 }}
               >
                 <Plus className="h-4 w-4 mr-2" />
@@ -404,8 +441,8 @@ const ShowTimeList = () => {
                       <TableHead className="w-[80px]">Poster</TableHead>
                       <TableHead className="min-w-[250px]">Tên Phim</TableHead>
                       <TableHead className="min-w-[200px]">Tên Phòng</TableHead>
+                      <TableHead>Ngày</TableHead>
                       <TableHead>Giờ Bắt Đầu</TableHead>
-                      <TableHead>Giờ Kết Thúc</TableHead>
                       <TableHead>Loại Ngày</TableHead>
                       <TableHead>Phát Hành</TableHead>
                       <TableHead>Thời Lượng</TableHead>
@@ -446,21 +483,16 @@ const ShowTimeList = () => {
                           </div>
                         </TableCell>
                         <TableCell>
-                          <div className="flex items-center gap-1">
-                            <Clock className="h-4 w-4 text-muted-foreground" />
-                            {showTime.start_time || "N/A"}
-                          </div>
+                          {parseDateTime(showTime.start_time).date}
                         </TableCell>
                         <TableCell>
                           <div className="flex items-center gap-1">
                             <Clock className="h-4 w-4 text-muted-foreground" />
-                            {showTime.end_time || "N/A"}
+                            {parseDateTime(showTime.start_time).time}
                           </div>
                         </TableCell>
                         <TableCell>
-                          <Badge variant="outline">
-                            {showTime.day_type || "N/A"}
-                          </Badge>
+                          {getDayTypeBadge(showTime.day_type)}
                         </TableCell>
                         <TableCell>
                           <div className="flex items-center gap-1">
@@ -488,7 +520,8 @@ const ShowTimeList = () => {
                               variant="ghost"
                               size="icon"
                               onClick={() => {
-                                //handleView(showTime);
+                                setSelectedShowTime(showTime);
+                                setDetailDialogOpen(true);
                               }}
                               title="Xem chi tiết"
                             >
@@ -617,6 +650,24 @@ const ShowTimeList = () => {
         open={detailDialogOpen}
         onOpenChange={setDetailDialogOpen}
       /> */}
+
+      {/* Show Time Detail Dialog */}
+      <ShowTimeDetailDialog
+        showTime={selectedShowTime}
+        open={detailDialogOpen}
+        onOpenChange={setDetailDialogOpen}
+      />
+
+      {/* Create Show Time Dialog */}
+      <ShowTimeCreateDialog
+        open={createDialogOpen}
+        onOpenChange={setCreateDialogOpen}
+        movies={movies}
+        rooms={rooms}
+        onSubmit={() => {
+          handleSearch();
+        }}
+      />
     </div>
   );
 };
@@ -631,8 +682,8 @@ const TableSkeleton = () => {
             <TableHead className="w-[80px]">Poster</TableHead>
             <TableHead className="min-w-[250px]">Tên Phim</TableHead>
             <TableHead className="min-w-[200px]">Tên Phòng</TableHead>
+            <TableHead>Ngày</TableHead>
             <TableHead>Giờ Bắt Đầu</TableHead>
-            <TableHead>Giờ Kết Thúc</TableHead>
             <TableHead>Loại Ngày</TableHead>
             <TableHead>Phát Hành</TableHead>
             <TableHead>Thời Lượng</TableHead>
