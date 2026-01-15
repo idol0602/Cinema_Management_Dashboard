@@ -111,14 +111,31 @@ export function ShowTimeCreateDialog({
         .toISOString()
         .split("T")[0];
     }
-    console.log("core: ", showTimeCore);
-    const showTimeCreated: Omit<ShowTimeType, "id" | "room_id">[] =
-      (await findAndPaginate(1, undefined, undefined)) as Omit<
-        ShowTimeType,
-        "id" | "room_id"
-      >[];
-    const finalShowTimes = removeConflitRange(showTimeCore, showTimeCreated);
-    console.log("final: ", finalShowTimes);
+    const showTimeCreated: ShowTimeType[] =
+      (await findAndPaginate(1, undefined, undefined)) || [];
+
+    const data: ShowTimeType[] = [];
+
+    for (const roomId of formData.roomId) {
+      for (const showTime of showTimeCore) {
+        data.push({
+          ...showTime,
+          room_id: roomId,
+        });
+      }
+    }
+
+    const finalShowTimes = removeConflitRange(data, showTimeCreated);
+
+    const removedCount = data.length - finalShowTimes.length;
+    setShowTimesList(finalShowTimes);
+
+    if (removedCount > 0) {
+      toast.warning(`⚠️ Đã loại ${removedCount} suất chiếu trùng giờ`);
+    }
+    toast.success(
+      `✓ Tính toán được ${finalShowTimes.length} suất chiếu hợp lệ`
+    );
   };
 
   const findAndPaginate = async (
@@ -154,8 +171,6 @@ export function ShowTimeCreateDialog({
 
       if (response.success && response.data) {
         const data = response.data as ShowTimeType[];
-        console.log("Fetched show times:", data);
-        toast.success(`Tìm được ${data.length} suất chiếu`);
         return data;
       } else {
         toast.error(response.error || "Lỗi khi tìm kiếm suất chiếu");
@@ -335,26 +350,36 @@ export function ShowTimeCreateDialog({
   };
 
   const toDate = (value: string): Date => {
-    return new Date(value.replace(" ", "T"));
+    const normalized = value.replace(" ", "T").replace(/\+\d{2}$/, "Z");
+    return new Date(normalized);
   };
 
-  const isOverlapTime = (
-    a: Omit<ShowTimeType, "id" | "room_id">,
-    b: Omit<ShowTimeType, "id" | "room_id">
-  ): boolean => {
-    const aStart = toDate(a.start_time);
-    const aEnd = toDate(a.end_time as string);
-    const bStart = toDate(b.start_time);
-    const bEnd = toDate(b.end_time as string);
+  const isOverlapTime = (a: ShowTimeType, b: ShowTimeType): boolean => {
+    const aRoom = String(a.room_id);
+    const bRoom = String(b.room_id);
 
-    return aStart < bEnd && bStart < aEnd;
+    if (aRoom !== bRoom) return false;
+
+    const aStart = toDate(a.start_time);
+    const aEnd = toDate(a.end_time || "");
+    const bStart = toDate(b.start_time);
+    const bEnd = toDate(b.end_time || "");
+
+    const hasOverlap = aStart < bEnd && bStart < aEnd;
+
+    return hasOverlap;
   };
 
   const removeConflitRange = (
-    a: Omit<ShowTimeType, "id" | "room_id">[],
-    b: Omit<ShowTimeType, "id" | "room_id">[]
-  ): Omit<ShowTimeType, "id" | "room_id">[] => {
-    return a.filter((itemA) => !b.some((itemB) => isOverlapTime(itemA, itemB)));
+    newShowTimes: ShowTimeType[],
+    existingShowTimes: ShowTimeType[]
+  ): ShowTimeType[] => {
+    const filtered = newShowTimes.filter(
+      (newTime) =>
+        !existingShowTimes.some((existing) => isOverlapTime(newTime, existing))
+    );
+
+    return filtered;
   };
 
   return (
@@ -507,7 +532,7 @@ export function ShowTimeCreateDialog({
                   >
                     <div className="flex items-center gap-2">
                       <Badge>{index + 1}</Badge>
-                      <span className="font-medium">{time}</span>
+                      <span className="font-medium">{time.start_time}</span>
                     </div>
                     <Button
                       size="icon"
