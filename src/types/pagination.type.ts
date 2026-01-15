@@ -5,7 +5,6 @@ export interface PaginationQuery {
   sortBy?: string; // Format: "column:ASC" or "column:DESC"
   search?: string;
   searchBy?: string | string[];
-  filter?: Record<string, any>;
 }
 
 // Meta information from backend response

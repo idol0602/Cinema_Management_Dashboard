@@ -3,10 +3,6 @@ import { movieService } from "@/services/movie.service";
 import { roomService } from "@/services/room.service";
 import { showTimeService } from "@/services/showTime.service";
 import { toast } from "sonner";
-// import { MovieCreateDialog } from "@/components/movies/MovieCreateDialog";
-// import { MovieEditDialog } from "@/components/movies/MovieEditDialog";
-// import { MovieDetailDialog } from "@/components/movies/MovieDetailDialog";
-// import { MovieImportDialog } from "@/components/Dialog/MovieImportDialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -61,6 +57,12 @@ const ShowTimeList = () => {
   const [roomColumn, setRoomColumn] = useState("");
   const [orderColumn, setOrderColumn] = useState("");
   const [searchColumn, setSearchColumn] = useState("movies.title");
+  const [startDate, setStartDate] = useState(
+    new Date().toISOString().split("T")[0]
+  );
+  const [endDate, setEndDate] = useState(
+    new Date().toISOString().split("T")[0]
+  );
   const [meta, setMeta] = useState<PaginationMeta>({
     itemsPerPage: showTimePaginateConfig.defaultLimit,
     totalItems: 0,
@@ -134,21 +136,6 @@ const ShowTimeList = () => {
     }
   };
 
-  // useEffect(() => {
-  //   const fetchMovieIds = async (): Promise<void> => {
-  //     const movieIds = await getMovieId(searchQuery);
-
-  //     if (movieIds && movieIds.length > 0) {
-  //       const ids = movieIds.map((movie) => movie.id as string);
-  //       setFilterName(ids);
-  //     } else {
-  //       setFilterName([]);
-  //     }
-  //   };
-
-  //   fetchMovieIds();
-  // }, [searchQuery]);
-
   useEffect(() => {
     handleSearch();
   }, [currentPage]);
@@ -172,6 +159,16 @@ const ShowTimeList = () => {
       filter.room_id = roomColumn;
     }
 
+    // Add date range filters
+    if (startDate) {
+      filter.start_time = filter.start_time || {};
+      filter.start_time.$gte = `${startDate}T00:00:00Z`;
+    }
+    if (endDate) {
+      filter.end_time = filter.end_time || {};
+      filter.end_time.$lte = `${endDate}T23:59:00Z`;
+    }
+
     findAndPaginate(
       currentPage,
       showTimePaginateConfig.defaultLimit,
@@ -188,47 +185,6 @@ const ShowTimeList = () => {
       handleSearch();
     }
   };
-
-  // Handle create movie
-  //   const handleCreateSubmit = async (data: movieType) => {
-  //     try {
-  //       const response = await movieService.create(data);
-  //       if (response.success) {
-  //         toast.success("Tạo phim mới thành công!");
-  //         handleSearch(); // Refresh list
-  //       } else {
-  //         toast.error("Không thể tạo phim mới");
-  //       }
-  //     } catch (error) {
-  //       toast.error("Có lỗi xảy ra khi tạo phim");
-  //       console.error(error);
-  //     }
-  //   };
-
-  //   const handleEdit = (movie: movieType) => {
-  //     setSelectedMovie(movie);
-  //     setEditDialogOpen(true);
-  //   };
-
-  //   const handleEditSubmit = async (data: movieType) => {
-  //     if (!selectedMovie) return;
-
-  //     try {
-  //       const response = await movieService.update(
-  //         selectedMovie.id as string,
-  //         data
-  //       );
-  //       if (response.success) {
-  //         toast.success("Cập nhật phim thành công!");
-  //         handleSearch(); // Refresh list
-  //       } else {
-  //         toast.error("Không thể cập nhật phim");
-  //       }
-  //     } catch (error) {
-  //       toast.error("Có lỗi xảy ra khi cập nhật phim");
-  //       console.error(error);
-  //     }
-  //   };
 
   const handleDelete = async (showTime: ShowTimeType) => {
     if (!confirm(`Bạn có chắc chắn muốn xóa lịch chiếu này không?`)) {
@@ -248,23 +204,6 @@ const ShowTimeList = () => {
       console.error(error);
     }
   };
-
-  //   const handleView = (movie: movieType) => {
-  //     setSelectedMovie(movie);
-  //     setDetailDialogOpen(true);
-  //   };
-
-  // const getMovieId = async (movieName: string) => {
-  //   const movie = await movieService.getByName(movieName);
-  //   if (
-  //     movie &&
-  //     movie.data &&
-  //     Array.isArray(movie.data) &&
-  //     movie.data.length > 0
-  //   ) {
-  //     return movie.data;
-  //   }
-  // };
 
   const handleImport = async (file: File) => {
     console.log("Importing file:", file);
@@ -356,17 +295,17 @@ const ShowTimeList = () => {
         </CardHeader>
         <CardContent>
           {/* Search Bar */}
+          <div className="relative flex-1 mb-4">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Tìm kiếm theo tên phim"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              onKeyPress={handleKeyPress}
+              className="pl-10"
+            />
+          </div>
           <div className="flex gap-2 mb-4">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Tìm kiếm theo tên phim"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                onKeyPress={handleKeyPress}
-                className="pl-10"
-              />
-            </div>
             <Combobox
               datas={rooms.map((item) => ({
                 value: item.id + "",
@@ -409,6 +348,26 @@ const ShowTimeList = () => {
               onChange={setOrderColumn}
               value={orderColumn}
             ></Combobox>
+            <div className="relative">
+              <Input
+                type="date"
+                placeholder="Ngày bắt đầu"
+                value={startDate}
+                onChange={(e) => setStartDate(e.target.value)}
+                title="Ngày bắt đầu"
+                className="cursor-pointer bg-white text-black dark:bg-white dark:text-black"
+              />
+            </div>
+            <div className="relative">
+              <Input
+                type="date"
+                placeholder="Ngày kết thúc"
+                value={endDate}
+                onChange={(e) => setEndDate(e.target.value)}
+                title="Ngày kết thúc"
+                className="cursor-pointer bg-white text-black dark:bg-white dark:text-black"
+              />
+            </div>
             <Button onClick={handleSearch}>Tìm kiếm</Button>
           </div>
 

@@ -3,11 +3,11 @@ export const showTimePaginateConfig = {
   sortableColumns : [
   {
     value: "start_time",
-    label: "Giờ bắt đầu",
+    label: "Thời gian bắt đầu",
   },
   {
     value: "end_time",
-    label: "Giờ kết thúc",
+    label: "Thời gian kết thúc",
   },
   {
     value: "created_at",

@@ -17,6 +17,9 @@ import { Badge } from "@/components/ui/badge";
 import { DatePickerInput } from "@/components/ui/date-picker-input";
 import type { movieType } from "@/types/movie.type";
 import type { RoomType } from "@/types/room.type";
+import type { ShowTimeType } from "@/types/showTime.type";
+import { showTimeService } from "@/services/showTime.service";
+import { showTimePaginateConfig } from "@/config/paginate/show_time.config";
 
 interface ShowTimeCreateDialogProps {
   open: boolean;
@@ -36,48 +39,110 @@ export function ShowTimeCreateDialog({
   const [formData, setFormData] = useState({
     movieIds: [] as string[],
     roomId: [] as string[],
-    startDate: "",
-    endDate: "",
+    startDate: new Date().toISOString().split("T")[0],
+    endDate: new Date().toISOString().split("T")[0],
     bufferTime: 10,
     adTime: 10,
     firstShowTime: "",
   });
 
-  const [showTimesList, setShowTimesList] = useState<string[]>([]);
+  const [showTimesList, setShowTimesList] = useState<ShowTimeType[]>([]);
 
   /* ================== CALCULATE SHOW TIMES ================== */
   const calculateShowTimes = () => {
+    const showTimeCore: Omit<ShowTimeType, "id" | "room_id">[] = [];
+    let timeReduce: string = formData.firstShowTime || "";
+    let curDate: string = formData.startDate || "";
+
     if (!formData.firstShowTime) {
       toast.error("Vui lòng chọn suất chiếu đầu tiên");
       return;
     }
 
-    const [hours, minutes] = formData.firstShowTime.split(":").map(Number);
-
-    const times: string[] = [];
-    let currentHours = hours;
-    let currentMinutes = minutes;
-
-    const movieDuration = 120;
-    const totalSlotDuration =
-      movieDuration + formData.bufferTime + formData.adTime;
-
-    while (currentHours < 23) {
-      times.push(
-        `${String(currentHours).padStart(2, "0")}:${String(
-          currentMinutes
-        ).padStart(2, "0")}`
-      );
-
-      currentMinutes += totalSlotDuration;
-
-      if (currentMinutes >= 60) {
-        currentHours += Math.floor(currentMinutes / 60);
-        currentMinutes = currentMinutes % 60;
+    //
+    const selectedMovies = movies.filter((movie) => {
+      if (formData.movieIds.includes(movie.id + "")) {
+        return movie;
       }
+    });
+    if (selectedMovies.length === 0) {
+      toast.error("Vui lòng chọn ít nhất 1 phim");
+      return;
     }
 
-    setShowTimesList(times);
+    while (curDate <= formData.endDate) {
+      timeReduce = formData.firstShowTime || "";
+      while (timeReduce !== "over 24 hours") {
+        const showTimeTemp: Omit<ShowTimeType, "id" | "room_id">[] = [];
+        for (const movie of selectedMovies) {
+          if (
+            "over 24 hours" ==
+            addMinutesToTime(
+              timeReduce,
+              (movie.duration || 120) + formData.adTime
+            )
+          ) {
+            timeReduce = "over 24 hours";
+            break;
+          }
+          showTimeTemp.push({
+            movie_id: movie.id + "",
+            start_time: combineDateAndTimeToUTC(curDate, timeReduce),
+            end_time: combineDateAndTimeToUTC(
+              curDate,
+              addMinutesToTime(
+                timeReduce,
+                (movie.duration || 120) + formData.adTime
+              )
+            ),
+            day_type: getDayType(curDate),
+            is_active: true,
+          });
+          timeReduce = addMinutesToTime(
+            timeReduce,
+            (movie.duration || 120) + formData.adTime + formData.bufferTime
+          );
+        }
+        showTimeCore.push(...showTimeTemp);
+      }
+      curDate = new Date(
+        new Date(curDate).setDate(new Date(curDate).getDate() + 1)
+      )
+        .toISOString()
+        .split("T")[0];
+    }
+    console.log(showTimeCore);
+    console.log(formData.roomId);
+    console.log(formData.startDate, formData.endDate);
+  };
+
+  const findAndPaginate = async (
+    page = 1,
+    limit = undefined,
+    sortBy = `${showTimePaginateConfig.defaultSortBy[0][0]}:${showTimePaginateConfig.defaultSortBy[0][1]}`,
+    search = undefined,
+    searchBy = undefined,
+    filter = {
+      is_active: "true",
+    }
+  ) => {
+    try {
+      const response = await showTimeService.findAndPaginate({
+        page,
+        limit,
+        sortBy,
+        search,
+        searchBy,
+        filter,
+      });
+
+      if (response.success && response.data) {
+        const data = response.data as ShowTimeType[];
+        console.log("Fetched show times:", data);
+      }
+    } catch (error) {
+      console.error(error);
+    }
   };
 
   const removeShowTime = (index: number) => {
@@ -153,6 +218,122 @@ export function ShowTimeCreateDialog({
       toast.error("Có lỗi xảy ra khi tạo suất chiếu");
       console.error(error);
     }
+  };
+
+  // HELPER FUCTIONS
+  const addMinutesToTime = (timeStr: string, addMinutes: number): string => {
+    const [timePart, period] = timeStr.trim().split(" ");
+    if (!timePart || !period) {
+      throw new Error("Invalid time format");
+    }
+
+    const [hh, mm] = timePart.split(":");
+
+    let hour = parseInt(hh, 10);
+    const minute = parseInt(mm, 10);
+
+    if (isNaN(hour) || isNaN(minute)) {
+      throw new Error("Invalid time format");
+    }
+
+    // Convert sang 24h
+    if (period === "CH" && hour !== 12) hour += 12;
+    if (period === "SA" && hour === 12) hour = 0;
+
+    const totalMinutes = hour * 60 + minute + addMinutes;
+
+    // 🚨 vượt quá 24h
+    if (totalMinutes >= 1440) {
+      return "over 24 hours";
+    }
+
+    // Tính lại giờ phút
+    const newHour24 = Math.floor(totalMinutes / 60);
+    const newMinute = totalMinutes % 60;
+
+    // Convert về 12h + SA/CH
+    const newPeriod = newHour24 >= 12 ? "CH" : "SA";
+    let newHour12 = newHour24 % 12;
+    if (newHour12 === 0) newHour12 = 12;
+
+    const newHH = String(newHour12).padStart(2, "0");
+    const newMM = String(newMinute).padStart(2, "0");
+
+    return `${newHH}:${newMM} ${newPeriod}`;
+  };
+
+  const getDayType = (dateStr: string): "WEEKEND" | "WEEKDAY" => {
+    const date = new Date(dateStr);
+
+    if (isNaN(date.getTime())) {
+      throw new Error("Invalid date format. Expected YYYY-MM-DD");
+    }
+
+    const day = date.getDay();
+    // 0 = Sunday, 6 = Saturday
+
+    return day === 0 || day === 6 ? "WEEKEND" : "WEEKDAY";
+  };
+
+  const combineDateAndTimeToUTC = (
+    dateStr: string, // "2026-01-15"
+    timeStr: string // "10:20 SA" | "10:20 CH"
+  ): string => {
+    // Parse date
+    const [year, month, day] = dateStr.split("-").map(Number);
+
+    if (!year || !month || !day) {
+      throw new Error("Invalid date format");
+    }
+
+    // Parse time
+    const [timePart, period] = timeStr.trim().split(" ");
+    const [hh, mm] = timePart.split(":").map(Number);
+
+    if (isNaN(hh) || isNaN(mm) || (period !== "SA" && period !== "CH")) {
+      throw new Error("Invalid time format");
+    }
+
+    // Convert to 24h
+    let hour24 = hh;
+    if (period === "CH" && hh !== 12) hour24 += 12;
+    if (period === "SA" && hh === 12) hour24 = 0;
+
+    // Create UTC date
+    const date = new Date(Date.UTC(year, month - 1, day, hour24, mm, 0));
+
+    // Format YYYY-MM-DD HH:mm:ss+00
+    const yyyy = date.getUTCFullYear();
+    const MM = String(date.getUTCMonth() + 1).padStart(2, "0");
+    const dd = String(date.getUTCDate()).padStart(2, "0");
+    const HH = String(date.getUTCHours()).padStart(2, "0");
+    const mm2 = String(date.getUTCMinutes()).padStart(2, "0");
+    const ss = "00";
+
+    return `${yyyy}-${MM}-${dd} ${HH}:${mm2}:${ss}+00`;
+  };
+
+  const toDate = (value: string): Date => {
+    return new Date(value.replace(" ", "T"));
+  };
+
+  const isOverlapTime = (
+    a: Omit<ShowTimeType, "id" | "room_id">,
+    b: Omit<ShowTimeType, "id" | "room_id">
+  ): boolean => {
+    const aStart = toDate(a.start_time);
+    const aEnd = toDate(a.end_time as string);
+    const bStart = toDate(b.start_time);
+    const bEnd = toDate(b.end_time as string);
+
+    return aStart < bEnd && bStart < aEnd;
+  };
+
+  const removeConflitRange = (
+    a: Omit<ShowTimeType, "id" | "room_id">[],
+    b: Omit<ShowTimeType, "id" | "room_id">[]
+  ): Omit<ShowTimeType, "id" | "room_id">[] => {
+    return a.filter((itemA) => !b.some((itemB) => isOverlapTime(itemA, itemB)));
   };
 
   return (
@@ -243,8 +424,7 @@ export function ShowTimeCreateDialog({
                 Thời gian đón khách (phút)
               </label>
               <Input
-                type="number"
-                min={0}
+                type="string"
                 value={formData.bufferTime}
                 onChange={(e) =>
                   setFormData({
@@ -260,8 +440,7 @@ export function ShowTimeCreateDialog({
                 Thời gian quảng cáo (phút)
               </label>
               <Input
-                type="number"
-                min={0}
+                type="string"
                 value={formData.adTime}
                 onChange={(e) =>
                   setFormData({
@@ -277,10 +456,10 @@ export function ShowTimeCreateDialog({
           <div className="flex gap-4 items-end">
             <div className="flex-1 space-y-2">
               <label className="text-sm font-semibold">
-                Chọn suất chiếu đầu tiên
+                Chọn suất chiếu đầu tiên (HH:MM SA/CH)
               </label>
               <Input
-                type="time"
+                type="string"
                 value={formData.firstShowTime}
                 onChange={(e) =>
                   setFormData({
