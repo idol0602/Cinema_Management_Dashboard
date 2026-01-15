@@ -49,7 +49,7 @@ export function ShowTimeCreateDialog({
   const [showTimesList, setShowTimesList] = useState<ShowTimeType[]>([]);
 
   /* ================== CALCULATE SHOW TIMES ================== */
-  const calculateShowTimes = () => {
+  const calculateShowTimes = async () => {
     const showTimeCore: Omit<ShowTimeType, "id" | "room_id">[] = [];
     let timeReduce: string = formData.firstShowTime || "";
     let curDate: string = formData.startDate || "";
@@ -111,36 +111,57 @@ export function ShowTimeCreateDialog({
         .toISOString()
         .split("T")[0];
     }
-    console.log(showTimeCore);
-    console.log(formData.roomId);
-    console.log(formData.startDate, formData.endDate);
+    console.log("core: ", showTimeCore);
+    const showTimeCreated: Omit<ShowTimeType, "id" | "room_id">[] =
+      (await findAndPaginate(1, undefined, undefined)) as Omit<
+        ShowTimeType,
+        "id" | "room_id"
+      >[];
+    const finalShowTimes = removeConflitRange(showTimeCore, showTimeCreated);
+    console.log("final: ", finalShowTimes);
   };
 
   const findAndPaginate = async (
     page = 1,
     limit = undefined,
-    sortBy = `${showTimePaginateConfig.defaultSortBy[0][0]}:${showTimePaginateConfig.defaultSortBy[0][1]}`,
-    search = undefined,
-    searchBy = undefined,
-    filter = {
-      is_active: "true",
-    }
+    sortBy = `${showTimePaginateConfig.defaultSortBy[0][0]}:${showTimePaginateConfig.defaultSortBy[0][1]}`
   ) => {
     try {
+      // Validate dữ liệu đầu vào
+      if (!formData.roomId || formData.roomId.length === 0) {
+        toast.error("Vui lòng chọn ít nhất 1 phòng");
+        return;
+      }
+
+      if (!formData.startDate || !formData.endDate) {
+        toast.error("Vui lòng chọn khoảng thời gian");
+        return;
+      }
+
+      // Xây dựng filter object
+      const filters: any = {
+        "filter[room_id][$in]": formData.roomId.join(","),
+        "filter[start_time][$gte]": `${formData.startDate}T00:00:00Z`,
+        "filter[end_time][$lte]": `${formData.endDate}T23:59:59Z`,
+      };
+
       const response = await showTimeService.findAndPaginate({
         page,
         limit,
         sortBy,
-        search,
-        searchBy,
-        filter,
+        ...filters,
       });
 
       if (response.success && response.data) {
         const data = response.data as ShowTimeType[];
         console.log("Fetched show times:", data);
+        toast.success(`Tìm được ${data.length} suất chiếu`);
+        return data;
+      } else {
+        toast.error(response.error || "Lỗi khi tìm kiếm suất chiếu");
       }
     } catch (error) {
+      toast.error("Có lỗi xảy ra khi tìm kiếm");
       console.error(error);
     }
   };
