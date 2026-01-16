@@ -25,15 +25,38 @@ export function ShowTimeDetailDialog({
 
   const parseDateTime = (dateTimeString?: string) => {
     if (!dateTimeString) return { date: "N/A", time: "N/A" };
-    const date = new Date(dateTimeString);
-    return {
-      date: date.toLocaleDateString("vi-VN"),
-      time: date.toLocaleTimeString("vi-VN", {
-        hour: "2-digit",
-        minute: "2-digit",
-        hour12: false,
-      }),
-    };
+
+    try {
+      let datePart = "";
+      let timePart = "";
+
+      if (dateTimeString.includes("T")) {
+        const dateTimeParts = dateTimeString.split("T");
+        datePart = dateTimeParts[0];
+        timePart = dateTimeParts[1]?.split("+")[0] || "";
+      } else if (dateTimeString.includes(" ")) {
+        // Space format: "2026-01-10 16:35:00+00"
+        const dateTimeParts = dateTimeString.split(" ");
+        datePart = dateTimeParts[0];
+        timePart = dateTimeParts[1]?.split("+")[0] || "";
+      }
+
+      if (datePart && timePart) {
+        const [year, month, day] = datePart.split("-");
+        const [hour, minute] = timePart.split(":");
+
+        if (year && month && day && hour && minute) {
+          return {
+            date: `${day}/${month}/${year.slice(-2)}`,
+            time: `${hour}:${minute}`,
+          };
+        }
+      }
+    } catch (error) {
+      console.error("Error parsing datetime:", dateTimeString, error);
+    }
+
+    return { date: "N/A", time: "N/A" };
   };
 
   const formatDate = (dateString?: string) => {

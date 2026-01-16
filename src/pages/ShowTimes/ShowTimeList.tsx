@@ -26,10 +26,8 @@ import { Combobox } from "@/components/ui/combobox";
 import {
   Plus,
   Search,
-  Edit,
   Trash2,
   Film,
-  Upload,
   Eye,
   ChevronLeft,
   ChevronRight,
@@ -41,7 +39,6 @@ import type { RoomType } from "@/types/room.type";
 import type { movieType } from "@/types/movie.type";
 import type { PaginationMeta } from "@/types/pagination.type";
 import { showTimePaginateConfig } from "@/config/paginate/show_time.config";
-import { MovieImportDialog } from "@/components/Dialog/MovieImportDialog";
 import { ShowTimeCreateDialog } from "@/components/showTimes/ShowTimeCreateDialog";
 import { ShowTimeDetailDialog } from "@/components/showTimes/ShowTimeDetailDialog";
 
@@ -52,7 +49,6 @@ const ShowTimeList = () => {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
-  const [statusColumn, setStatusColumn] = useState("");
   const [sortColumn, setSortColumn] = useState("");
   const [roomColumn, setRoomColumn] = useState("");
   const [orderColumn, setOrderColumn] = useState("");
@@ -106,7 +102,9 @@ const ShowTimeList = () => {
     sortBy = `${showTimePaginateConfig.defaultSortBy[0][0]}:${showTimePaginateConfig.defaultSortBy[0][1]}`,
     search = undefined,
     searchBy = undefined,
-    filter = {}
+    filter = {
+      is_active: true,
+    }
   ) => {
     setLoading(true);
     try {
@@ -152,9 +150,7 @@ const ShowTimeList = () => {
     }
 
     const filter: Record<string, any> = {};
-    if (statusColumn) {
-      filter.is_active = statusColumn === "true";
-    }
+    filter.is_active = true;
     if (roomColumn) {
       filter.room_id = roomColumn;
     }
@@ -177,6 +173,10 @@ const ShowTimeList = () => {
       searchColumn || undefined,
       Object.keys(filter).length > 0 ? filter : undefined
     );
+  };
+
+  const handleReresh = () => {
+    handleSearch();
   };
   // Handle search on Enter key
   const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -205,10 +205,6 @@ const ShowTimeList = () => {
     }
   };
 
-  const handleImport = async (file: File) => {
-    console.log("Importing file:", file);
-  };
-
   // Format date
   const formatDate = (dateString?: string) => {
     if (!dateString) return "N/A";
@@ -218,15 +214,38 @@ const ShowTimeList = () => {
   // Parse ISO datetime to date and time
   const parseDateTime = (dateTimeString?: string) => {
     if (!dateTimeString) return { date: "N/A", time: "N/A" };
-    const date = new Date(dateTimeString);
-    return {
-      date: date.toLocaleDateString("vi-VN"),
-      time: date.toLocaleTimeString("vi-VN", {
-        hour: "2-digit",
-        minute: "2-digit",
-        hour12: false,
-      }),
-    };
+
+    try {
+      let datePart = "";
+      let timePart = "";
+
+      if (dateTimeString.includes("T")) {
+        const dateTimeParts = dateTimeString.split("T");
+        datePart = dateTimeParts[0];
+        timePart = dateTimeParts[1]?.split("+")[0] || "";
+      } else if (dateTimeString.includes(" ")) {
+        // Space format: "2026-01-10 16:35:00+00"
+        const dateTimeParts = dateTimeString.split(" ");
+        datePart = dateTimeParts[0];
+        timePart = dateTimeParts[1]?.split("+")[0] || "";
+      }
+
+      if (datePart && timePart) {
+        const [year, month, day] = datePart.split("-");
+        const [hour, minute] = timePart.split(":");
+
+        if (year && month && day && hour && minute) {
+          return {
+            date: `${day}/${month}/${year.slice(-2)}`,
+            time: `${hour}:${minute}`,
+          };
+        }
+      }
+    } catch (error) {
+      console.error("Error parsing datetime:", dateTimeString, error);
+    }
+
+    return { date: "N/A", time: "N/A" };
   };
 
   // Get badge color based on day type
@@ -273,15 +292,6 @@ const ShowTimeList = () => {
               </CardDescription>
             </div>
             <div className="flex gap-2">
-              <MovieImportDialog
-                onSubmit={handleImport}
-                trigger={
-                  <Button variant="outline">
-                    <Upload className="h-4 w-4 mr-2" />
-                    Import Excel
-                  </Button>
-                }
-              />
               <Button
                 onClick={() => {
                   setCreateDialogOpen(true);
@@ -314,12 +324,6 @@ const ShowTimeList = () => {
               placeholder="Phòng"
               onChange={setRoomColumn}
               value={roomColumn}
-            ></Combobox>
-            <Combobox
-              datas={showTimePaginateConfig.filterableColumns.is_active}
-              placeholder="Trạng thái"
-              onChange={setStatusColumn}
-              value={statusColumn}
             ></Combobox>
             <Combobox
               datas={showTimePaginateConfig.searchableColumns}
@@ -475,16 +479,6 @@ const ShowTimeList = () => {
                             >
                               <Eye className="h-4 w-4" />
                             </Button>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => {
-                                //handleEdit(showTime);
-                              }}
-                              title="Chỉnh sửa"
-                            >
-                              <Edit className="h-4 w-4" />
-                            </Button>
                             {showTime.is_active === false ? (
                               <></>
                             ) : (
@@ -576,29 +570,6 @@ const ShowTimeList = () => {
         </CardContent>
       </Card>
 
-      {/* Dialogs */}
-      {/* <MovieCreateDialog
-        movieTypes={movieTypes}
-        open={createDialogOpen}
-        onOpenChange={setCreateDialogOpen}
-        onSubmit={handleCreateSubmit}
-      />
-
-      <MovieEditDialog
-        movie={selectedMovie}
-        movieTypes={movieTypes}
-        open={editDialogOpen}
-        onOpenChange={setEditDialogOpen}
-        onSubmit={handleEditSubmit}
-      />
-
-      <MovieDetailDialog
-        movie={selectedMovie}
-        movieTypes={movieTypes}
-        open={detailDialogOpen}
-        onOpenChange={setDetailDialogOpen}
-      /> */}
-
       {/* Show Time Detail Dialog */}
       <ShowTimeDetailDialog
         showTime={selectedShowTime}
@@ -614,6 +585,9 @@ const ShowTimeList = () => {
         rooms={rooms}
         onSubmit={() => {
           handleSearch();
+        }}
+        onRefresh={() => {
+          handleReresh();
         }}
       />
     </div>

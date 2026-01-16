@@ -131,4 +131,22 @@ export const showTimeService = {
       };
     }
   },
-}
+
+  bulkCreate: async (data: CreateShowTimeType[]) : Promise<serviceResponse> => {  
+    try {
+      const response = await api.post('/show-times/bulk-create', data);
+      return {
+        data: response.data.data,
+        success: true,
+        error: response.data.error,
+      };
+    } catch (error) {
+      const apiError = handleApiError(error);
+      return {
+        data: {},
+        success: false,
+        error: apiError.message,
+      };
+    }
+  }
+};

@@ -27,7 +27,8 @@ interface ShowTimeCreateDialogProps {
   onOpenChange: (open: boolean) => void;
   movies: movieType[];
   rooms: RoomType[];
-  onSubmit?: (showTimes: any[]) => void;
+  onSubmit?: (showTimes: unknown) => void;
+  onRefresh?: () => void;
 }
 
 export function ShowTimeCreateDialog({
@@ -36,6 +37,7 @@ export function ShowTimeCreateDialog({
   movies,
   rooms,
   onSubmit,
+  onRefresh,
 }: ShowTimeCreateDialogProps) {
   const [formData, setFormData] = useState({
     movieIds: [] as string[],
@@ -55,100 +57,119 @@ export function ShowTimeCreateDialog({
 
   /* ================== CALCULATE SHOW TIMES ================== */
   const calculateShowTimes = async () => {
-    const showTimeCore: Omit<ShowTimeType, "id" | "room_id">[] = [];
-    let timeReduce: string = formData.firstShowTime || "";
-    let curDate: string = formData.startDate || "";
-
-    if (!formData.firstShowTime) {
-      toast.error("Vui lòng chọn suất chiếu đầu tiên");
-      return;
-    }
-
-    //
-    const selectedMovies = movies.filter((movie) => {
-      if (formData.movieIds.includes(movie.id + "")) {
-        return movie;
+    try {
+      if (!formData.firstShowTime) {
+        toast.error("Vui lòng chọn suất chiếu đầu tiên");
+        return;
       }
-    });
-    if (selectedMovies.length === 0) {
-      toast.error("Vui lòng chọn ít nhất 1 phim");
-      return;
-    }
 
-    while (curDate <= formData.endDate) {
-      timeReduce = formData.firstShowTime || "";
-      while (timeReduce !== "over closing time") {
-        const showTimeTemp: Omit<ShowTimeType, "id" | "room_id">[] = [];
-        let isOverClosingTime = false;
-        for (const movie of selectedMovies) {
-          if (
-            "over closing time" ==
-            addMinutesToTime(
-              timeReduce,
-              (movie.duration || 120) + formData.adTime
-            )
+      const selectedMovies = movies.filter((movie) =>
+        formData.movieIds.includes(movie.id + "")
+      );
+      if (selectedMovies.length === 0) {
+        toast.error("Vui lòng chọn ít nhất 1 phim");
+        return;
+      }
+
+      if (formData.roomId.length === 0) {
+        toast.error("Vui lòng chọn ít nhất 1 phòng");
+        return;
+      }
+
+      // Lấy danh sách suất chiếu hiện tại
+      const existingShowTimes: ShowTimeType[] =
+        (await findAndPaginate(1, undefined, undefined)) || [];
+
+      const finalShowTimes: ShowTimeType[] = [];
+
+      // Lặp qua từng phòng
+      for (const roomId of formData.roomId) {
+        // Lặp qua từng ngày
+        let curDateStr = formData.startDate;
+        while (curDateStr <= formData.endDate) {
+          let movieIndex = 0;
+
+          // Bắt đầu từ giờ mở cửa
+          let currentTime = formData.firstShowTime;
+
+          // Lặp qua từng phim trong ngày này
+          while (
+            currentTime !== "over closing time" &&
+            movieIndex < selectedMovies.length
           ) {
-            isOverClosingTime = true;
-            break;
+            const movie = selectedMovies[movieIndex];
+            const movieDuration = movie.duration || 120;
+
+            // Tính thời gian kết thúc của phim
+            const endTime = addMinutesToTime(
+              currentTime,
+              movieDuration + formData.adTime
+            );
+
+            if (endTime === "over closing time") {
+              // Phim này vượt quá giờ đóng rạp, chuyển sang ngày tiếp theo
+              break;
+            }
+
+            // Tạo object suất chiếu dự kiến
+            const proposedShowTime: ShowTimeType = {
+              movie_id: movie.id + "",
+              room_id: roomId,
+              start_time: combineDateAndTimeToUTC(curDateStr, currentTime),
+              end_time: combineDateAndTimeToUTC(curDateStr, endTime),
+              day_type: getDayType(curDateStr),
+              is_active: true,
+            };
+
+            // Kiểm tra xem có overlap không
+            const hasOverlap = existingShowTimes.some((existing) =>
+              isOverlapTime(proposedShowTime, existing)
+            );
+
+            if (!hasOverlap) {
+              // Nếu không overlap, thêm vào danh sách kết quả
+              finalShowTimes.push(proposedShowTime);
+
+              // Cập nhật existingShowTimes để kiểm tra phim tiếp theo
+              existingShowTimes.push(proposedShowTime);
+
+              // Tăng index phim lên
+              movieIndex++;
+
+              // Tăng thời gian cho phim tiếp theo
+              currentTime = addMinutesToTime(endTime, formData.bufferTime);
+            } else {
+              // Nếu có overlap, tăng thời gian lên và thử lại
+              currentTime = addMinutesToTime(currentTime, 15); // Tăng 15 phút thử lại
+              if (currentTime === "over closing time") {
+                break;
+              }
+            }
           }
 
-          showTimeTemp.push({
-            movie_id: movie.id + "",
-            start_time: combineDateAndTimeToUTC(curDate, timeReduce),
-            end_time: combineDateAndTimeToUTC(
-              curDate,
-              addMinutesToTime(
-                timeReduce,
-                (movie.duration || 120) + formData.adTime
-              )
-            ),
-            day_type: getDayType(curDate),
-            is_active: true,
-          });
-          timeReduce = addMinutesToTime(
-            timeReduce,
-            (movie.duration || 120) + formData.adTime + formData.bufferTime
-          );
+          // Chuyển sang ngày tiếp theo
+          const [year, month, day] = curDateStr.split("-").map(Number);
+          const nextDate = new Date(year, month - 1, day + 1);
+          const nextYear = nextDate.getFullYear();
+          const nextMonth = String(nextDate.getMonth() + 1).padStart(2, "0");
+          const nextDay = String(nextDate.getDate()).padStart(2, "0");
+          curDateStr = `${nextYear}-${nextMonth}-${nextDay}`;
         }
-        if (isOverClosingTime) {
-          timeReduce = "over closing time";
-        }
-        showTimeCore.push(...showTimeTemp);
       }
-      // Tăng ngày
-      const nextDate = new Date(curDate);
-      nextDate.setDate(nextDate.getDate() + 1);
-      curDate = nextDate.toISOString().split("T")[0];
-    }
 
-    const showTimeCreated: ShowTimeType[] =
-      (await findAndPaginate(1, undefined, undefined)) || [];
+      setShowTimesList(finalShowTimes);
 
-    const data: ShowTimeType[] = [];
-
-    for (const roomId of formData.roomId) {
-      for (const showTime of showTimeCore) {
-        data.push({
-          ...showTime,
-          room_id: roomId,
-        });
+      if (finalShowTimes.length === 0) {
+        toast.warning("Không tìm được khoảng thời gian thích hợp cho phim nào");
+      } else {
+        toast.success(
+          `✓ Tính toán được ${finalShowTimes.length} suất chiếu hợp lệ`
+        );
       }
+    } catch (error) {
+      toast.error("Có lỗi xảy ra khi tính toán suất chiếu");
+      console.error(error);
     }
-    console.log("data", data);
-    console.log("showTimeCreated", showTimeCreated);
-
-    const finalShowTimes = removeConflitRange(data, showTimeCreated);
-
-    const removedCount = data.length - finalShowTimes.length;
-    console.log("finalShowTimes", finalShowTimes);
-    setShowTimesList(finalShowTimes);
-
-    if (removedCount > 0) {
-      toast.warning(`⚠️ Đã loại ${removedCount} suất chiếu trùng giờ`);
-    }
-    toast.success(
-      `✓ Tính toán được ${finalShowTimes.length} suất chiếu hợp lệ`
-    );
   };
 
   const findAndPaginate = async (
@@ -169,17 +190,18 @@ export function ShowTimeCreateDialog({
       }
 
       // Xây dựng filter object
-      const filters: any = {
+      const filters: unknown = {
         "filter[room_id][$in]": formData.roomId.join(","),
         "filter[start_time][$gte]": `${formData.startDate}T00:00:00Z`,
         "filter[end_time][$lte]": `${formData.endDate}T23:59:59Z`,
+        "filter[is_active][$eq]": true,
       };
 
       const response = await showTimeService.findAndPaginate({
         page,
         limit,
         sortBy,
-        ...filters,
+        ...(filters || {}),
       });
 
       if (response.success && response.data) {
@@ -194,14 +216,6 @@ export function ShowTimeCreateDialog({
     }
   };
 
-  const removeShowTime = (index: number) => {
-    setShowTimesList(showTimesList.filter((_, i) => i !== index));
-    const newSelected = new Set(selectedIndices);
-    newSelected.delete(index);
-    setSelectedIndices(newSelected);
-  };
-
-  // Toggle select một suất chiếu
   const handleToggleSelect = (index: number) => {
     const newSelected = new Set(selectedIndices);
     if (newSelected.has(index)) {
@@ -212,18 +226,14 @@ export function ShowTimeCreateDialog({
     setSelectedIndices(newSelected);
   };
 
-  // Select/Deselect tất cả
   const handleSelectAll = () => {
     if (selectedIndices.size === showTimesList.length) {
-      // Deselect all
       setSelectedIndices(new Set());
     } else {
-      // Select all
       setSelectedIndices(new Set(showTimesList.map((_, i) => i)));
     }
   };
 
-  // Xóa những suất chiếu được chọn
   const handleDeleteSelected = () => {
     if (selectedIndices.size === 0) {
       toast.error("Vui lòng chọn ít nhất 1 suất chiếu để xóa");
@@ -241,6 +251,29 @@ export function ShowTimeCreateDialog({
       if (showTimesList.length === 0) {
         toast.error("Không có suất chiếu để tạo");
         return;
+      }
+
+      // Gọi API bulkCreate
+      const response = await showTimeService.bulkCreate(showTimesList);
+
+      if (response.success) {
+        toast.success(`✓ Tạo thành công ${showTimesList.length} suất chiếu`);
+
+        // Clear form
+        setShowTimesList([]);
+        setSelectedIndices(new Set());
+
+        // Gọi callback nếu có
+        onSubmit?.(response.data);
+
+        // Đóng dialog sau 1 giây
+        setTimeout(() => {
+          onOpenChange(false);
+        }, 1000);
+
+        onRefresh?.();
+      } else {
+        toast.error(response.error || "Lỗi khi tạo suất chiếu");
       }
     } catch (error) {
       toast.error("Có lỗi xảy ra khi tạo suất chiếu");
@@ -270,9 +303,8 @@ export function ShowTimeCreateDialog({
 
     const totalMinutes = hour * 60 + minute + addMinutes;
 
-    // 🚨 vượt quá 24h
+    // 🚨 vượt quá giờ đóng rạp
     if (totalMinutes >= closingTimeToMinutes(formData.closingTime)) {
-      console.log("over closing time");
       return "over closing time";
     }
 
@@ -363,24 +395,14 @@ export function ShowTimeCreateDialog({
     return hasOverlap;
   };
 
-  const removeConflitRange = (
-    newShowTimes: ShowTimeType[],
-    existingShowTimes: ShowTimeType[]
-  ): ShowTimeType[] => {
-    const filtered = newShowTimes.filter(
-      (newTime) =>
-        !existingShowTimes.some((existing) => isOverlapTime(newTime, existing))
-    );
-
-    return filtered;
-  };
-
-  // Helper function để lấy thông tin phim
   const getMovieInfo = (movieId: string) => {
     return movies.find((m) => m.id + "" === movieId);
   };
 
-  // Helper function để tính thời lượng (phút)
+  const getRoomInfo = (roomId: string) => {
+    return rooms.find((r) => r.id + "" === roomId);
+  };
+
   const getDuration = (startStr: string, endStr: string): number => {
     try {
       const start = new Date(startStr);
@@ -412,45 +434,16 @@ export function ShowTimeCreateDialog({
     return hour * 60 + minute;
   };
 
-  // Helper function để format thời gian (HH:MM)
-  // const formatTime = (dateStr: string): string => {
-  //   try {
-  //     const date = new Date(dateStr);
-  //     return date.toLocaleTimeString("vi-vn", {
-  //       hour: "2-digit",
-  //       minute: "2-digit",
-  //       hour12: false,
-  //     });
-  //   } catch {
-  //     return "--:--";
-  //   }
-  // };
-
-  // Helper function để format ngày (DD/MM/YY)
-  // const formatDate = (dateStr: string): string => {
-  //   try {
-  //     const date = new Date(dateStr);
-  //     const year = String(date.getFullYear()).slice(-2);
-  //     const month = String(date.getMonth() + 1).padStart(2, "0");
-  //     const day = String(date.getDate()).padStart(2, "0");
-  //     return `${day}/${month}/${year}`;
-  //   } catch {
-  //     return "";
-  //   }
-  // };
-
   const formatDate = (dateStr: string): string => {
-    // Parse "2026-01-10 14:30:00+00" → extract date part
-    const datePart = dateStr.split(" ")[0]; // "2026-01-10"
+    const datePart = dateStr.split(" ")[0];
     const [year, month, day] = datePart.split("-");
     return `${day}/${month}/${year.slice(-2)}`;
   };
 
   const formatTime = (dateStr: string): string => {
-    // Parse "2026-01-10 14:30:00+00" → extract time part
     const parts = dateStr.split(" ");
     if (parts.length >= 2) {
-      const timePart = parts[1]; // "14:30:00"
+      const timePart = parts[1];
       const [hour, minute] = timePart.split(":");
       return `${hour}:${minute}`;
     }
@@ -640,6 +633,7 @@ export function ShowTimeCreateDialog({
               <div className="space-y-2 max-h-96 overflow-y-auto border rounded-lg p-3 bg-slate-50">
                 {showTimesList.map((showTime, index) => {
                   const movieInfo = getMovieInfo(showTime.movie_id);
+                  const roomInfo = getRoomInfo(showTime.room_id);
                   const duration = getDuration(
                     showTime.start_time,
                     showTime.end_time || ""
@@ -684,6 +678,12 @@ export function ShowTimeCreateDialog({
                           <div className="flex items-center gap-1">
                             <span className="font-medium">⏱️</span>
                             <span>{duration} phút</span>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <span className="font-medium">🏢</span>
+                            <span>
+                              {roomInfo?.name || "Phòng không xác định"}
+                            </span>
                           </div>
                           <div className="flex items-center gap-1">
                             <span className="font-medium">🏷️</span>
