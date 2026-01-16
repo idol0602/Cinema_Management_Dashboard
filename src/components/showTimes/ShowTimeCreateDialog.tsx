@@ -15,6 +15,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { DatePickerInput } from "@/components/ui/date-picker-input";
+import { TimePickerInput } from "@/components/ui/time-picker-input";
 import type { movieType } from "@/types/movie.type";
 import type { RoomType } from "@/types/room.type";
 import type { ShowTimeType } from "@/types/showTime.type";
@@ -43,10 +44,14 @@ export function ShowTimeCreateDialog({
     endDate: new Date().toISOString().split("T")[0],
     bufferTime: 10,
     adTime: 10,
-    firstShowTime: "",
+    firstShowTime: "10:00 SA",
+    closingTime: "10:30 CH",
   });
 
   const [showTimesList, setShowTimesList] = useState<ShowTimeType[]>([]);
+  const [selectedIndices, setSelectedIndices] = useState<Set<number>>(
+    new Set()
+  );
 
   /* ================== CALCULATE SHOW TIMES ================== */
   const calculateShowTimes = async () => {
@@ -72,19 +77,21 @@ export function ShowTimeCreateDialog({
 
     while (curDate <= formData.endDate) {
       timeReduce = formData.firstShowTime || "";
-      while (timeReduce !== "over 24 hours") {
+      while (timeReduce !== "over closing time") {
         const showTimeTemp: Omit<ShowTimeType, "id" | "room_id">[] = [];
+        let isOverClosingTime = false;
         for (const movie of selectedMovies) {
           if (
-            "over 24 hours" ==
+            "over closing time" ==
             addMinutesToTime(
               timeReduce,
               (movie.duration || 120) + formData.adTime
             )
           ) {
-            timeReduce = "over 24 hours";
+            isOverClosingTime = true;
             break;
           }
+
           showTimeTemp.push({
             movie_id: movie.id + "",
             start_time: combineDateAndTimeToUTC(curDate, timeReduce),
@@ -103,14 +110,17 @@ export function ShowTimeCreateDialog({
             (movie.duration || 120) + formData.adTime + formData.bufferTime
           );
         }
+        if (isOverClosingTime) {
+          timeReduce = "over closing time";
+        }
         showTimeCore.push(...showTimeTemp);
       }
-      curDate = new Date(
-        new Date(curDate).setDate(new Date(curDate).getDate() + 1)
-      )
-        .toISOString()
-        .split("T")[0];
+      // Tăng ngày
+      const nextDate = new Date(curDate);
+      nextDate.setDate(nextDate.getDate() + 1);
+      curDate = nextDate.toISOString().split("T")[0];
     }
+
     const showTimeCreated: ShowTimeType[] =
       (await findAndPaginate(1, undefined, undefined)) || [];
 
@@ -124,10 +134,13 @@ export function ShowTimeCreateDialog({
         });
       }
     }
+    console.log("data", data);
+    console.log("showTimeCreated", showTimeCreated);
 
     const finalShowTimes = removeConflitRange(data, showTimeCreated);
 
     const removedCount = data.length - finalShowTimes.length;
+    console.log("finalShowTimes", finalShowTimes);
     setShowTimesList(finalShowTimes);
 
     if (removedCount > 0) {
@@ -183,73 +196,52 @@ export function ShowTimeCreateDialog({
 
   const removeShowTime = (index: number) => {
     setShowTimesList(showTimesList.filter((_, i) => i !== index));
+    const newSelected = new Set(selectedIndices);
+    newSelected.delete(index);
+    setSelectedIndices(newSelected);
+  };
+
+  // Toggle select một suất chiếu
+  const handleToggleSelect = (index: number) => {
+    const newSelected = new Set(selectedIndices);
+    if (newSelected.has(index)) {
+      newSelected.delete(index);
+    } else {
+      newSelected.add(index);
+    }
+    setSelectedIndices(newSelected);
+  };
+
+  // Select/Deselect tất cả
+  const handleSelectAll = () => {
+    if (selectedIndices.size === showTimesList.length) {
+      // Deselect all
+      setSelectedIndices(new Set());
+    } else {
+      // Select all
+      setSelectedIndices(new Set(showTimesList.map((_, i) => i)));
+    }
+  };
+
+  // Xóa những suất chiếu được chọn
+  const handleDeleteSelected = () => {
+    if (selectedIndices.size === 0) {
+      toast.error("Vui lòng chọn ít nhất 1 suất chiếu để xóa");
+      return;
+    }
+
+    const newList = showTimesList.filter((_, i) => !selectedIndices.has(i));
+    setShowTimesList(newList);
+    setSelectedIndices(new Set());
   };
 
   /* ================== SUBMIT ================== */
   const handleCreateShowTimes = async () => {
-    if (
-      formData.movieIds.length === 0 ||
-      !formData.roomId ||
-      !formData.startDate ||
-      showTimesList.length === 0
-    ) {
-      toast.error("Vui lòng điền đầy đủ thông tin");
-      return;
-    }
-
     try {
-      const startDate = new Date(formData.startDate);
-      const endDate = formData.endDate ? new Date(formData.endDate) : startDate;
-
-      const showTimesToCreate: any[] = [];
-
-      for (
-        let d = new Date(startDate);
-        d <= endDate;
-        d.setDate(d.getDate() + 1)
-      ) {
-        for (const movieId of formData.movieIds) {
-          for (const time of showTimesList) {
-            const [hours, minutes] = time.split(":").map(Number);
-
-            const startDateTime = new Date(d);
-            startDateTime.setHours(hours, minutes, 0, 0);
-
-            const endDateTime = new Date(startDateTime);
-            endDateTime.setHours(hours + 2, minutes, 0, 0);
-
-            const dayType =
-              startDateTime.getDay() === 0 || startDateTime.getDay() === 6
-                ? "weekend"
-                : "weekday";
-
-            showTimesToCreate.push({
-              movie_id: movieId,
-              room_id: formData.roomId,
-              start_time: startDateTime.toISOString(),
-              end_time: endDateTime.toISOString(),
-              day_type: dayType,
-              is_active: true,
-            });
-          }
-        }
+      if (showTimesList.length === 0) {
+        toast.error("Không có suất chiếu để tạo");
+        return;
       }
-
-      toast.success(`Tạo ${showTimesToCreate.length} suất chiếu thành công`);
-
-      onSubmit?.(showTimesToCreate);
-      onOpenChange(false);
-
-      setFormData({
-        movieIds: [],
-        roomId: [],
-        startDate: "",
-        endDate: "",
-        bufferTime: 10,
-        adTime: 10,
-        firstShowTime: "",
-      });
-      setShowTimesList([]);
     } catch (error) {
       toast.error("Có lỗi xảy ra khi tạo suất chiếu");
       console.error(error);
@@ -279,8 +271,9 @@ export function ShowTimeCreateDialog({
     const totalMinutes = hour * 60 + minute + addMinutes;
 
     // 🚨 vượt quá 24h
-    if (totalMinutes >= 1440) {
-      return "over 24 hours";
+    if (totalMinutes >= closingTimeToMinutes(formData.closingTime)) {
+      console.log("over closing time");
+      return "over closing time";
     }
 
     // Tính lại giờ phút
@@ -380,6 +373,88 @@ export function ShowTimeCreateDialog({
     );
 
     return filtered;
+  };
+
+  // Helper function để lấy thông tin phim
+  const getMovieInfo = (movieId: string) => {
+    return movies.find((m) => m.id + "" === movieId);
+  };
+
+  // Helper function để tính thời lượng (phút)
+  const getDuration = (startStr: string, endStr: string): number => {
+    try {
+      const start = new Date(startStr);
+      const end = new Date(endStr);
+      return Math.round((end.getTime() - start.getTime()) / 60000);
+    } catch {
+      return 0;
+    }
+  };
+
+  const closingTimeToMinutes = (closingTime: string): number => {
+    const [timePart, period] = closingTime.trim().split(" ");
+    if (!timePart || !period) {
+      throw new Error("Invalid time format");
+    }
+
+    const [hh, mm] = timePart.split(":");
+    let hour = parseInt(hh, 10);
+    const minute = parseInt(mm, 10);
+
+    if (isNaN(hour) || isNaN(minute)) {
+      throw new Error("Invalid time format");
+    }
+
+    // Convert to 24h
+    if (period === "CH" && hour !== 12) hour += 12;
+    if (period === "SA" && hour === 12) hour = 0;
+
+    return hour * 60 + minute;
+  };
+
+  // Helper function để format thời gian (HH:MM)
+  // const formatTime = (dateStr: string): string => {
+  //   try {
+  //     const date = new Date(dateStr);
+  //     return date.toLocaleTimeString("vi-vn", {
+  //       hour: "2-digit",
+  //       minute: "2-digit",
+  //       hour12: false,
+  //     });
+  //   } catch {
+  //     return "--:--";
+  //   }
+  // };
+
+  // Helper function để format ngày (DD/MM/YY)
+  // const formatDate = (dateStr: string): string => {
+  //   try {
+  //     const date = new Date(dateStr);
+  //     const year = String(date.getFullYear()).slice(-2);
+  //     const month = String(date.getMonth() + 1).padStart(2, "0");
+  //     const day = String(date.getDate()).padStart(2, "0");
+  //     return `${day}/${month}/${year}`;
+  //   } catch {
+  //     return "";
+  //   }
+  // };
+
+  const formatDate = (dateStr: string): string => {
+    // Parse "2026-01-10 14:30:00+00" → extract date part
+    const datePart = dateStr.split(" ")[0]; // "2026-01-10"
+    const [year, month, day] = datePart.split("-");
+    return `${day}/${month}/${year.slice(-2)}`;
+  };
+
+  const formatTime = (dateStr: string): string => {
+    // Parse "2026-01-10 14:30:00+00" → extract time part
+    const parts = dateStr.split(" ");
+    if (parts.length >= 2) {
+      const timePart = parts[1]; // "14:30:00"
+      const [hour, minute] = timePart.split(":");
+      return `${hour}:${minute}`;
+    }
+    return "--:--";
   };
 
   return (
@@ -502,17 +577,30 @@ export function ShowTimeCreateDialog({
           <div className="flex gap-4 items-end">
             <div className="flex-1 space-y-2">
               <label className="text-sm font-semibold">
-                Chọn suất chiếu đầu tiên (HH:MM SA/CH)
+                Chọn suất chiếu đầu tiên
               </label>
-              <Input
-                type="string"
+              <TimePickerInput
                 value={formData.firstShowTime}
-                onChange={(e) =>
+                onChange={(timeStr) =>
                   setFormData({
                     ...formData,
-                    firstShowTime: e.target.value,
+                    firstShowTime: timeStr || "",
                   })
                 }
+                placeholder="HH:MM SA/CH"
+              />
+            </div>
+            <div className="flex-1 space-y-2">
+              <label className="text-sm font-semibold">Giờ đóng rạp</label>
+              <TimePickerInput
+                value={formData.closingTime}
+                onChange={(timeStr) =>
+                  setFormData({
+                    ...formData,
+                    closingTime: timeStr || "",
+                  })
+                }
+                placeholder="HH:MM SA/CH"
               />
             </div>
             <Button onClick={calculateShowTimes}>Tính toán suất chiếu</Button>
@@ -521,28 +609,95 @@ export function ShowTimeCreateDialog({
           {/* ================= SHOW TIMES LIST ================= */}
           {showTimesList.length > 0 && (
             <div className="space-y-3">
-              <h4 className="text-sm font-semibold">
-                Danh sách suất chiếu trong ngày
-              </h4>
-              <div className="space-y-2 max-h-48 overflow-y-auto border rounded-lg p-3">
-                {showTimesList.map((time, index) => (
-                  <div
-                    key={index}
-                    className="flex items-center justify-between bg-muted p-3 rounded-md"
-                  >
-                    <div className="flex items-center gap-2">
-                      <Badge>{index + 1}</Badge>
-                      <span className="font-medium">{time.start_time}</span>
-                    </div>
+              <div className="flex items-center justify-between">
+                <h4 className="text-sm font-semibold">
+                  Danh sách suất chiếu đã tính toán ({showTimesList.length})
+                </h4>
+                <div className="flex items-center gap-2">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={
+                        selectedIndices.size === showTimesList.length &&
+                        showTimesList.length > 0
+                      }
+                      onChange={handleSelectAll}
+                      className="w-4 h-4 rounded"
+                    />
+                    <span className="text-sm font-medium">Chọn tất cả</span>
+                  </label>
+                  {selectedIndices.size > 0 && (
                     <Button
-                      size="icon"
+                      size="sm"
                       variant="destructive"
-                      onClick={() => removeShowTime(index)}
+                      onClick={handleDeleteSelected}
                     >
-                      ✕
+                      Xóa ({selectedIndices.size})
                     </Button>
-                  </div>
-                ))}
+                  )}
+                </div>
+              </div>
+              <div className="space-y-2 max-h-96 overflow-y-auto border rounded-lg p-3 bg-slate-50">
+                {showTimesList.map((showTime, index) => {
+                  const movieInfo = getMovieInfo(showTime.movie_id);
+                  const duration = getDuration(
+                    showTime.start_time,
+                    showTime.end_time || ""
+                  );
+                  const startTime = formatTime(showTime.start_time);
+                  const startDate = formatDate(showTime.start_time);
+                  const isSelected = selectedIndices.has(index);
+
+                  return (
+                    <div
+                      key={index}
+                      className={`flex items-center justify-between p-3 rounded-lg border transition-all ${
+                        isSelected
+                          ? "bg-blue-50 border-blue-300"
+                          : "bg-white border-slate-200"
+                      } hover:shadow-sm`}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={isSelected}
+                        onChange={() => handleToggleSelect(index)}
+                        className="w-4 h-4 rounded cursor-pointer flex-shrink-0"
+                      />
+                      <div className="flex-1 space-y-1 ml-3">
+                        <div className="flex items-center gap-2">
+                          <Badge className="bg-blue-100 text-blue-800">
+                            {index + 1}
+                          </Badge>
+                          <span className="font-semibold text-slate-900">
+                            {movieInfo?.title || "Phim không xác định"}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-4 text-sm text-slate-600">
+                          <div className="flex items-center gap-1">
+                            <span className="font-medium">🕐</span>
+                            <span>{startTime}</span>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <span className="font-medium">📅</span>
+                            <span>{startDate}</span>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <span className="font-medium">⏱️</span>
+                            <span>{duration} phút</span>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <span className="font-medium">🏷️</span>
+                            <span className="capitalize">
+                              {showTime.day_type === "WEEKEND"
+                                ? "Cuối tuần"
+                                : "Ngày thường"}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             </div>
           )}

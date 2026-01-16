@@ -11,12 +11,9 @@ import {
   Ticket,
   Settings,
   ChevronDown,
-  Moon,
-  Sun,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
-import { Button } from "../ui/button";
 import { useTheme } from "../theme-provider";
 
 const navItems = [
@@ -169,7 +166,6 @@ const navItems = [
 ];
 
 function Navbar() {
-  const { theme, setTheme } = useTheme();
   const { user } = useAuth();
   const [openSubmenu, setOpenSubmenu] = useState<string | null>(null);
   const [submenuPos, setSubmenuPos] = useState<{ top: number; left: number }>({
@@ -274,20 +270,6 @@ function Navbar() {
               );
             }
           })}
-          <div className="ml-auto flex items-center gap-2">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-              className="rounded-full"
-            >
-              {theme === "dark" ? (
-                <Sun className="h-5 w-5" />
-              ) : (
-                <Moon className="h-5 w-5" />
-              )}
-            </Button>
-          </div>
         </div>
       </div>
 

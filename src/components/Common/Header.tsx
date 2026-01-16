@@ -1,10 +1,12 @@
-import { LogOut } from "lucide-react";
+import { LogOut, Moon, Sun } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { useTheme } from "@/components/theme-provider";
 
 function Header() {
+  const { theme, setTheme } = useTheme();
   const { user, logout } = useAuth();
   const navigate = useNavigate();
 
@@ -45,6 +47,20 @@ function Header() {
 
         {/* User Info & Actions */}
         <div className="flex items-center gap-4">
+          <div className="flex items-center gap-4">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+              className="rounded-full"
+            >
+              {theme === "dark" ? (
+                <Sun className="h-5 w-5" />
+              ) : (
+                <Moon className="h-5 w-5" />
+              )}
+            </Button>
+          </div>
           {user && (
             <div className="flex items-center gap-3">
               <div className="hidden md:block text-right">
@@ -58,7 +74,6 @@ function Header() {
               </Avatar>
             </div>
           )}
-
           <Button
             variant="outline"
             size="sm"
