@@ -1,5 +1,10 @@
 import { useState, useEffect } from "react";
 import { comboService } from "@/services/combo.service";
+import { comboMovieService } from "@/services/comboMovie.service";
+import { comboEventService } from "@/services/comboEvent.service";
+import { eventService } from "@/services/event.service";
+import { movieService } from "@/services/movie.service";
+import { menuItemService } from "@/services/menuItem.service";
 import { toast } from "sonner";
 // import { ComboCreateDialog } from "@/components/combos/ComboCreateDialog";
 // import { ComboEditDialog } from "@/components/combos/ComboEditDialog";
@@ -37,6 +42,11 @@ import {
   DollarSign,
 } from "lucide-react";
 import type { CreateComboType, UpdateComboType } from "@/types/combo.type";
+import type { ComboMovieType } from "@/types/comboMovie.type";
+import type { ComboEventType } from "@/types/comboEvent.type";
+import type { movieType } from "@/types/movie.type";
+import type { EventType } from "@/types/event.type";
+import type { ComboItemType } from "@/types/comboItem.type";
 import type { PaginationMeta } from "@/types/pagination.type";
 import { comboPaginateConfig } from "@/config/paginate/combo.config";
 
@@ -46,6 +56,12 @@ interface ComboType extends CreateComboType {
 
 const ComboList = () => {
   const [combos, setCombos] = useState<ComboType[]>([]);
+  const [comboItems, setComboItems] = useState<ComboItemType[]>([]);
+  const [menuItems, setMenuItems] = useState<movieType[]>([]);
+  const [comboMovies, setComboMovies] = useState<ComboMovieType[]>([]);
+  const [comboEvents, setComboEvents] = useState<ComboEventType[]>([]);
+  const [movies, setMovies] = useState<movieType[]>([]);
+  const [events, setEvents] = useState<EventType[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
@@ -60,10 +76,118 @@ const ComboList = () => {
     totalPages: 0,
   });
 
+  const fetchComboMovies = async () => {
+    try {
+      const response = await comboMovieService.getAll();
+      if (response.success) {
+        setComboMovies(response.data as ComboMovieType[]);
+      }
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  const fetchComboEvents = async () => {
+    try {
+      const response = await comboEventService.getAll();
+      if (response.success) {
+        setComboEvents(response.data as ComboEventType[]);
+      }
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  const fetchComboItems = async () => {
+    try {
+      const response = await menuItemService.getAll();
+      if (response.success) {
+        setComboItems(response.data as ComboItemType[]);
+      }
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  const fetchMovies = async () => {
+    try {
+      const response = await movieService.findAndPaginate({
+        page: 1,
+        limit: undefined,
+        sortBy: undefined, // Format: "column:ASC" or "column:DESC"
+        search: undefined,
+        searchBy: undefined,
+        filter: {
+          is_active: true,
+        },
+      });
+      if (response.success) {
+        setMovies(response.data as movieType[]);
+      }
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  const fetchEvents = async () => {
+    try {
+      const response = await eventService.findAndPaginate({
+        page: 1,
+        limit: undefined,
+        sortBy: undefined, // Format: "column:ASC" or "column:DESC"
+        search: undefined,
+        searchBy: undefined,
+        filter: {
+          is_active: true,
+        },
+      });
+      if (response.success) {
+        setEvents(response.data as EventType[]);
+      }
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  const fetchMenuItems = async () => {
+    try {
+      const response = await menuItemService.findAndPaginate({
+        page: 1,
+        limit: undefined,
+        sortBy: undefined,
+        search: undefined,
+        searchBy: undefined,
+        filter: { is_active: true },
+      });
+      if (response.success) {
+        setMenuItems(response.data as movieType[]);
+      }
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  useEffect(() => {
+    fetchComboMovies();
+    fetchComboEvents();
+    fetchComboItems();
+    fetchMenuItems();
+    fetchEvents();
+    fetchMovies();
+  }, []);
+
+  console.log("ComboMovies:", comboMovies);
+  console.log("ComboEvents:", comboEvents);
+  console.log("ComboItems:", comboItems);
+  console.log("Movies:", movies);
+  console.log("Events:", events);
+  console.log("MenuItems:", menuItems);
+  console.log("Combos state:", combos);
+
   // Dialog states
-  const [createDialogOpen, setCreateDialogOpen] = useState(false);
-  const [editDialogOpen, setEditDialogOpen] = useState(false);
-  const [detailDialogOpen, setDetailDialogOpen] = useState(false);
+  //   const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  //   const [editDialogOpen, setEditDialogOpen] = useState(false);
+  //   const [detailDialogOpen, setDetailDialogOpen] = useState(false);
   const [selectedCombo, setSelectedCombo] = useState<ComboType | null>(null);
 
   const findAndPaginate = async (
