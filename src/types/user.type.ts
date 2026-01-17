@@ -9,7 +9,9 @@ export interface User {
     role: UserRole,
     points?: number,
     is_active?: boolean,
-    created_at?: string
+    created_at?: string,
+    is_online?: boolean,
+    last_seen?: string,
 }
 
 export interface CreateUserType {

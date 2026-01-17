@@ -65,30 +65,30 @@ function Profile() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
+    <div className="min-h-screen bg-background py-8">
       <div className="max-w-4xl mx-auto px-4">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-4xl font-bold text-gray-900">Hồ sơ cá nhân</h1>
-          <p className="text-gray-600 mt-2">
+          <h1 className="text-4xl font-bold text-foreground">Hồ sơ cá nhân</h1>
+          <p className="text-muted-foreground mt-2">
             Quản lý thông tin và cài đặt tài khoản của bạn
           </p>
         </div>
         {/* Profile Card */}
-        <div className="bg-white rounded-lg shadow-md p-8 mb-8">
+        <div className="bg-card rounded-lg shadow-md p-8 mb-8 border border-border">
           {/* Avatar & Basic Info */}
-          <div className="flex items-center gap-6 mb-8 pb-8 border-b">
-            <div className="w-24 h-24 bg-gradient-to-br from-blue-400 to-purple-500 rounded-full flex items-center justify-center text-white shadow-lg">
+          <div className="flex items-center gap-6 mb-8 pb-8 border-b border-border">
+            <div className="w-24 h-24 bg-gradient-to-br from-primary to-accent rounded-full flex items-center justify-center text-primary-foreground shadow-lg">
               <User size={48} />
             </div>
             <div className="flex-1">
-              <h2 className="text-2xl font-bold text-gray-900">
+              <h2 className="text-2xl font-bold text-foreground">
                 {formData.name || "Người dùng"}
               </h2>
-              <p className="text-gray-500 mt-1">
+              <p className="text-muted-foreground mt-1">
                 {getRoleLabel(formData.role || "CUSTOMER")}
               </p>
-              <p className="text-sm text-gray-400 mt-2">
+              <p className="text-sm text-muted-foreground/70 mt-2">
                 Tham gia từ ngày {formatDate(formData.created_at as string)}
               </p>
             </div>
@@ -100,7 +100,7 @@ function Profile() {
                   setIsEditMode(true);
                 }
               }}
-              className="flex items-center gap-2 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition font-medium"
+              className="flex items-center gap-2 px-4 py-2 bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg transition font-medium"
             >
               <Edit size={18} />
               {isEditMode ? "Hủy" : "Chỉnh sửa"}
@@ -112,7 +112,7 @@ function Profile() {
             {/* Left Column */}
             <div className="space-y-6">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-foreground mb-2">
                   Họ và tên
                 </label>
                 {isEditMode ? (
@@ -120,18 +120,18 @@ function Profile() {
                     type="text"
                     value={formData.name || ""}
                     onChange={(e) => handleChangeForm("name", e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"
+                    className="w-full px-4 py-2 border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition bg-background text-foreground"
                     placeholder="Nhập họ và tên"
                   />
                 ) : (
-                  <p className="text-gray-900 font-medium">
+                  <p className="text-foreground font-medium">
                     {formData.name || "Chưa cập nhật"}
                   </p>
                 )}
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-foreground mb-2">
                   <Mail className="inline mr-2" size={16} />
                   Email
                 </label>
@@ -140,18 +140,18 @@ function Profile() {
                     type="email"
                     value={formData.email || ""}
                     onChange={(e) => handleChangeForm("email", e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"
+                    className="w-full px-4 py-2 border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition bg-background text-foreground"
                     placeholder="Nhập email"
                   />
                 ) : (
-                  <p className="text-gray-900">
+                  <p className="text-foreground">
                     {formData.email || "Chưa cập nhật"}
                   </p>
                 )}
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-foreground mb-2">
                   <Phone className="inline mr-2" size={16} />
                   Số điện thoại
                 </label>
@@ -160,11 +160,11 @@ function Profile() {
                     type="tel"
                     value={formData.phone || ""}
                     onChange={(e) => handleChangeForm("phone", e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"
+                    className="w-full px-4 py-2 border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition bg-background text-foreground"
                     placeholder="Nhập số điện thoại"
                   />
                 ) : (
-                  <p className="text-gray-900">
+                  <p className="text-foreground">
                     {formData.phone || "Chưa cập nhật"}
                   </p>
                 )}
@@ -174,16 +174,16 @@ function Profile() {
             {/* Right Column */}
             <div className="space-y-6">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-foreground mb-2">
                   Chức vụ
                 </label>
-                <div className="inline-block px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm font-medium">
+                <div className="inline-block px-3 py-1 bg-primary/10 text-primary rounded-full text-sm font-medium">
                   {getRoleLabel(formData.role || "CUSTOMER")}
                 </div>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-foreground mb-2">
                   Điểm thưởng
                 </label>
                 <p className="text-3xl font-bold text-purple-600">
@@ -192,7 +192,7 @@ function Profile() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-foreground mb-2">
                   Mật khẩu
                 </label>
                 {isEditMode ? (
@@ -203,19 +203,19 @@ function Profile() {
                       onChange={(e) =>
                         handleChangeForm("password", e.target.value)
                       }
-                      className="w-full px-4 py-2 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"
+                      className="w-full px-4 py-2 pr-10 border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition bg-background text-foreground"
                       placeholder="Nhập mật khẩu"
                     />
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 transition"
+                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground transition"
                     >
                       {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                     </button>
                   </div>
                 ) : (
-                  <p className="text-gray-900">••••••</p>
+                  <p className="text-foreground">••••••</p>
                 )}
               </div>
             </div>
@@ -226,14 +226,14 @@ function Profile() {
               <button
                 onClick={handleSaveChanges}
                 disabled={loading}
-                className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-green-500 hover:bg-green-600 disabled:bg-gray-400 text-white rounded-lg transition font-medium"
+                className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-accent hover:bg-accent/90 disabled:bg-muted text-accent-foreground rounded-lg transition font-medium"
               >
                 <Check size={18} />
                 {loading ? "Đang lưu..." : "Lưu thay đổi"}
               </button>
               <button
                 onClick={handleCancel}
-                className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-gray-300 hover:bg-gray-400 text-gray-800 rounded-lg transition font-medium"
+                className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-muted hover:bg-muted/70 text-muted-foreground rounded-lg transition font-medium"
               >
                 <X size={18} />
                 Hủy
@@ -244,14 +244,18 @@ function Profile() {
 
         {/* Statistics */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-          <div className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition">
-            <p className="text-gray-600 text-sm mb-2">Điểm thưởng tích lũy</p>
+          <div className="bg-card rounded-lg shadow-md p-6 hover:shadow-lg transition border border-border">
+            <p className="text-muted-foreground text-sm mb-2">
+              Điểm thưởng tích lũy
+            </p>
             <p className="text-4xl font-bold text-purple-600">
               {formData.points || 0}
             </p>
           </div>
-          <div className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition">
-            <p className="text-gray-600 text-sm mb-2">Trạng thái tài khoản</p>
+          <div className="bg-card rounded-lg shadow-md p-6 hover:shadow-lg transition border border-border">
+            <p className="text-muted-foreground text-sm mb-2">
+              Trạng thái tài khoản
+            </p>
             <div
               className={`inline-block px-4 py-2 rounded-lg font-medium ${
                 formData.is_active

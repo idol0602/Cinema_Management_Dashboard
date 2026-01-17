@@ -18,6 +18,9 @@ import Profile from "@/pages/Profile/Profile";
 import DiscountList from "@/pages/Discounts/DiscountList";
 import EventList from "@/pages/Events/EventList";
 import ShowTimeList from "@/pages/ShowTimes/ShowTimeList";
+import NotFound from "@/pages/NotFound";
+import ComboList from "@/pages/Combos/ComboList";
+import Home from "@/pages/Home";
 
 export const AppRoutes = () => {
   return (
@@ -76,10 +79,10 @@ export const AppRoutes = () => {
         <Route path="/ticket-prices" element={<TicketPriceList />} />
 
         {/* Services */}
-        <Route path="/combos" element={<>COMBOS PAGE</>} />
+        <Route path="/combos" element={<ComboList />} />
         <Route path="/menu-items" element={<MenuItemList />} />
         <Route path="/events" element={<EventList />} />
-        <Route path="/dashboard" element={<>DASHBOARD HOME</>} />
+        <Route path="/dashboard" element={<Home />} />
         <Route path="/orders" element={<>ORDERS PAGE</>} />
         <Route path="/profile" element={<Profile />} />
       </Route>
@@ -89,7 +92,7 @@ export const AppRoutes = () => {
       <Route index element={<Navigate to="/dashboard" replace />} />
 
       {/* 404 - Redirect to Dashboard */}
-      <Route path="*" element={<Navigate to="/dashboard" replace />} />
+      <Route path="*" element={<NotFound />} />
     </Routes>
   );
 };

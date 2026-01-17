@@ -146,16 +146,16 @@ function SQLAgent() {
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-gray-50">
+    <div className="flex flex-col min-h-screen bg-background">
       {/* Header */}
-      <div className="bg-white border-b border-gray-200 px-6 py-4 flex-shrink-0">
+      <div className="bg-card border-b border-border px-6 py-4 flex-shrink-0">
         <div className="flex items-center gap-3">
-          <div className="p-2 bg-blue-100 rounded-lg">
-            <Bot className="w-6 h-6 text-blue-600" />
+          <div className="p-2 bg-primary/10 rounded-lg">
+            <Bot className="w-6 h-6 text-primary" />
           </div>
           <div>
-            <h1 className="text-xl font-semibold text-gray-900">SQL Agent</h1>
-            <p className="text-sm text-gray-500">
+            <h1 className="text-xl font-semibold text-foreground">SQL Agent</h1>
+            <p className="text-sm text-muted-foreground">
               Hỏi về cơ sở dữ liệu và xem thống kê trực quan
             </p>
           </div>
@@ -163,13 +163,13 @@ function SQLAgent() {
       </div>
 
       {/* Charts Section */}
-      <div className="bg-white border-b border-gray-200 px-6 py-6 flex-shrink-0">
+      <div className="bg-card border-b border-border px-6 py-6 flex-shrink-0">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Revenue Chart */}
-          <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-4 shadow-sm">
+          <div className="bg-primary/5 rounded-xl p-4 shadow-sm">
             <div className="flex items-center gap-2 mb-3">
-              <BarChart3 className="w-5 h-5 text-blue-600" />
-              <h3 className="font-semibold text-gray-800">
+              <BarChart3 className="w-5 h-5 text-primary" />
+              <h3 className="font-semibold text-foreground">
                 Doanh thu & Vé bán
               </h3>
             </div>
@@ -180,10 +180,10 @@ function SQLAgent() {
           </div>
 
           {/* User Growth Chart */}
-          <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-xl p-4 shadow-sm">
+          <div className="bg-accent/5 rounded-xl p-4 shadow-sm">
             <div className="flex items-center gap-2 mb-3">
-              <TrendingUp className="w-5 h-5 text-green-600" />
-              <h3 className="font-semibold text-gray-800">
+              <TrendingUp className="w-5 h-5 text-accent" />
+              <h3 className="font-semibold text-foreground">
                 Tăng trưởng người dùng
               </h3>
             </div>
@@ -191,10 +191,10 @@ function SQLAgent() {
           </div>
 
           {/* Genre Distribution Chart */}
-          <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl p-4 shadow-sm">
+          <div className="bg-destructive/5 rounded-xl p-4 shadow-sm">
             <div className="flex items-center gap-2 mb-3">
-              <PieChart className="w-5 h-5 text-purple-600" />
-              <h3 className="font-semibold text-gray-800">
+              <PieChart className="w-5 h-5 text-destructive" />
+              <h3 className="font-semibold text-foreground">
                 Phân bố thể loại phim
               </h3>
             </div>
@@ -207,53 +207,53 @@ function SQLAgent() {
       </div>
 
       {/* Messages Container */}
-      <div className="overflow-y-auto px-6 py-4 space-y-4 h-[80vh]">
+      <div className="overflow-y-auto px-6 py-4 space-y-4 h-[80vh] bg-background">
         {messages.length === 0 && (
           <div className="flex flex-col items-center justify-center h-full text-center">
-            <Bot className="w-16 h-16 text-gray-300 mb-4" />
-            <h2 className="text-xl font-semibold text-gray-700 mb-2">
+            <Bot className="w-16 h-16 text-muted-foreground/50 mb-4" />
+            <h2 className="text-xl font-semibold text-foreground mb-2">
               Chào mừng đến với SQL Agent
             </h2>
-            <p className="text-gray-500 max-w-md">
+            <p className="text-muted-foreground max-w-md">
               Hỏi tôi bất cứ điều gì về cơ sở dữ liệu rạp chiếu phim. Tôi có thể
               giúp bạn truy vấn phim, người dùng, đặt vé và nhiều hơn nữa!
             </p>
             <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-3 w-full max-w-2xl">
               <button
                 onClick={() => setInput("Có bao nhiêu người dùng đã đăng ký?")}
-                className="px-4 py-3 bg-white border-2 border-gray-200 rounded-lg hover:border-blue-400 hover:bg-blue-50 transition-all text-left"
+                className="px-4 py-3 bg-card border-2 border-border rounded-lg hover:border-primary hover:bg-primary/5 transition-all text-left"
               >
-                <p className="font-medium text-gray-700">
+                <p className="font-medium text-foreground">
                   📊 Thống kê người dùng
                 </p>
-                <p className="text-sm text-gray-500">
+                <p className="text-sm text-muted-foreground">
                   Có bao nhiêu người dùng đã đăng ký?
                 </p>
               </button>
               <button
                 onClick={() => setInput("Top 5 phim có doanh thu cao nhất?")}
-                className="px-4 py-3 bg-white border-2 border-gray-200 rounded-lg hover:border-blue-400 hover:bg-blue-50 transition-all text-left"
+                className="px-4 py-3 bg-card border-2 border-border rounded-lg hover:border-primary hover:bg-primary/5 transition-all text-left"
               >
-                <p className="font-medium text-gray-700">🎬 Phim phổ biến</p>
-                <p className="text-sm text-gray-500">
+                <p className="font-medium text-foreground">🎬 Phim phổ biến</p>
+                <p className="text-sm text-muted-foreground">
                   Top 5 phim có doanh thu cao nhất?
                 </p>
               </button>
               <button
                 onClick={() => setInput("Tổng doanh thu trong tháng này?")}
-                className="px-4 py-3 bg-white border-2 border-gray-200 rounded-lg hover:border-blue-400 hover:bg-blue-50 transition-all text-left"
+                className="px-4 py-3 bg-card border-2 border-border rounded-lg hover:border-primary hover:bg-primary/5 transition-all text-left"
               >
-                <p className="font-medium text-gray-700">💰 Doanh thu</p>
-                <p className="text-sm text-gray-500">
+                <p className="font-medium text-foreground">💰 Doanh thu</p>
+                <p className="text-sm text-muted-foreground">
                   Tổng doanh thu trong tháng này?
                 </p>
               </button>
               <button
                 onClick={() => setInput("Suất chiếu nào còn ghế trống?")}
-                className="px-4 py-3 bg-white border-2 border-gray-200 rounded-lg hover:border-blue-400 hover:bg-blue-50 transition-all text-left"
+                className="px-4 py-3 bg-card border-2 border-border rounded-lg hover:border-primary hover:bg-primary/5 transition-all text-left"
               >
-                <p className="font-medium text-gray-700">🎫 Suất chiếu</p>
-                <p className="text-sm text-gray-500">
+                <p className="font-medium text-foreground">🎫 Suất chiếu</p>
+                <p className="text-sm text-muted-foreground">
                   Suất chiếu nào còn ghế trống?
                 </p>
               </button>
@@ -269,8 +269,8 @@ function SQLAgent() {
           >
             {message.role === "assistant" && (
               <div className="flex-shrink-0">
-                <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                  <Bot className="w-5 h-5 text-blue-600" />
+                <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center">
+                  <Bot className="w-5 h-5 text-primary" />
                 </div>
               </div>
             )}
@@ -279,12 +279,12 @@ function SQLAgent() {
             <div
               className={`max-w-[70%] rounded-lg px-4 py-3 shadow-sm ${
                 message.role === "user"
-                  ? "bg-gradient-to-br from-blue-600 to-blue-700 text-white"
-                  : "bg-white border border-gray-200 text-gray-900"
+                  ? "bg-primary text-primary-foreground"
+                  : "bg-card border border-border text-foreground"
               }`}
             >
               {message.role === "assistant" ? (
-                <div className="prose prose-sm max-w-none prose-headings:text-gray-900 prose-p:text-gray-700 prose-code:text-blue-600">
+                <div className="prose prose-sm max-w-none prose-headings:text-foreground prose-p:text-foreground prose-code:text-primary">
                   <ReactMarkdown
                     remarkPlugins={[remarkGfm]}
                     rehypePlugins={[rehypeHighlight]}
@@ -300,7 +300,9 @@ function SQLAgent() {
 
               <span
                 className={`text-xs mt-2 block ${
-                  message.role === "user" ? "text-blue-100" : "text-gray-400"
+                  message.role === "user"
+                    ? "text-primary-foreground/70"
+                    : "text-muted-foreground"
                 }`}
               >
                 {new Date(message.timestamp).toLocaleTimeString("vi-VN", {
@@ -312,8 +314,8 @@ function SQLAgent() {
 
             {message.role === "user" && (
               <div className="flex-shrink-0">
-                <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center">
-                  <User className="w-5 h-5 text-gray-600" />
+                <div className="w-8 h-8 bg-muted rounded-full flex items-center justify-center">
+                  <User className="w-5 h-5 text-muted-foreground" />
                 </div>
               </div>
             )}
@@ -323,14 +325,14 @@ function SQLAgent() {
         {isLoading && (
           <div className="flex gap-3 justify-start">
             <div className="flex-shrink-0">
-              <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                <Bot className="w-5 h-5 text-blue-600" />
+              <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center">
+                <Bot className="w-5 h-5 text-primary" />
               </div>
             </div>
-            <div className="bg-white border border-gray-200 rounded-lg px-4 py-3 shadow-sm">
+            <div className="bg-card border border-border rounded-lg px-4 py-3 shadow-sm">
               <div className="flex items-center gap-2">
-                <Loader2 className="w-4 h-4 animate-spin text-blue-600" />
-                <span className="text-gray-500">Đang phân tích...</span>
+                <Loader2 className="w-4 h-4 animate-spin text-primary" />
+                <span className="text-muted-foreground">Đang phân tích...</span>
               </div>
             </div>
           </div>
@@ -340,12 +342,12 @@ function SQLAgent() {
       </div>
 
       {/* Input Form */}
-      <div className="bg-white border-t border-gray-200 px-6 py-4 shadow-lg flex-shrink-0">
+      <div className="bg-card border-t border-border px-6 py-4 shadow-lg flex-shrink-0">
         <form onSubmit={handleSubmit} className="flex gap-3">
           <button
             type="button"
             onClick={() => setShowImportModal(true)}
-            className="px-4 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-all flex items-center gap-2 shadow-md"
+            className="px-4 py-3 bg-accent text-accent-foreground rounded-lg hover:bg-accent/90 focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2 transition-all flex items-center gap-2 shadow-md"
             title="Import Excel"
           >
             <FileSpreadsheet className="w-5 h-5" />
@@ -356,12 +358,12 @@ function SQLAgent() {
             onChange={(e) => setInput(e.target.value)}
             placeholder="Đặt câu hỏi về cơ sở dữ liệu của bạn..."
             disabled={isLoading}
-            className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-50 disabled:cursor-not-allowed transition-all"
+            className="flex-1 px-4 py-3 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent disabled:bg-muted disabled:cursor-not-allowed transition-all"
           />
           <button
             type="submit"
             disabled={isLoading || !input.trim()}
-            className="px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg hover:from-blue-700 hover:to-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center gap-2 shadow-md"
+            className="px-6 py-3 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center gap-2 shadow-md"
           >
             {isLoading ? (
               <Loader2 className="w-5 h-5 animate-spin" />
@@ -375,23 +377,23 @@ function SQLAgent() {
 
       {/* Import Excel Modal */}
       {showImportModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-xl shadow-2xl p-6 w-full max-w-md mx-4">
+        <div className="fixed inset-0 bg-foreground/50 flex items-center justify-center z-50">
+          <div className="bg-card rounded-xl shadow-2xl p-6 w-full max-w-md mx-4 border border-border">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-                <FileSpreadsheet className="w-5 h-5 text-green-600" />
+              <h3 className="text-lg font-semibold text-foreground flex items-center gap-2">
+                <FileSpreadsheet className="w-5 h-5 text-accent" />
                 Import File Excel
               </h3>
               <button
                 onClick={handleCancelImport}
-                className="text-gray-400 hover:text-gray-600 transition-colors"
+                className="text-muted-foreground hover:text-foreground transition-colors"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
             <div className="mb-6">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-foreground mb-2">
                 Chọn file Excel (.xlsx, .xls)
               </label>
               <input
@@ -399,12 +401,14 @@ function SQLAgent() {
                 type="file"
                 accept=".xlsx,.xls"
                 onChange={handleFileSelect}
-                className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-green-50 file:text-green-700 hover:file:bg-green-100 cursor-pointer border border-gray-300 rounded-lg"
+                className="block w-full text-sm text-muted-foreground file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-accent/10 file:text-accent hover:file:bg-accent/20 cursor-pointer border border-border rounded-lg"
               />
               {selectedFile && (
-                <p className="mt-2 text-sm text-gray-600">
+                <p className="mt-2 text-sm text-muted-foreground">
                   Đã chọn:{" "}
-                  <span className="font-medium">{selectedFile.name}</span>
+                  <span className="font-medium text-foreground">
+                    {selectedFile.name}
+                  </span>
                 </p>
               )}
             </div>
@@ -412,14 +416,14 @@ function SQLAgent() {
             <div className="flex gap-3 justify-end">
               <button
                 onClick={handleCancelImport}
-                className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-all"
+                className="px-4 py-2 border border-border text-foreground rounded-lg hover:bg-muted focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 transition-all"
               >
                 Hủy
               </button>
               <button
                 onClick={handleImportFile}
                 disabled={!selectedFile}
-                className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center gap-2"
+                className="px-4 py-2 bg-accent text-accent-foreground rounded-lg hover:bg-accent/90 focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center gap-2"
               >
                 <FileSpreadsheet className="w-4 h-4" />
                 Import

@@ -4,6 +4,7 @@ import { authService } from "@/services/auth.service.ts";
 import { AuthContext } from "./AuthContext.tsx";
 import { isTokenExpired } from "@/utils/token.ts";
 import { toast } from "sonner";
+import { userService } from "@/services/user.service.ts";
 
 interface AuthProviderProps {
   children: ReactNode;
@@ -54,7 +55,6 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         toast.error(error);
         throw new Error(error);
       }
-
       const { user, token } = data;
       setUser(user as User);
       setToken(token);
@@ -70,14 +70,21 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     }
   }, []);
 
-  const logout = useCallback(() => {
+  const logout = useCallback(async () => {
+    try {
+      if (user?.id) {
+        await userService.sendOffline(user.id);
+      }
+    } catch (error) {
+      console.error("Error sending offline signal:", error);
+    }
     setUser(null);
     setToken(null);
     setIsAuthenticated(false);
     localStorage.removeItem("user");
     localStorage.removeItem("token");
     toast.success("Đăng xuất thành công!");
-  }, []);
+  }, [user]);
 
   const updateProfile = useCallback(async (updatedUser: Partial<User>) => {
     try {
@@ -85,7 +92,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       const { id: userId, ...updatedData } = updatedUser;
       const { data, error } = await authService.updateProfile(
         userId as string,
-        updatedData
+        updatedData,
       );
       if (error) {
         toast.error(error);

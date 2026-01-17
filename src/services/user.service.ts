@@ -113,4 +113,34 @@ export const userService = {
       };
     }
   },
+
+  sendOnline: async(userId: string) => {
+    try {
+      await api.put(`/users/online/${userId}`);
+      return { success: true };
+    } catch (error) {
+      const apiError = handleApiError(error);
+      return { success: false, error: apiError.message };
+    }
+  },
+
+  sendOffline: async(userId: string) => {
+    try {
+      await api.put(`/users/offline/${userId}`);
+      return { success: true };
+    } catch (error) {
+      const apiError = handleApiError(error);
+      return { success: false, error: apiError.message };
+    }
+  },
+
+  sendHeartbeat: async(userId: string) => {
+    try {
+      await api.post(`/users/heartbeat/${userId}`);
+      return { success: true };
+    } catch (error) {
+      const apiError = handleApiError(error);
+      return { success: false, error: apiError.message };
+    }
+  }
 }

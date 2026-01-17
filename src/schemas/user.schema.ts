@@ -9,6 +9,8 @@ export const createUserSchema = z.object({
   points: z.number().int().default(0).optional(),
   is_active: z.boolean().default(true).optional(),
   created_at: z.string().default(new Date().toISOString()).optional(),
+  is_online: z.boolean().default(false).optional(),
+  last_seen: z.string().default(new Date().toISOString()).optional(),
 });
 
 export const updateUserSchema = createUserSchema.partial();
