@@ -1,3 +1,5 @@
+import type { DiscountType } from "./discount.type";
+
 export interface EventType {
   id?: string;
   name: string;
@@ -7,6 +9,7 @@ export interface EventType {
   image?: string;
   is_active?: boolean;
   created_at?: string;
+  discount?: DiscountType;  
 }
 
 export interface CreateEventType {

@@ -5,10 +5,11 @@ import { comboEventService } from "@/services/comboEvent.service";
 import { eventService } from "@/services/event.service";
 import { movieService } from "@/services/movie.service";
 import { menuItemService } from "@/services/menuItem.service";
+import { discountService } from "@/services/discount.service";
 import { toast } from "sonner";
-// import { ComboCreateDialog } from "@/components/combos/ComboCreateDialog";
+import { ComboCreateDialog } from "../../components/combos/ComboCreateDialog";
 // import { ComboEditDialog } from "@/components/combos/ComboEditDialog";
-// import { ComboDetailDialog } from "@/components/combos/ComboDetailDialog";
+import { ComboDetailDialog } from "../../components/combos/ComboDetailDialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -48,7 +49,9 @@ import type { movieType } from "@/types/movie.type";
 import type { EventType } from "@/types/event.type";
 import type { ComboItemType } from "@/types/comboItem.type";
 import type { PaginationMeta } from "@/types/pagination.type";
+import type { DiscountType } from "@/types/discount.type";
 import { comboPaginateConfig } from "@/config/paginate/combo.config";
+import { comboItemService } from "@/services/comboItem.service";
 
 interface ComboType extends CreateComboType {
   id: string;
@@ -56,6 +59,7 @@ interface ComboType extends CreateComboType {
 
 const ComboList = () => {
   const [combos, setCombos] = useState<ComboType[]>([]);
+  const [discounts, setDiscounts] = useState<DiscountType[]>([]);
   const [comboItems, setComboItems] = useState<ComboItemType[]>([]);
   const [menuItems, setMenuItems] = useState<movieType[]>([]);
   const [comboMovies, setComboMovies] = useState<ComboMovieType[]>([]);
@@ -100,7 +104,7 @@ const ComboList = () => {
 
   const fetchComboItems = async () => {
     try {
-      const response = await menuItemService.getAll();
+      const response = await comboItemService.getAll();
       if (response.success) {
         setComboItems(response.data as ComboItemType[]);
       }
@@ -167,6 +171,24 @@ const ComboList = () => {
     }
   };
 
+  const fetchDiscounts = async () => {
+    try {
+      const response = await discountService.findAndPaginate({
+        page: 1,
+        limit: undefined,
+        sortBy: undefined,
+        search: undefined,
+        searchBy: undefined,
+        filter: { is_active: true },
+      });
+      if (response.success) {
+        setDiscounts(response.data as DiscountType[]);
+      }
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
   useEffect(() => {
     fetchComboMovies();
     fetchComboEvents();
@@ -174,20 +196,13 @@ const ComboList = () => {
     fetchMenuItems();
     fetchEvents();
     fetchMovies();
+    fetchDiscounts();
   }, []);
 
-  console.log("ComboMovies:", comboMovies);
-  console.log("ComboEvents:", comboEvents);
-  console.log("ComboItems:", comboItems);
-  console.log("Movies:", movies);
-  console.log("Events:", events);
-  console.log("MenuItems:", menuItems);
-  console.log("Combos state:", combos);
-
   // Dialog states
-  //   const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  const [createDialogOpen, setCreateDialogOpen] = useState(false);
   //   const [editDialogOpen, setEditDialogOpen] = useState(false);
-  //   const [detailDialogOpen, setDetailDialogOpen] = useState(false);
+  const [detailDialogOpen, setDetailDialogOpen] = useState(false);
   const [selectedCombo, setSelectedCombo] = useState<ComboType | null>(null);
 
   const findAndPaginate = async (
@@ -267,18 +282,7 @@ const ComboList = () => {
 
   // Handle create combo
   const handleCreateSubmit = async (data: CreateComboType) => {
-    try {
-      const response = await comboService.create(data);
-      if (response.success) {
-        toast.success("Tạo combo mới thành công!");
-        handleSearch(); // Refresh list
-      } else {
-        toast.error("Không thể tạo combo mới");
-      }
-    } catch (error) {
-      toast.error("Có lỗi xảy ra khi tạo combo");
-      console.error(error);
-    }
+    handleSearch(); // Refresh list
   };
 
   const handleEdit = (combo: ComboType) => {
@@ -323,7 +327,8 @@ const ComboList = () => {
   };
 
   const handleView = (combo: ComboType) => {
-    setSelectedCombo(combo);
+    const detailedCombo = collectDataForDetail(combo);
+    setSelectedCombo(detailedCombo as any);
     setDetailDialogOpen(true);
   };
 
@@ -341,6 +346,61 @@ const ComboList = () => {
       currency: "VND",
     }).format(price);
   };
+
+  const collectDataForDetail = (combo: ComboType) => {
+    // lấy ra danh sách combo item trong comboItems có comboId trùng với comboId truyền vào
+    const items = comboItems
+      .filter((item) => item.combo_id === combo.id)
+      .map((item) => {
+        // từ mỗi combo item lấy ra menu item tương ứng trong menuItems
+        const menuItem = menuItems.find(
+          (menu) => menu.id === item.menu_item_id,
+        );
+        return {
+          ...item,
+          menu_item: menuItem,
+        };
+      });
+
+    const moviesInCombo = comboMovies
+      .filter((cm) => cm.combo_id === combo.id)
+      .map((cm) => {
+        const movie = movies.find((m) => m.id === cm.movie_id);
+        return {
+          ...cm,
+          movie: movie,
+        };
+      });
+
+    const eventsInCombo = comboEvents
+      .filter((ce) => ce.combo_id === combo.id)
+      .map((ce) => {
+        const event = events.find((e) => e.id === ce.event_id);
+        const discount = event
+          ? discounts.find((d) => d.event_id === event.id)
+          : null;
+        return {
+          ...ce,
+          event: event
+            ? {
+                ...event,
+                discount: discount || null,
+              }
+            : null,
+        };
+      });
+
+    return {
+      ...combo,
+      combo_items: items,
+      combo_movies: moviesInCombo,
+      combos_events: eventsInCombo,
+    };
+  };
+
+  if (combos[0]) {
+    console.log("combo", collectDataForDetail(combos[1]));
+  }
 
   return (
     <div className="container mx-auto py-6 space-y-6">
@@ -587,26 +647,27 @@ const ComboList = () => {
           )}
         </CardContent>
       </Card>
-
       {/* Dialogs */}
-      {/* <ComboCreateDialog
+      <ComboCreateDialog
         open={createDialogOpen}
         onOpenChange={setCreateDialogOpen}
         onSubmit={handleCreateSubmit}
+        menuItems={menuItems}
+        movies={movies}
+        events={events}
       />
-
-      <ComboEditDialog
+      {/* <ComboEditDialog
         combo={selectedCombo}
         open={editDialogOpen}
         onOpenChange={setEditDialogOpen}
         onSubmit={handleEditSubmit}
-      />
-
+      /> */}{" "}
+      */
       <ComboDetailDialog
         combo={selectedCombo}
         open={detailDialogOpen}
         onOpenChange={setDetailDialogOpen}
-      /> */}
+      />
     </div>
   );
 };

@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { seatService } from "@/services/seat.service";
 import { roomService } from "@/services/room.service";
 import { SeatCreateDialog } from "@/components/seats/SeatCreateDialog";
@@ -43,6 +43,7 @@ import { seatPaginateConfig } from "@/config/paginate/seat.config";
 import { MovieImportDialog } from "@/components/Dialog/MovieImportDialog";
 
 const SeatList = () => {
+  const navigate = useNavigate();
   const { id: roomId } = useParams<{ id: string }>();
   const [seats, setSeats] = useState<SeatType[]>([]);
   const [fullSeats, setFullSeats] = useState<SeatType[]>([]);
@@ -108,7 +109,7 @@ const SeatList = () => {
       seatPaginateConfig.defaultSortBy[0][1],
     search = undefined,
     searchBy = undefined,
-    filter = { room_id: roomId }
+    filter = { room_id: roomId },
   ) => {
     setLoading(true);
     try {
@@ -169,7 +170,7 @@ const SeatList = () => {
       sortBy,
       searchQuery || undefined,
       searchColumn || undefined,
-      Object.keys(filter).length > 0 ? filter : undefined
+      Object.keys(filter).length > 0 ? filter : undefined,
     );
   };
 
@@ -185,7 +186,7 @@ const SeatList = () => {
       const response = await seatService.importFromExcel(file, roomId);
       if (response.success) {
         toast.success(
-          `Import thành công! ${response.data.imported} ghế đã được nhập, ${response.data.skipped} ghế bị bỏ qua.`
+          `Import thành công! ${response.data.imported} ghế đã được nhập, ${response.data.skipped} ghế bị bỏ qua.`,
         );
         handleSearch();
       } else {
@@ -259,7 +260,8 @@ const SeatList = () => {
 
   return (
     <div className="container mx-auto py-6 space-y-6">
-      <Tabs defaultValue="list" className="w-full">
+      <Tabs defaultValue="list" className="w-full space-x-2">
+        <Button onClick={() => navigate("/rooms")}>Về danh sách phòng</Button>
         <TabsList>
           <TabsTrigger value="list">Danh sách ghế</TabsTrigger>
           <TabsTrigger value="diagram">Sơ đồ ghế</TabsTrigger>
@@ -418,7 +420,7 @@ const SeatList = () => {
                                   onClick={() =>
                                     handleDelete(
                                       seat.id as string,
-                                      seat.seat_number
+                                      seat.seat_number,
                                     )
                                   }
                                 >
@@ -439,7 +441,7 @@ const SeatList = () => {
                       -{" "}
                       {Math.min(
                         meta.currentPage * meta.itemsPerPage,
-                        meta.totalItems
+                        meta.totalItems,
                       )}{" "}
                       của {meta.totalItems} ghế
                     </div>
@@ -458,13 +460,13 @@ const SeatList = () => {
                       <div className="flex items-center gap-1">
                         {Array.from(
                           { length: meta.totalPages },
-                          (_, i) => i + 1
+                          (_, i) => i + 1,
                         )
                           .filter(
                             (page) =>
                               page === 1 ||
                               page === meta.totalPages ||
-                              Math.abs(page - currentPage) <= 1
+                              Math.abs(page - currentPage) <= 1,
                           )
                           .map((page, index, array) => (
                             <div key={page} className="flex items-center">
@@ -489,7 +491,7 @@ const SeatList = () => {
                         size="sm"
                         onClick={() =>
                           setCurrentPage((prev) =>
-                            Math.min(meta.totalPages, prev + 1)
+                            Math.min(meta.totalPages, prev + 1),
                           )
                         }
                         disabled={currentPage === meta.totalPages}
@@ -662,7 +664,7 @@ const SeatDiagram = ({ seats }: { seats: SeatType[] }) => {
                   <div
                     key={`seat-${row}-${col}`}
                     className={`w-10 h-10 rounded flex items-center justify-center text-xs font-medium border-2 transition-all ${getSeatClass(
-                      seat
+                      seat,
                     )}`}
                     title={
                       seat

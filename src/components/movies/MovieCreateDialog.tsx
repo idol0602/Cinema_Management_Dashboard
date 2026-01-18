@@ -31,10 +31,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { DatePickerInput } from "@/components/ui/date-picker-input";
-import { cn } from "@/lib/utils";
-import { format } from "date-fns";
-import { vi } from "date-fns/locale";
-import { Plus, CalendarIcon, Film, Upload, X, Loader2 } from "lucide-react";
+import { Plus, Film, Upload, X, Loader2 } from "lucide-react";
 import type { movieTypeType } from "@/types/movieType.type";
 
 interface MovieCreateDialogProps {
