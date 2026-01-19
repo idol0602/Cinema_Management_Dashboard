@@ -83,8 +83,6 @@ export const ComboCreateDialog = ({
     }
   };
 
-  console.log("Selected Menu Items:", selectedMenuItems);
-
   const handleRemoveMenuItem = (menuItemId: string) => {
     setSelectedMenuItems((prev) =>
       prev.filter((item) => item.menu_item_id !== menuItemId),
@@ -114,7 +112,6 @@ export const ComboCreateDialog = ({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
   };
 
   const resetForm = () => {
@@ -132,14 +129,6 @@ export const ComboCreateDialog = ({
   const getMenuItemName = (menuItemId: string) => {
     return menuItems.find((item) => item.id === menuItemId)?.name || "N/A";
   };
-
-  //   const getMovieName = (movieId: string) => {
-  //     return movies.find((movie) => movie.id === movieId)?.title || "N/A";
-  //   };
-
-  //   const getEventName = (eventId: string) => {
-  //     return events.find((event) => event.id === eventId)?.name || "N/A";
-  //   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
