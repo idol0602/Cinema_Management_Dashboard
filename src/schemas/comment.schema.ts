@@ -9,6 +9,3 @@ export const createCommentSchema = z.object({
 });
 
 export const updateCommentSchema = createCommentSchema.partial();
-
-export type CreateCommentFormData = z.infer<typeof createCommentSchema>;
-export type UpdateCommentFormData = z.infer<typeof updateCommentSchema>;

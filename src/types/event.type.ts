@@ -1,4 +1,3 @@
-import type { DiscountType } from "./discount.type";
 
 export interface EventType {
   id?: string;
@@ -7,9 +6,10 @@ export interface EventType {
   start_date?: string;
   end_date?: string;
   image?: string;
+  event_type_id?: string; // Reference to event_types table
+  only_at_counter?: boolean;
   is_active?: boolean;
   created_at?: string;
-  discount?: DiscountType;  
 }
 
 export interface CreateEventType {
@@ -18,6 +18,8 @@ export interface CreateEventType {
   start_date?: string;
   end_date?: string;
   image?: string;
+  event_type_id?: string; // Reference to event_types table
+  only_at_counter?: boolean;
   is_active?: boolean;
   created_at?: string;
 }
@@ -28,6 +30,8 @@ export interface UpdateEventType {
   start_date?: string;
   end_date?: string;
   image?: string;
+  event_type_id?: string; // Reference to event_types table
+  only_at_counter?: boolean;
   is_active?: boolean;
   created_at?: string;
 }

@@ -11,7 +11,6 @@ export interface authResponse{
             email: string
             phone: string
             role: string
-            points: number
             is_active: boolean
             created_at: string
         }, 

@@ -4,8 +4,7 @@ export interface MenuItemInTicketType {
   item_id: string;
   quantity: number;
   unit_price: number;
-  total_price?: number;
-  created_at?: string;
+  total_price: number;
 }
 
 export interface CreateMenuItemInTicketType {
@@ -13,8 +12,7 @@ export interface CreateMenuItemInTicketType {
   item_id: string;
   quantity: number;
   unit_price: number;
-  total_price?: number;
-  created_at?: string;
+  total_price: number;
 }
 
 export interface UpdateMenuItemInTicketType {
@@ -23,5 +21,4 @@ export interface UpdateMenuItemInTicketType {
   quantity?: number;
   unit_price?: number;
   total_price?: number;
-  created_at?: string;
 }

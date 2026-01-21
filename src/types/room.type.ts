@@ -1,9 +1,7 @@
-export type RoomFormat = "2D" | "3D" | "IMAX";
-
 export interface RoomType {
   id?: string;
   name: string;
-  format: RoomFormat;
+  format_id: string; // Reference to formats table
   location?: string;
   is_active?: boolean;
   created_at?: string;
@@ -11,7 +9,7 @@ export interface RoomType {
 
 export interface CreateRoomType {
   name: string;
-  format: RoomFormat;
+  format_id: string; // Reference to formats table
   location?: string;
   is_active?: boolean;
   created_at?: string;
@@ -19,7 +17,7 @@ export interface CreateRoomType {
 
 export interface UpdateRoomType {
   name?: string;
-  format?: RoomFormat;
+  format_id?: string; // Reference to formats table
   location?: string;
   is_active?: boolean;
   created_at?: string;

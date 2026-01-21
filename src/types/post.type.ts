@@ -4,8 +4,8 @@ export interface PostType {
   content: string;
   image?: string;
   user_id: string;
-  created_at?: string;
   is_active?: boolean;
+  created_at?: string;
 }
 
 export interface CreatePostType {
@@ -13,8 +13,8 @@ export interface CreatePostType {
   content: string;
   image?: string;
   user_id: string;
-  created_at?: string;
   is_active?: boolean;
+  created_at?: string;
 }
 
 export interface UpdatePostType {

@@ -3,22 +3,22 @@ export interface CommentType {
   movie_id: string;
   user_id: string;
   content: string;
-  created_at?: string;
   is_active?: boolean;
+  created_at?: string;
 }
 
 export interface CreateCommentType {
   movie_id: string;
   user_id: string;
   content: string;
-  created_at?: string;
   is_active?: boolean;
+  created_at?: string;
 }
 
 export interface UpdateCommentType {
   movie_id?: string;
   user_id?: string;
   content?: string;
-  created_at?: string;
   is_active?: boolean;
+  created_at?: string;
 }

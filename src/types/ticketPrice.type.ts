@@ -1,28 +1,29 @@
-export type TicketFormat = "2D" | "3D" | "IMAX";
-export type SeatType = "VIP" | "STANDARD";
 export type DayType = "WEEKDAY" | "WEEKEND";
 
 export interface TicketPriceType {
   id?: string;
-  format: TicketFormat;
-  seat_type: SeatType;
+  format_id: string; // Reference to formats table
+  seat_type_id: string; // Reference to seat_types table
   day_type: DayType;
   price: number;
+  is_active?: boolean;
   created_at?: string;
 }
 
 export interface CreateTicketPriceType {
-  format: TicketFormat;
-  seat_type: SeatType;
+  format_id: string; // Reference to formats table
+  seat_type_id: string; // Reference to seat_types table
   day_type: DayType;
   price: number;
+  is_active?: boolean;
   created_at?: string;
 }
 
 export interface UpdateTicketPriceType {
-  format?: TicketFormat;
-  seat_type?: SeatType;
+  format_id?: string; // Reference to formats table
+  seat_type_id?: string; // Reference to seat_types table
   day_type?: DayType;
   price?: number;
+  is_active?: boolean;
   created_at?: string;
 }

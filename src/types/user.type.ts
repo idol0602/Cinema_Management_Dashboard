@@ -1,17 +1,14 @@
-export type UserRole = 'ADMIN' | 'STAFF' | 'CUSTOMER';
-
 export interface User {
     id?: string;
     name: string,
     email: string,
     phone?: string,
     password?: string,
-    role: UserRole,
-    points?: number,
+    role: string,
     is_active?: boolean,
-    created_at?: string,
     is_online?: boolean,
     last_seen?: string,
+    created_at?: string,
 }
 
 export interface CreateUserType {
@@ -19,9 +16,10 @@ export interface CreateUserType {
     email: string,
     phone?: string,
     password: string,
-    role?: UserRole,
-    points?: number,
+    role?: string,
     is_active?: boolean,
+    is_online?: boolean,
+    last_seen?: string,
     created_at?: string
 }
 
@@ -30,8 +28,9 @@ export interface UpdateUserType {
     email?: string,
     phone?: string,
     password?: string,
-    role?: UserRole,
-    points?: number,
+    role?: string,
     is_active?: boolean,
+    is_online?: boolean,
+    last_seen?: string,
     created_at?: string
 }

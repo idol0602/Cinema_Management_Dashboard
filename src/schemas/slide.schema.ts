@@ -10,6 +10,3 @@ export const createSlideSchema = z.object({
 });
 
 export const updateSlideSchema = createSlideSchema.partial();
-
-export type CreateSlideFormData = z.infer<typeof createSlideSchema>;
-export type UpdateSlideFormData = z.infer<typeof updateSlideSchema>;

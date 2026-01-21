@@ -2,19 +2,17 @@ export interface ComboItemType {
   id?: string;
   combo_id: string;
   menu_item_id: string;
-  quantity?: number;
+  quantity: number;
   unit_price: number;
   is_active?: boolean;
-  created_at?: string;
 }
 
 export interface CreateComboItemType {
   combo_id: string;
   menu_item_id: string;
-  quantity?: number;
+  quantity: number;
   unit_price: number;
   is_active?: boolean;
-  created_at?: string;
 }
 
 export interface UpdateComboItemType {
@@ -23,5 +21,4 @@ export interface UpdateComboItemType {
   quantity?: number;
   unit_price?: number;
   is_active?: boolean;
-  created_at?: string;
 }
