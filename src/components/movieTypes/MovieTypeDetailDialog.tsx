@@ -8,10 +8,10 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Tag, Calendar, Info } from "lucide-react";
-import type { movieTypeType } from "@/types/movieType.type";
+import type { MovieTypeType } from "@/types/movieType.type";
 
 interface MovieTypeDetailDialogProps {
-  movieType: movieTypeType | null;
+  movieType: MovieTypeType | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }

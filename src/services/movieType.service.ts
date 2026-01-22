@@ -1,12 +1,10 @@
 import api, {handleApiError} from "./api";
-import type { movieTypeType } from "@/types/movieType.type"; 
+import type { MovieTypeType,CreateMovieTypeType,UpdateMovieTypeType } from "@/types/movieType.type"; 
 import type {PaginationQuery, PaginatedResponse} from "@/types/pagination.type.ts"
 import type {serviceResponse} from "../types/api.type.ts"
-import type { movieType } from "@/types/movie.type";
 
 export const movieTypeService = {
-
-    create : async(data : movieTypeType) : Promise<serviceResponse> => {
+    create : async(data : CreateMovieTypeType) : Promise<serviceResponse> => {
         try {
             const response = await api.post('/movie-types',data);
             return {
@@ -60,7 +58,7 @@ export const movieTypeService = {
         }   
     },
     
-    update : async(id: string, data: movieTypeType) : Promise<serviceResponse> => {
+    update : async(id: string, data: UpdateMovieTypeType) : Promise<serviceResponse> => {
         try {
             const response = await api.put(`/movie-types/${id}`, data);
             return {
@@ -96,7 +94,7 @@ export const movieTypeService = {
         }
     },
 
-    findAndPaginate: async(query: PaginationQuery): Promise<PaginatedResponse<movieType>> => {
+    findAndPaginate: async(query: PaginationQuery): Promise<PaginatedResponse<MovieTypeType>> => {
     try {
         const response = await api.get("/movie-types", { params: query });
         return {
@@ -109,7 +107,7 @@ export const movieTypeService = {
     } catch (error) {
         const apiError = handleApiError(error);
         return {
-            data: [] as movieType[],
+            data: [] as MovieTypeType[],
             success: false,
             error: apiError.message
         };

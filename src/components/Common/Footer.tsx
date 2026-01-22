@@ -1,7 +1,7 @@
-import { Link } from "react-router-dom";
-import { Film } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
 
 function Footer() {
+  const navigate = useNavigate();
   const currentYear = new Date().getFullYear();
 
   return (
@@ -15,6 +15,7 @@ function Footer() {
                 src="/logo.png"
                 alt="Meta Cinema"
                 className="h-10 w-auto object-contain"
+                onClick={() => navigate("/dashboard")}
               />
               <h3 className="text-white font-bold text-lg bg-gradient-to-r from-amber-400 to-amber-600 bg-clip-text text-transparent">
                 META CINEMA

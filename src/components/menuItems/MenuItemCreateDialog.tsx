@@ -2,10 +2,6 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
-  createMenuItemSchema,
-  type CreateMenuItemFormData,
-} from "@/schemas/menuItem.schema";
-import {
   Dialog,
   DialogContent,
   DialogDescription,
@@ -33,12 +29,14 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
-import { Plus, UtensilsCrossed, Loader2, Upload, X } from "lucide-react";
+import { UtensilsCrossed, Loader2, Upload, X } from "lucide-react";
+import { createMenuItemSchema } from "../../schemas/menu_items.schema";
+import type { CreateMenuItemType } from "@/types/menuItem.type";
 
 interface MenuItemCreateDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSubmit?: (data: CreateMenuItemFormData) => void;
+  onSubmit?: (data: CreateMenuItemType) => void;
 }
 
 export function MenuItemCreateDialog({
@@ -49,7 +47,7 @@ export function MenuItemCreateDialog({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [imagePreview, setImagePreview] = useState<string>("");
 
-  const form = useForm<CreateMenuItemFormData>({
+  const form = useForm({
     resolver: zodResolver(createMenuItemSchema),
     defaultValues: {
       name: "",
@@ -62,7 +60,7 @@ export function MenuItemCreateDialog({
     },
   });
 
-  const handleSubmit = async (data: CreateMenuItemFormData) => {
+  const handleSubmit = async (data: CreateMenuItemType) => {
     setIsSubmitting(true);
     try {
       console.log("Form data:", data);

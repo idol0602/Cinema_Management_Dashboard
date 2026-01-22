@@ -19,12 +19,12 @@ import {
   Tag,
   Info,
 } from "lucide-react";
-import type { movieType } from "@/types/movie.type";
-import type { movieTypeType } from "@/types/movieType.type";
+import type { MovieType } from "@/types/movie.type";
+import type { MovieTypeType } from "@/types/movieType.type";
 
 interface MovieDetailDialogProps {
-  movie: movieType | null;
-  movieTypes: movieTypeType[];
+  movie: MovieType | null;
+  movieTypes: MovieTypeType[];
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }

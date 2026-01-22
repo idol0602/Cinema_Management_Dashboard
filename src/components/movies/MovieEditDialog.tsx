@@ -1,10 +1,7 @@
 import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import {
-  updateMovieSchema,
-  type UpdateMovieFormData,
-} from "@/schemas/movie.schema";
+import { updateMovieSchema } from "@/schemas/movie.schema";
 import {
   Dialog,
   DialogContent,
@@ -34,19 +31,16 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { DatePickerInput } from "@/components/ui/date-picker-input";
-import { cn } from "@/lib/utils";
-import { format } from "date-fns";
-import { vi } from "date-fns/locale";
-import { Save, CalendarIcon, Film, Upload, X, Loader2 } from "lucide-react";
-import type { movieType } from "@/types/movie.type";
-import type { movieTypeType } from "@/types/movieType.type";
+import { Save, Film, Upload, X, Loader2 } from "lucide-react";
+import type { MovieType, UpdateMovieType } from "@/types/movie.type";
+import type { MovieTypeType } from "@/types/movieType.type";
 
 interface MovieEditDialogProps {
-  movie: movieType | null;
-  movieTypes: movieTypeType[];
+  movie: MovieType | null;
+  movieTypes: MovieTypeType[];
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSubmit?: (data: UpdateMovieFormData) => void;
+  onSubmit?: (data: UpdateMovieType) => void;
 }
 
 export function MovieEditDialog({
@@ -60,7 +54,7 @@ export function MovieEditDialog({
   const [imagePreview, setImagePreview] = useState<string>("");
   const [thumbnailPreview, setThumbnailPreview] = useState<string>("");
 
-  const form = useForm<UpdateMovieFormData>({
+  const form = useForm({
     resolver: zodResolver(updateMovieSchema),
     defaultValues: {
       title: "",
@@ -102,7 +96,7 @@ export function MovieEditDialog({
     }
   }, [movie, open, form]);
 
-  const handleSubmit = async (data: UpdateMovieFormData) => {
+  const handleSubmit = async (data: UpdateMovieType) => {
     setIsSubmitting(true);
     try {
       // TODO: Implement API call

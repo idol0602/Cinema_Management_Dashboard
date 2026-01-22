@@ -2,10 +2,6 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
-  createSlideSchema,
-  type CreateSlideFormData,
-} from "@/schemas/slide.schema";
-import {
   Dialog,
   DialogContent,
   DialogDescription,
@@ -27,11 +23,13 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Plus, ImageIcon, Loader2, Upload, X } from "lucide-react";
+import type { CreateSlideType } from "@/types/slide.type";
+import { createSlideSchema } from "../../schemas/slide.schema.ts";
 
 interface SlideCreateDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSubmit?: (data: CreateSlideFormData) => void;
+  onSubmit?: (data: CreateSlideType) => void;
 }
 
 export function SlideCreateDialog({
@@ -42,7 +40,7 @@ export function SlideCreateDialog({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [imagePreview, setImagePreview] = useState<string>("");
 
-  const form = useForm<CreateSlideFormData>({
+  const form = useForm({
     resolver: zodResolver(createSlideSchema),
     defaultValues: {
       image: "",
@@ -53,7 +51,7 @@ export function SlideCreateDialog({
     },
   });
 
-  const handleSubmit = async (data: CreateSlideFormData) => {
+  const handleSubmit = async (data: CreateSlideType) => {
     setIsSubmitting(true);
     try {
       console.log("Form data:", data);

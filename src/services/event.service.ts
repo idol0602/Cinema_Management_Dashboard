@@ -1,7 +1,7 @@
 import api, { handleApiError } from "./api.ts"
 import type {serviceResponse} from "../types/api.type.ts"
 import type {PaginationQuery, PaginatedResponse} from "@/types/pagination.type.ts"
-import type {CreateEventType, UpdateEventType} from "@/types/event.type.ts"
+import type {CreateEventType, UpdateEventType, EventType} from "@/types/event.type.ts"
 
 export const eventService = {
   getAll: async () : Promise<serviceResponse> => {
@@ -94,7 +94,7 @@ export const eventService = {
     }
   },
 
-  findAndPaginate: async(query: PaginationQuery): Promise<PaginatedResponse> => {
+  findAndPaginate: async(query: PaginationQuery): Promise<PaginatedResponse<EventType>> => {
     try {
       const response = await api.get("/events", { params: query });
       return {

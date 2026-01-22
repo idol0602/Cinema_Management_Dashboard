@@ -2,10 +2,6 @@ import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
-  updateSlideSchema,
-  type UpdateSlideFormData,
-} from "@/schemas/slide.schema";
-import {
   Dialog,
   DialogContent,
   DialogDescription,
@@ -27,13 +23,14 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Save, ImageIcon, Loader2, Upload, X } from "lucide-react";
-import type { SlideType } from "@/types/slide.type";
+import type { SlideType, UpdateSlideType } from "@/types/slide.type";
+import { updateSlideSchema } from "../../schemas/slide.schema.ts";
 
 interface SlideEditDialogProps {
   slide: SlideType | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSubmit?: (data: UpdateSlideFormData) => void;
+  onSubmit?: (data: UpdateSlideType) => void;
 }
 
 export function SlideEditDialog({
@@ -45,7 +42,7 @@ export function SlideEditDialog({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [imagePreview, setImagePreview] = useState<string>("");
 
-  const form = useForm<UpdateSlideFormData>({
+  const form = useForm<UpdateSlideType>({
     resolver: zodResolver(updateSlideSchema),
     defaultValues: {
       image: "",
@@ -69,7 +66,7 @@ export function SlideEditDialog({
     }
   }, [slide, open, form]);
 
-  const handleSubmit = async (data: UpdateSlideFormData) => {
+  const handleSubmit = async (data: UpdateSlideType) => {
     setIsSubmitting(true);
     try {
       console.log("Update form data:", data);

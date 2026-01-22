@@ -1,7 +1,7 @@
 import api, { handleApiError } from "./api.ts"
 import type {serviceResponse} from "../types/api.type.ts"
 import type {PaginationQuery, PaginatedResponse} from "@/types/pagination.type.ts"
-import type {CreateUserType, UpdateUserType} from "@/types/user.type.ts"
+import type {CreateUserType, UpdateUserType, User} from "@/types/user.type.ts"
 
 export const userService = {
   getAll: async () : Promise<serviceResponse> => {
@@ -94,7 +94,7 @@ export const userService = {
     }
   },
 
-  findAndPaginate: async(query: PaginationQuery): Promise<PaginatedResponse> => {
+  findAndPaginate: async(query: PaginationQuery): Promise<PaginatedResponse<User>> => {
     try {
       const response = await api.get("/users", { params: query });
       return {

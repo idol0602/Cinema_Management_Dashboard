@@ -1,6 +1,6 @@
 import api, { handleApiError } from "./api.ts"
 import type {serviceResponse} from "../types/api.type.ts"
-import type {SeatTypeCreate, SeatTypeUpdate} from "@/types/seat.type.ts"
+import type {SeatTypeCreate, SeatTypeUpdate, SeatType} from "@/types/seat.type.ts"
 import type {PaginationQuery, PaginatedResponse} from "@/types/pagination.type.ts"
 import type {importResponse} from "@/types/importResponse.type.ts"
 
@@ -113,7 +113,7 @@ export const seatService = {
     }
   },
 
-  findAndPaginate: async(query: PaginationQuery): Promise<PaginatedResponse> => {
+  findAndPaginate: async(query: PaginationQuery): Promise<PaginatedResponse<SeatType>> => {
     try {
         const response = await api.get("/seats", { params: query });
         return {

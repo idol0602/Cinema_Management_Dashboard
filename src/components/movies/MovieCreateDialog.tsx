@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { movieSchema, type MovieFormData } from "@/schemas/movie.schema";
+import { createMovieSchema } from "../../schemas/movie.schema";
 import {
   Dialog,
   DialogContent,
@@ -32,13 +32,14 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { DatePickerInput } from "@/components/ui/date-picker-input";
 import { Plus, Film, Upload, X, Loader2 } from "lucide-react";
-import type { movieTypeType } from "@/types/movieType.type";
+import type { CreateMovieType } from "@/types/movie.type";
+import type { MovieTypeType } from "@/types/movieType.type";
 
 interface MovieCreateDialogProps {
-  movieTypes: movieTypeType[];
+  movieTypes: MovieTypeType[];
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSubmit?: (data: MovieFormData) => void;
+  onSubmit?: (data: CreateMovieType) => void;
 }
 
 export function MovieCreateDialog({
@@ -51,8 +52,8 @@ export function MovieCreateDialog({
   const [imagePreview, setImagePreview] = useState<string>("");
   const [thumbnailPreview, setThumbnailPreview] = useState<string>("");
 
-  const form = useForm<MovieFormData>({
-    resolver: zodResolver(movieSchema),
+  const form = useForm({
+    resolver: zodResolver(createMovieSchema),
     defaultValues: {
       title: "",
       director: "",
@@ -69,7 +70,7 @@ export function MovieCreateDialog({
     },
   });
 
-  const handleSubmit = async (data: MovieFormData) => {
+  const handleSubmit = async (data: CreateMovieType) => {
     setIsSubmitting(true);
     try {
       // TODO: Implement API call

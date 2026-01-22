@@ -63,7 +63,6 @@ export const authService = {
             };
         }
     },
-
     updateProfile: async(userId: string, updatedData: Partial<User>) : Promise<authResponse> => {
         try {
             const response = await api.put(`/auth/update-profile/${userId}`, updatedData);

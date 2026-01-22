@@ -2,10 +2,6 @@ import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
-  updateMovieTypeSchema,
-  type UpdateMovieTypeFormData,
-} from "@/schemas/movieType.schema";
-import {
   Dialog,
   DialogContent,
   DialogDescription,
@@ -26,13 +22,17 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Save, Tag, Loader2 } from "lucide-react";
-import type { movieTypeType } from "@/types/movieType.type";
+import type {
+  MovieTypeType,
+  UpdateMovieTypeType,
+} from "@/types/movieType.type";
+import { updateMovieTypeSchema } from "@/schemas/movie_type.schema";
 
 interface MovieTypeEditDialogProps {
-  movieType: movieTypeType | null;
+  movieType: MovieTypeType | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSubmit?: (data: UpdateMovieTypeFormData) => void;
+  onSubmit?: (data: UpdateMovieTypeType) => void;
 }
 
 export function MovieTypeEditDialog({
@@ -43,7 +43,7 @@ export function MovieTypeEditDialog({
 }: MovieTypeEditDialogProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const form = useForm<UpdateMovieTypeFormData>({
+  const form = useForm({
     resolver: zodResolver(updateMovieTypeSchema),
     defaultValues: {
       type: "",
@@ -61,7 +61,7 @@ export function MovieTypeEditDialog({
     }
   }, [movieType, open, form]);
 
-  const handleSubmit = async (data: UpdateMovieTypeFormData) => {
+  const handleSubmit = async (data: UpdateMovieTypeType) => {
     setIsSubmitting(true);
     try {
       // Include id in the data
@@ -69,7 +69,7 @@ export function MovieTypeEditDialog({
         ...data,
         id: movieType?.id,
       };
-      onSubmit?.(updateData as any);
+      onSubmit?.(updateData as UpdateMovieTypeType);
 
       // Close dialog
       onOpenChange(false);

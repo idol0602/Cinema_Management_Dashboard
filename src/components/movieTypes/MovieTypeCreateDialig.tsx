@@ -1,10 +1,8 @@
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import {
-  createMovieTypeSchema,
-  type CreateMovieTypeFormData,
-} from "@/schemas/movieType.schema";
+import type { CreateMovieTypeType } from "../../types/movieType.type";
+import { createMovieTypeSchema } from "../../schemas/movie_type.schema";
 import {
   Dialog,
   DialogContent,
@@ -28,7 +26,7 @@ import { Plus, Tag, Loader2 } from "lucide-react";
 interface MovieTypeCreateDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSubmit?: (data: CreateMovieTypeFormData) => void;
+  onSubmit?: (data: CreateMovieTypeType) => void;
 }
 
 export function MovieTypeCreateDialog({
@@ -38,7 +36,7 @@ export function MovieTypeCreateDialog({
 }: MovieTypeCreateDialogProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const form = useForm<CreateMovieTypeFormData>({
+  const form = useForm({
     resolver: zodResolver(createMovieTypeSchema),
     defaultValues: {
       type: "",
@@ -46,7 +44,7 @@ export function MovieTypeCreateDialog({
     },
   });
 
-  const handleSubmit = async (data: CreateMovieTypeFormData) => {
+  const handleSubmit = async (data: CreateMovieTypeType) => {
     setIsSubmitting(true);
     try {
       onSubmit?.(data);

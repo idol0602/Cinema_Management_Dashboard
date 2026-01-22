@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { seatService } from "@/services/seat.service";
 import { roomService } from "@/services/room.service";
+import { seatTypeService } from "@/services/seatType.service";
 import { SeatCreateDialog } from "@/components/seats/SeatCreateDialog";
 import { SeatEditDialog } from "@/components/seats/SeatEditDialog";
 import { toast } from "sonner";
@@ -37,16 +38,129 @@ import {
   ChevronRight,
 } from "lucide-react";
 import type { SeatType } from "@/types/seat.type";
+import type { SeatTypeType } from "@/types/seatType.type";
 import type { RoomType } from "@/types/room.type";
 import type { PaginationMeta } from "@/types/pagination.type";
 import { seatPaginateConfig } from "@/config/paginate/seat.config";
 import { MovieImportDialog } from "@/components/Dialog/MovieImportDialog";
+
+// Color palette for seat types
+const SEAT_TYPE_COLORS = [
+  {
+    bg: "bg-blue-100",
+    border: "border-blue-400",
+    text: "text-blue-800",
+    hover: "hover:bg-blue-200",
+  },
+  {
+    bg: "bg-yellow-100",
+    border: "border-yellow-400",
+    text: "text-yellow-800",
+    hover: "hover:bg-yellow-200",
+  },
+  {
+    bg: "bg-red-100",
+    border: "border-red-400",
+    text: "text-red-800",
+    hover: "hover:bg-red-200",
+  },
+  {
+    bg: "bg-green-100",
+    border: "border-green-400",
+    text: "text-green-800",
+    hover: "hover:bg-green-200",
+  },
+  {
+    bg: "bg-purple-100",
+    border: "border-purple-400",
+    text: "text-purple-800",
+    hover: "hover:bg-purple-200",
+  },
+  {
+    bg: "bg-pink-100",
+    border: "border-pink-400",
+    text: "text-pink-800",
+    hover: "hover:bg-pink-200",
+  },
+  {
+    bg: "bg-indigo-100",
+    border: "border-indigo-400",
+    text: "text-indigo-800",
+    hover: "hover:bg-indigo-200",
+  },
+  {
+    bg: "bg-amber-100",
+    border: "border-amber-400",
+    text: "text-amber-800",
+    hover: "hover:bg-amber-200",
+  },
+  {
+    bg: "bg-cyan-100",
+    border: "border-cyan-400",
+    text: "text-cyan-800",
+    hover: "hover:bg-cyan-200",
+  },
+  {
+    bg: "bg-orange-100",
+    border: "border-orange-400",
+    text: "text-orange-800",
+    hover: "hover:bg-orange-200",
+  },
+];
+
+// Get color for seat type based on index
+const getSeatTypeColorByIndex = (index: number) => {
+  return SEAT_TYPE_COLORS[index % SEAT_TYPE_COLORS.length];
+};
+
+const TableSkeleton = () => {
+  return (
+    <div className="rounded-md border">
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead className="w-[50px]">#</TableHead>
+            <TableHead>Số Ghế</TableHead>
+            <TableHead>Loại Ghế</TableHead>
+            <TableHead className="text-center">Trạng Thái</TableHead>
+            <TableHead className="text-center">Thao Tác</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {Array.from({ length: 5 }).map((_, index) => (
+            <TableRow key={index}>
+              <TableCell>
+                <Skeleton className="h-4 w-8" />
+              </TableCell>
+              <TableCell>
+                <Skeleton className="h-4 w-16" />
+              </TableCell>
+              <TableCell>
+                <Skeleton className="h-6 w-20 rounded-full" />
+              </TableCell>
+              <TableCell>
+                <Skeleton className="h-6 w-20 mx-auto rounded-full" />
+              </TableCell>
+              <TableCell>
+                <div className="flex items-center justify-center gap-1">
+                  <Skeleton className="h-8 w-8 rounded" />
+                  <Skeleton className="h-8 w-8 rounded" />
+                </div>
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </div>
+  );
+};
 
 const SeatList = () => {
   const navigate = useNavigate();
   const { id: roomId } = useParams<{ id: string }>();
   const [seats, setSeats] = useState<SeatType[]>([]);
   const [fullSeats, setFullSeats] = useState<SeatType[]>([]);
+  const [seatTypes, setSeatTypes] = useState<SeatTypeType[]>([]);
   const [room, setRoom] = useState<RoomType | null>(null);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
@@ -65,6 +179,21 @@ const SeatList = () => {
     currentPage: 1,
     totalPages: 0,
   });
+
+  // Load seat types on component mount
+  useEffect(() => {
+    const loadSeatTypes = async () => {
+      try {
+        const response = await seatTypeService.findAll();
+        if (response.success && Array.isArray(response.data)) {
+          setSeatTypes(response.data as SeatTypeType[]);
+        }
+      } catch (error) {
+        console.error("Error loading seat types:", error);
+      }
+    };
+    loadSeatTypes();
+  }, []);
 
   const fetchRoom = async () => {
     if (!roomId) return;
@@ -86,6 +215,7 @@ const SeatList = () => {
     fetchRoom();
     if (roomId) {
       fetchDiagramSeats();
+      handleSearch();
     }
   }, [roomId]);
 
@@ -248,14 +378,21 @@ const SeatList = () => {
     }
   };
 
-  const getSeatTypeColor = (type: string) => {
-    return type === "VIP"
-      ? "bg-yellow-100 text-yellow-800"
-      : "bg-blue-100 text-blue-800";
+  const getSeatTypeColor = (typeId: string) => {
+    const index = seatTypes.findIndex((st) => st.id === typeId);
+    if (index === -1) return "bg-blue-100 text-blue-800";
+    const color = getSeatTypeColorByIndex(index);
+    return `${color.bg} ${color.text}`;
   };
 
-  const getSeatTypeLabel = (type: string) => {
-    return type === "VIP" ? "Ghế VIP" : "Ghế Thường";
+  const getSeatTypeLabel = (typeId: string) => {
+    const seatType = seatTypes.find((st) => st.id === typeId);
+    return seatType?.name || "N/A";
+  };
+
+  const getSeatTypeBgClass = (index: number) => {
+    const color = getSeatTypeColorByIndex(index);
+    return `${color.bg} ${color.border}`;
   };
 
   return (
@@ -312,7 +449,10 @@ const SeatList = () => {
                   />
                 </div>
                 <Combobox
-                  datas={seatPaginateConfig.filterableColumns.type}
+                  datas={seatTypes.map((st) => ({
+                    value: st.id || "",
+                    label: st.name,
+                  }))}
                   placeholder="Loại ghế"
                   onChange={setTypeColumn}
                   value={typeColumn}
@@ -522,15 +662,17 @@ const SeatList = () => {
             <CardContent>
               <div className="space-y-4">
                 {/* Legend */}
-                <div className="flex gap-6 p-4 bg-muted rounded-lg">
-                  <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 bg-blue-100 border-2 border-blue-400 rounded"></div>
-                    <span className="text-sm">Ghế Thường</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 bg-yellow-100 border-2 border-yellow-400 rounded"></div>
-                    <span className="text-sm">Ghế VIP</span>
-                  </div>
+                <div className="flex gap-6 p-4 bg-muted rounded-lg flex-wrap">
+                  {seatTypes.map((type, index) => (
+                    <div key={type.id} className="flex items-center gap-2">
+                      <div
+                        className={`w-8 h-8 border-2 rounded ${getSeatTypeBgClass(
+                          index,
+                        )}`}
+                      ></div>
+                      <span className="text-sm">{type.name}</span>
+                    </div>
+                  ))}
                   <div className="flex items-center gap-2">
                     <div className="w-8 h-8 bg-gray-200 border-2 border-gray-400 rounded"></div>
                     <span className="text-sm">Không khả dụng</span>
@@ -539,7 +681,7 @@ const SeatList = () => {
 
                 {/* Seat Diagram */}
                 {room ? (
-                  <SeatDiagram seats={fullSeats} />
+                  <SeatDiagram seats={fullSeats} seatTypes={seatTypes} />
                 ) : (
                   <div className="text-center py-12">
                     <p className="text-muted-foreground">
@@ -557,6 +699,7 @@ const SeatList = () => {
       <SeatCreateDialog
         open={createDialogOpen}
         onOpenChange={setCreateDialogOpen}
+        seatTypes={seatTypes}
         onSubmit={handleCreateSubmit}
         roomId={roomId}
       />
@@ -564,6 +707,7 @@ const SeatList = () => {
       <SeatEditDialog
         seat={selectedSeat || undefined}
         open={editDialogOpen}
+        seatTypes={seatTypes}
         onOpenChange={setEditDialogOpen}
         onSubmit={handleEditSubmit}
       />
@@ -571,7 +715,13 @@ const SeatList = () => {
   );
 };
 
-const SeatDiagram = ({ seats }: { seats: SeatType[] }) => {
+const SeatDiagram = ({
+  seats,
+  seatTypes,
+}: {
+  seats: SeatType[];
+  seatTypes: SeatTypeType[];
+}) => {
   const roomSeats = seats;
 
   if (roomSeats.length === 0) {
@@ -613,6 +763,19 @@ const SeatDiagram = ({ seats }: { seats: SeatType[] }) => {
   const sortedRows = Array.from(rows).sort();
   const sortedCols = Array.from(cols).sort((a, b) => a - b);
 
+  const getSeatTypeLabel = (typeId: string) => {
+    const seatType = seatTypes.find((st) => st.id === typeId);
+    return seatType?.name || "N/A";
+  };
+
+  const getSeatBgClass = (typeId: string) => {
+    const index = seatTypes.findIndex((st) => st.id === typeId);
+    if (index === -1)
+      return "bg-blue-100 border-blue-400 text-blue-800 hover:bg-blue-200";
+    const color = getSeatTypeColorByIndex(index);
+    return `${color.bg} ${color.border} ${color.text} ${color.hover}`;
+  };
+
   const getSeatClass = (seat: SeatType | undefined) => {
     if (!seat) {
       return "bg-transparent border-transparent";
@@ -620,10 +783,7 @@ const SeatDiagram = ({ seats }: { seats: SeatType[] }) => {
     if (!seat.is_active) {
       return "bg-gray-200 border-gray-400 text-gray-600 cursor-not-allowed";
     }
-    if (seat.type === "VIP") {
-      return "bg-yellow-100 border-yellow-400 text-yellow-800 hover:bg-yellow-200 cursor-pointer";
-    }
-    return "bg-blue-100 border-blue-400 text-blue-800 hover:bg-blue-200 cursor-pointer";
+    return `${getSeatBgClass(seat.type)} cursor-pointer`;
   };
 
   return (
@@ -668,9 +828,9 @@ const SeatDiagram = ({ seats }: { seats: SeatType[] }) => {
                     )}`}
                     title={
                       seat
-                        ? `Ghế ${seat.seat_number} - ${
-                            seat.type === "VIP" ? "Ghế VIP" : "Ghế Thường"
-                          }`
+                        ? `Ghế ${seat.seat_number} - ${getSeatTypeLabel(
+                            seat.type,
+                          )}`
                         : ""
                     }
                   >
@@ -682,52 +842,6 @@ const SeatDiagram = ({ seats }: { seats: SeatType[] }) => {
           ))}
         </div>
       </div>
-    </div>
-  );
-};
-
-const TableSkeleton = () => {
-  return (
-    <div className="rounded-md border">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead className="w-[50px]">#</TableHead>
-            <TableHead>Phòng</TableHead>
-            <TableHead>Số Ghế</TableHead>
-            <TableHead>Loại Ghế</TableHead>
-            <TableHead className="text-center">Trạng Thái</TableHead>
-            <TableHead className="text-center">Thao Tác</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {Array.from({ length: 5 }).map((_, index) => (
-            <TableRow key={index}>
-              <TableCell>
-                <Skeleton className="h-4 w-8" />
-              </TableCell>
-              <TableCell>
-                <Skeleton className="h-4 w-24" />
-              </TableCell>
-              <TableCell>
-                <Skeleton className="h-4 w-16" />
-              </TableCell>
-              <TableCell>
-                <Skeleton className="h-6 w-20 rounded-full" />
-              </TableCell>
-              <TableCell>
-                <Skeleton className="h-6 w-20 mx-auto rounded-full" />
-              </TableCell>
-              <TableCell>
-                <div className="flex items-center justify-center gap-1">
-                  <Skeleton className="h-8 w-8 rounded" />
-                  <Skeleton className="h-8 w-8 rounded" />
-                </div>
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
     </div>
   );
 };

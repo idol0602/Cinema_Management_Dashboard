@@ -1,10 +1,8 @@
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import {
-  createPostSchema,
-  type CreatePostFormData,
-} from "@/schemas/post.schema";
+import { createPostSchema } from "@/schemas/post.schema";
+import type { CreatePostType } from "@/types/post.type";
 import {
   Dialog,
   DialogContent,
@@ -26,12 +24,12 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
-import { Plus, FileText, Loader2, Upload, X } from "lucide-react";
+import { FileText, Loader2, Upload, X } from "lucide-react";
 
 interface PostCreateDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSubmit?: (data: CreatePostFormData) => void;
+  onSubmit?: (data: CreatePostType) => void;
   currentUserId?: string;
 }
 
@@ -44,7 +42,7 @@ export function PostCreateDialog({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [imagePreview, setImagePreview] = useState<string>("");
 
-  const form = useForm<CreatePostFormData>({
+  const form = useForm({
     resolver: zodResolver(createPostSchema),
     defaultValues: {
       title: "",
@@ -55,7 +53,7 @@ export function PostCreateDialog({
     },
   });
 
-  const handleSubmit = async (data: CreatePostFormData) => {
+  const handleSubmit = async (data: CreatePostType) => {
     setIsSubmitting(true);
     try {
       console.log("Form data:", data);

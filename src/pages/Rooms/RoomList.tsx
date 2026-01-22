@@ -2,6 +2,8 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { roomService } from "@/services/room.service";
 import type { RoomType } from "@/types/room.type";
+import type { FormatType } from "@/types/format.type";
+import { formatService } from "@/services/format.service";
 import type { PaginationMeta } from "@/types/pagination.type";
 import { roomPaginateConfig } from "@/config/paginate/room.config";
 import { toast } from "sonner";
@@ -43,6 +45,7 @@ import { RoomDetailDialog } from "@/components/rooms/RoomDetailDialog";
 const RoomList = () => {
   const navigate = useNavigate();
   const [rooms, setRooms] = useState<RoomType[]>([]);
+  const [formats, setFormats] = useState<FormatType[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
@@ -72,7 +75,7 @@ const RoomList = () => {
       roomPaginateConfig.defaultSortBy[0][1],
     search = undefined,
     searchBy = undefined,
-    filter: Record<string, any> | undefined = undefined
+    filter: Record<string, any> | undefined = undefined,
   ) => {
     setLoading(true);
     try {
@@ -101,6 +104,21 @@ const RoomList = () => {
     }
   };
 
+  // Load formats on component mount
+  useEffect(() => {
+    const loadFormats = async () => {
+      try {
+        const response = await formatService.findAll();
+        if (response.success && Array.isArray(response.data)) {
+          setFormats(response.data as FormatType[]);
+        }
+      } catch (error) {
+        console.error("Error loading formats:", error);
+      }
+    };
+    loadFormats();
+  }, []);
+
   useEffect(() => {
     handleSearch();
   }, [currentPage]);
@@ -121,7 +139,7 @@ const RoomList = () => {
       filter.is_active = statusColumn === "true";
     }
     if (formatColumn) {
-      filter.format = formatColumn;
+      filter.format_id = formatColumn;
     }
 
     findAndPaginate(
@@ -130,7 +148,7 @@ const RoomList = () => {
       sortBy,
       searchQuery || undefined,
       searchColumn || undefined,
-      Object.keys(filter).length > 0 ? filter : undefined
+      Object.keys(filter).length > 0 ? filter : undefined,
     );
   };
 
@@ -141,7 +159,7 @@ const RoomList = () => {
     }
   };
 
-  const handleCreate = async (data: any) => {
+  const handleCreate = async (data: RoomType) => {
     try {
       const response = await roomService.create(data);
       if (response.success) {
@@ -156,12 +174,12 @@ const RoomList = () => {
     }
   };
 
-  const handleUpdate = async (data: any) => {
+  const handleUpdate = async (data: RoomType) => {
     if (!selectedRoom) return;
     try {
       const response = await roomService.update(
         selectedRoom.id as string,
-        data
+        data,
       );
       if (response.success) {
         toast.success("Cập nhật phòng chiếu thành công!");
@@ -209,13 +227,10 @@ const RoomList = () => {
     return new Date(dateString).toLocaleDateString("vi-VN");
   };
 
-  const getFormatBadge = (format: string) => {
-    const variants: Record<string, any> = {
-      "2D": "default",
-      "3D": "secondary",
-      IMAX: "destructive",
-    };
-    return <Badge variant={variants[format] || "default"}>{format}</Badge>;
+  const getFormatBadge = (formatId: string) => {
+    const format = formats.find((f) => f.id === formatId);
+    const formatName = format?.name || "N/A";
+    return <Badge>{formatName}</Badge>;
   };
 
   return (
@@ -252,7 +267,10 @@ const RoomList = () => {
               />
             </div>
             <Combobox
-              datas={roomPaginateConfig.filterableColumns.format}
+              datas={formats.map((f) => ({
+                value: f.id || "",
+                label: f.name,
+              }))}
               placeholder="Định dạng"
               onChange={setFormatColumn}
               value={formatColumn}
@@ -323,7 +341,7 @@ const RoomList = () => {
                         <TableCell className="font-semibold">
                           {room.name}
                         </TableCell>
-                        <TableCell>{getFormatBadge(room.format)}</TableCell>
+                        <TableCell>{getFormatBadge(room.format_id)}</TableCell>
                         <TableCell>{room.location || "N/A"}</TableCell>
                         <TableCell>{formatDate(room.created_at)}</TableCell>
                         <TableCell className="text-center">
@@ -382,7 +400,7 @@ const RoomList = () => {
                   Hiển thị {(meta.currentPage - 1) * meta.itemsPerPage + 1} -{" "}
                   {Math.min(
                     meta.currentPage * meta.itemsPerPage,
-                    meta.totalItems
+                    meta.totalItems,
                   )}{" "}
                   của {meta.totalItems} phòng
                 </div>
@@ -404,7 +422,7 @@ const RoomList = () => {
                         (page) =>
                           page === 1 ||
                           page === meta.totalPages ||
-                          Math.abs(page - currentPage) <= 1
+                          Math.abs(page - currentPage) <= 1,
                       )
                       .map((page, index, array) => (
                         <div key={page} className="flex items-center">
@@ -429,7 +447,7 @@ const RoomList = () => {
                     size="sm"
                     onClick={() =>
                       setCurrentPage((prev) =>
-                        Math.min(meta.totalPages, prev + 1)
+                        Math.min(meta.totalPages, prev + 1),
                       )
                     }
                     disabled={currentPage === meta.totalPages}
@@ -448,17 +466,20 @@ const RoomList = () => {
       <RoomCreateDialog
         open={createDialogOpen}
         onOpenChange={setCreateDialogOpen}
+        formats={formats}
         onSubmit={handleCreate}
       />
       <RoomEditDialog
         room={selectedRoom}
         open={editDialogOpen}
+        formats={formats}
         onOpenChange={setEditDialogOpen}
         onSubmit={handleUpdate}
       />
       <RoomDetailDialog
         room={selectedRoom}
         open={detailDialogOpen}
+        formats={formats}
         onOpenChange={setDetailDialogOpen}
       />
     </div>

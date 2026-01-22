@@ -1,7 +1,7 @@
 import api, { handleApiError } from "./api.ts"
 import type {serviceResponse} from "../types/api.type.ts"
 import type {PaginationQuery, PaginatedResponse} from "@/types/pagination.type.ts"
-import type {CreateComboType, UpdateComboType} from "@/types/combo.type.ts"
+import type {CreateComboType, UpdateComboType, ComboType} from "@/types/combo.type.ts"
 
 export const comboService = {
   getAll: async () : Promise<serviceResponse> => {
@@ -94,7 +94,7 @@ export const comboService = {
     }
   },
 
-  findAndPaginate: async(query: PaginationQuery): Promise<PaginatedResponse> => {
+  findAndPaginate: async(query: PaginationQuery): Promise<PaginatedResponse<ComboType>> => {
     try {
       const response = await api.get("/combos", { params: query });
       return {

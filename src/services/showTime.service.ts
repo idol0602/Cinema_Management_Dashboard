@@ -1,7 +1,7 @@
 import api, { handleApiError } from "./api.ts"
 import type {serviceResponse} from "../types/api.type.ts"
 import type {PaginationQuery, PaginatedResponse} from "@/types/pagination.type.ts"
-import type {CreateShowTimeType, UpdateShowTimeType} from "@/types/showTime.type.ts"
+import type {CreateShowTimeType, UpdateShowTimeType, ShowTimeType} from "@/types/showTime.type.ts"
 
 export const showTimeService = {
   getAll: async () : Promise<serviceResponse> => {
@@ -112,7 +112,7 @@ export const showTimeService = {
     }
   },
 
-  findAndPaginate: async(query: PaginationQuery): Promise<PaginatedResponse> => {
+  findAndPaginate: async(query: PaginationQuery): Promise<PaginatedResponse<ShowTimeType>> => {
     try {
       const response = await api.get("/show-times", { params: query });
       return {

@@ -18,16 +18,7 @@ export const seatPaginateConfig = {
   ],
 
   filterableColumns: {
-    type: [
-      {
-        value: "STANDARD",
-        label: "Ghế thường",
-      },
-      {
-        value: "VIP",
-        label: "Ghế VIP",
-      }
-    ],
+    type: [],
     is_active: [
       {
         value: "true",

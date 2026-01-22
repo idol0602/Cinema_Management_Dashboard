@@ -1,6 +1,7 @@
 import api, { handleApiError } from "./api.ts"
 import type {serviceResponse} from "../types/api.type.ts"
-import type {CreateTicketPriceType, UpdateTicketPriceType} from "@/types/ticketPrice.type.ts"
+import type {CreateTicketPriceType, UpdateTicketPriceType, TicketPriceType} from "@/types/ticketPrice.type.ts"
+import type {PaginationQuery, PaginatedResponse} from "@/types/pagination.type.ts"
 
 export const ticketPriceService = {
   getAll: async () : Promise<serviceResponse> => {
@@ -87,6 +88,26 @@ export const ticketPriceService = {
       const apiError = handleApiError(error);
       return {
         data: {},
+        success: false,
+        error: apiError.message,
+      };
+    }
+  },
+
+  findAndPaginate: async (query: PaginationQuery): Promise<PaginatedResponse<TicketPriceType>> => {
+    try {
+      const response = await api.get("/ticket-prices", { params: query });
+      return {
+        data: response.data.data,
+        success: true,
+        error: response.data.error || "",
+        meta: response.data.meta,
+        links: response.data.links,
+      };
+    } catch (error) {
+      const apiError = handleApiError(error);
+      return {
+        data: [] as TicketPriceType[],
         success: false,
         error: apiError.message,
       };

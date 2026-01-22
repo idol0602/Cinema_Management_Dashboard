@@ -1,7 +1,7 @@
 import api, { handleApiError } from "./api.ts"
 import type {serviceResponse} from "../types/api.type.ts"
 import type {PaginationQuery, PaginatedResponse} from "@/types/pagination.type.ts"
-import type {CreateRoomType, UpdateRoomType} from "@/types/room.type.ts"
+import type {CreateRoomType, UpdateRoomType, RoomType} from "@/types/room.type.ts"
 
 export const roomService = {
   getAll: async () : Promise<serviceResponse> => {
@@ -94,7 +94,7 @@ export const roomService = {
     }
   },
 
-  findAndPaginate: async(query: PaginationQuery): Promise<PaginatedResponse> => {
+  findAndPaginate: async(query: PaginationQuery): Promise<PaginatedResponse<RoomType>> => {
     try {
       const response = await api.get("/rooms", { params: query });
       return {

@@ -34,6 +34,7 @@ function Header() {
             src="/logo.png"
             alt="Meta Cinema"
             className="h-12 w-auto object-contain"
+            onClick={() => navigate("/dashboard")}
           />
           <div className="flex flex-col">
             <h1 className="text-xl font-bold leading-none bg-gradient-to-r from-amber-600 to-amber-800 bg-clip-text text-transparent">

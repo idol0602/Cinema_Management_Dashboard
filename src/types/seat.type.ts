@@ -2,7 +2,7 @@ export interface SeatType {
     id?: string,
     room_id: string,
     seat_number: string,
-    type: string, // seat_type_id - Reference to seat_types table
+    type: string, // Reference to seat_types table
     is_active?: boolean,
     created_at?: string;
 }
@@ -10,7 +10,7 @@ export interface SeatType {
 export interface SeatTypeCreate {
     room_id: string,
     seat_number: string,
-    type: string, // seat_type_id - Reference to seat_types table
+    type: string, // Reference to seat_types table
     is_active?: boolean,
     created_at?: string;
 }
@@ -18,7 +18,7 @@ export interface SeatTypeCreate {
 export interface SeatTypeUpdate {
     room_id?: string,
     seat_number?: string,
-    type?: string, // seat_type_id - Reference to seat_types table
+    type?: string, // Reference to seat_types table
     is_active?: boolean,
     created_at?: string;
 }

@@ -15,7 +15,6 @@ import {
   Phone,
   Shield,
   UserIcon,
-  Award,
 } from "lucide-react";
 import type { User } from "@/types/user.type";
 
@@ -130,18 +129,6 @@ export function UserDetailDialog({
                       <Shield className="h-3 w-3 mr-1" />
                     )}
                     {getRoleLabel(user.role)}
-                  </Badge>
-                </div>
-              </div>
-
-              <div className="flex items-start gap-3">
-                <Award className="h-5 w-5 text-muted-foreground mt-0.5" />
-                <div className="flex-1">
-                  <p className="text-sm font-medium text-muted-foreground">
-                    Điểm Tích Lũy
-                  </p>
-                  <Badge variant="secondary" className="mt-1">
-                    {user.points || 0} điểm
                   </Badge>
                 </div>
               </div>

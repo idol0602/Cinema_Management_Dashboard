@@ -2,10 +2,6 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
-  createSeatSchema,
-  type CreateSeatFormData,
-} from "@/schemas/seat.schema";
-import {
   Dialog,
   DialogContent,
   DialogDescription,
@@ -32,33 +28,38 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Plus, Armchair, Loader2 } from "lucide-react";
+import type { SeatTypeCreate } from "@/types/seat.type";
+import type { SeatTypeType } from "@/types/seatType.type";
+import { createSeatSchema } from "../../schemas/seat.schema.ts";
 
 interface SeatCreateDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSubmit?: (data: CreateSeatFormData) => void;
+  seatTypes?: SeatTypeType[];
+  onSubmit?: (data: SeatTypeCreate) => void;
   roomId?: string;
 }
 
 export function SeatCreateDialog({
   open,
   onOpenChange,
+  seatTypes = [],
   onSubmit,
   roomId,
 }: SeatCreateDialogProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const form = useForm<CreateSeatFormData>({
+  const form = useForm({
     resolver: zodResolver(createSeatSchema),
     defaultValues: {
       room_id: roomId || "",
       seat_number: "",
-      type: "STANDARD",
+      type: "",
       is_active: true,
     },
   });
 
-  const handleSubmit = async (data: CreateSeatFormData) => {
+  const handleSubmit = async (data: SeatTypeCreate) => {
     setIsSubmitting(true);
     try {
       onSubmit?.(data);
@@ -120,8 +121,11 @@ export function SeatCreateDialog({
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="STANDARD">Ghế Thường</SelectItem>
-                      <SelectItem value="VIP">Ghế VIP</SelectItem>
+                      {seatTypes.map((type) => (
+                        <SelectItem key={type.id} value={type.id || ""}>
+                          {type.name}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                   <FormMessage />

@@ -1,7 +1,7 @@
 import api, { handleApiError } from "./api.ts"
 import type {serviceResponse} from "../types/api.type.ts"
 import type {PaginationQuery, PaginatedResponse} from "@/types/pagination.type.ts"
-import type {CreateSlideType, UpdateSlideType} from "@/types/slide.type.ts"
+import type {CreateSlideType, UpdateSlideType, SlideType} from "@/types/slide.type.ts"
 
 export const slideService = {
   getAll: async () : Promise<serviceResponse> => {
@@ -94,7 +94,7 @@ export const slideService = {
     }
   },
 
-  findAndPaginate: async(query: PaginationQuery): Promise<PaginatedResponse> => {
+  findAndPaginate: async(query: PaginationQuery): Promise<PaginatedResponse<SlideType>> => {
     try {
       const response = await api.get("/slides", { params: query });
       return {

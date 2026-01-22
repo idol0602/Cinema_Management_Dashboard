@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState, type ReactNode } from "react";
+import { useNavigate } from "react-router-dom";
 import type { User } from "@/types/user.type.ts";
 import { authService } from "@/services/auth.service.ts";
 import { AuthContext } from "./AuthContext.tsx";
@@ -11,6 +12,7 @@ interface AuthProviderProps {
 }
 
 export const AuthProvider = ({ children }: AuthProviderProps) => {
+  const navigate = useNavigate();
   const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
@@ -43,7 +45,6 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
       setLoading(false); // Đặt loading = false sau khi kiểm tra xong
     };
-
     initAuth();
   }, []);
 
@@ -84,7 +85,8 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     localStorage.removeItem("user");
     localStorage.removeItem("token");
     toast.success("Đăng xuất thành công!");
-  }, [user]);
+    navigate("/login");
+  }, [user, navigate]);
 
   const updateProfile = useCallback(async (updatedUser: Partial<User>) => {
     try {

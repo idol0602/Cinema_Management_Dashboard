@@ -2,10 +2,6 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
-  createUserSchema,
-  type CreateUserFormData,
-} from "@/schemas/user.schema";
-import {
   Dialog,
   DialogContent,
   DialogDescription,
@@ -33,11 +29,13 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Plus, Users, Loader2 } from "lucide-react";
+import type { CreateUserType } from "@/types/user.type";
+import { createUserSchema } from "../../schemas/user.schema.ts";
 
 interface UserCreateDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSubmit?: (data: CreateUserFormData) => void;
+  onSubmit?: (data: CreateUserType) => void;
 }
 
 export function UserCreateDialog({
@@ -47,7 +45,7 @@ export function UserCreateDialog({
 }: UserCreateDialogProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const form = useForm<CreateUserFormData>({
+  const form = useForm({
     resolver: zodResolver(createUserSchema),
     defaultValues: {
       name: "",
@@ -55,12 +53,11 @@ export function UserCreateDialog({
       phone: "",
       password: "",
       role: "CUSTOMER",
-      points: 0,
       is_active: true,
     },
   });
 
-  const handleSubmit = async (data: CreateUserFormData) => {
+  const handleSubmit = async (data: CreateUserType) => {
     setIsSubmitting(true);
     try {
       onSubmit?.(data);
@@ -197,31 +194,6 @@ export function UserCreateDialog({
                         <SelectItem value="ADMIN">Quản trị</SelectItem>
                       </SelectContent>
                     </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              {/* Points */}
-              <FormField
-                control={form.control}
-                name="points"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Điểm Tích Lũy</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="number"
-                        placeholder="0"
-                        {...field}
-                        onChange={(e) =>
-                          field.onChange(parseInt(e.target.value) || 0)
-                        }
-                      />
-                    </FormControl>
-                    <FormDescription>
-                      Điểm thưởng của người dùng
-                    </FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}

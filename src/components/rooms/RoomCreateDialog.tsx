@@ -2,10 +2,6 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
-  createRoomSchema,
-  type CreateRoomFormData,
-} from "@/schemas/room.schema";
-import {
   Dialog,
   DialogContent,
   DialogDescription,
@@ -33,31 +29,36 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { DoorOpen, Loader2 } from "lucide-react";
+import type { CreateRoomType } from "@/types/room.type";
+import type { FormatType } from "@/types/format.type";
+import { createRoomSchema } from "../../schemas/room.schema.ts";
 
 interface RoomCreateDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSubmit?: (data: CreateRoomFormData) => void;
+  formats?: FormatType[];
+  onSubmit?: (data: CreateRoomType) => void;
 }
 
 export function RoomCreateDialog({
   open,
   onOpenChange,
+  formats = [],
   onSubmit,
 }: RoomCreateDialogProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const form = useForm<CreateRoomFormData>({
+  const form = useForm({
     resolver: zodResolver(createRoomSchema),
     defaultValues: {
       name: "",
-      format: "2D",
+      format_id: "",
       location: "",
       is_active: true,
     },
   });
 
-  const handleSubmit = async (data: CreateRoomFormData) => {
+  const handleSubmit = async (data: CreateRoomType) => {
     setIsSubmitting(true);
     try {
       console.log("Form data:", data);
@@ -115,7 +116,7 @@ export function RoomCreateDialog({
               {/* Format */}
               <FormField
                 control={form.control}
-                name="format"
+                name="format_id"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>
@@ -131,9 +132,11 @@ export function RoomCreateDialog({
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="2D">2D</SelectItem>
-                        <SelectItem value="3D">3D</SelectItem>
-                        <SelectItem value="IMAX">IMAX</SelectItem>
+                        {formats.map((format) => (
+                          <SelectItem key={format.id} value={format.id || ""}>
+                            {format.name}
+                          </SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
                     <FormMessage />

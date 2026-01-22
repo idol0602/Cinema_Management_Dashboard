@@ -131,7 +131,9 @@ export function MenuItemDetailDialog({
                   </p>
                   <Badge
                     variant={
-                      menuItem.num_instock > 0 ? "default" : "destructive"
+                      menuItem.num_instock && menuItem.num_instock > 0
+                        ? "default"
+                        : "destructive"
                     }
                     className="mt-1"
                   >
@@ -186,20 +188,6 @@ export function MenuItemDetailDialog({
           )}
 
           <Separator />
-
-          {/* Additional Information */}
-          <div className="rounded-lg bg-muted/50 p-4">
-            <div className="flex items-center gap-2 mb-2">
-              <Info className="h-4 w-4 text-muted-foreground" />
-              <h3 className="text-sm font-semibold">Thông Tin Bổ Sung</h3>
-            </div>
-            <div className="space-y-2 text-sm text-muted-foreground">
-              <p>• ID: {menuItem.id}</p>
-              {menuItem.updated_at && (
-                <p>• Cập nhật lần cuối: {formatDate(menuItem.updated_at)}</p>
-              )}
-            </div>
-          </div>
         </div>
       </DialogContent>
     </Dialog>

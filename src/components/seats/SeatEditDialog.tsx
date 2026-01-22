@@ -2,10 +2,6 @@ import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
-  updateSeatSchema,
-  type UpdateSeatFormData,
-} from "@/schemas/seat.schema";
-import {
   Dialog,
   DialogContent,
   DialogDescription,
@@ -32,28 +28,32 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Save, Armchair, Loader2 } from "lucide-react";
-import type { SeatType } from "@/types/seat.type";
+import type { SeatType, SeatTypeUpdate } from "@/types/seat.type";
+import type { SeatTypeType } from "@/types/seatType.type";
+import { updateSeatSchema } from "../../schemas/seat.schema.ts";
 
 interface SeatEditDialogProps {
   seat?: SeatType;
   open: boolean;
+  seatTypes?: SeatTypeType[];
   onOpenChange: (open: boolean) => void;
-  onSubmit?: (data: UpdateSeatFormData & { id: string }) => void;
+  onSubmit?: (data: SeatTypeUpdate & { id: string }) => void;
 }
 
 export function SeatEditDialog({
   seat,
   open,
+  seatTypes = [],
   onOpenChange,
   onSubmit,
 }: SeatEditDialogProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const form = useForm<UpdateSeatFormData>({
+  const form = useForm<SeatTypeUpdate>({
     resolver: zodResolver(updateSeatSchema),
     defaultValues: {
       seat_number: "",
-      type: "STANDARD",
+      type: "",
       is_active: true,
     },
   });
@@ -69,7 +69,7 @@ export function SeatEditDialog({
     }
   }, [seat, open, form]);
 
-  const handleSubmit = async (data: UpdateSeatFormData) => {
+  const handleSubmit = async (data: SeatTypeUpdate) => {
     setIsSubmitting(true);
     try {
       // Include id in the data
@@ -77,7 +77,7 @@ export function SeatEditDialog({
         ...data,
         id: seat?.id,
       };
-      onSubmit?.(updateData as any);
+      onSubmit?.(updateData as SeatTypeUpdate & { id: string });
 
       // Close dialog
       onOpenChange(false);
@@ -137,8 +137,11 @@ export function SeatEditDialog({
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="STANDARD">Ghế Thường</SelectItem>
-                      <SelectItem value="VIP">Ghế VIP</SelectItem>
+                      {seatTypes.map((type) => (
+                        <SelectItem key={type.id} value={type.id || ""}>
+                          {type.name}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                   <FormMessage />

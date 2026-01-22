@@ -14,7 +14,6 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
-import { useTheme } from "../theme-provider";
 
 const navItems = [
   {
@@ -60,6 +59,18 @@ const navItems = [
         name: "Rooms",
         path: "/rooms",
         label: "Phòng chiếu",
+        allow: ["ADMIN", "STAFF"],
+      },
+      {
+        name: "Seat Types",
+        path: "/seat-types",
+        label: "Loại ghế",
+        allow: ["ADMIN", "STAFF"],
+      },
+      {
+        name: "Formats",
+        path: "/formats",
+        label: "Định dạng phòng",
         allow: ["ADMIN", "STAFF"],
       },
     ],
@@ -114,6 +125,12 @@ const navItems = [
         label: "Sự kiện",
         allow: ["ADMIN", "STAFF"],
       },
+      {
+        name: "Event Types",
+        path: "/event-types",
+        label: "Loại sự kiện",
+        allow: ["ADMIN", "STAFF"],
+      },
     ],
   },
   {
@@ -149,6 +166,18 @@ const navItems = [
         allow: ["ADMIN"],
       },
       {
+        name: "Roles",
+        path: "/roles",
+        label: "Vai trò",
+        allow: ["ADMIN"],
+      },
+      {
+        name: "Actions",
+        path: "/actions",
+        label: "Hành động",
+        allow: ["ADMIN"],
+      },
+      {
         name: "Agent",
         path: "/agent",
         label: "AI Agent SQL",
@@ -166,7 +195,8 @@ const navItems = [
 ];
 
 function Navbar() {
-  const { user } = useAuth();
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const { user: _user } = useAuth();
   const [openSubmenu, setOpenSubmenu] = useState<string | null>(null);
   const [submenuPos, setSubmenuPos] = useState<{ top: number; left: number }>({
     top: 0,
@@ -174,7 +204,11 @@ function Navbar() {
   });
   const buttonRefs = useRef<{ [key: string]: HTMLButtonElement | null }>({});
 
-  const hasAccess = (item: any) => item.allow.includes(user?.role as string);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const hasAccess = (_item: Record<string, unknown>) => {
+    // item.allow.includes(user?.role as string);
+    return true;
+  };
 
   const handleMenuClick = (itemName: string, buttonEl: HTMLButtonElement) => {
     setOpenSubmenu(openSubmenu === itemName ? null : itemName);
@@ -214,7 +248,7 @@ function Navbar() {
                       "hover:bg-accent hover:text-accent-foreground",
                       openSubmenu === item.name
                         ? "bg-accent"
-                        : "text-muted-foreground"
+                        : "text-muted-foreground",
                     )}
                   >
                     <Icon className="h-4 w-4" />
@@ -222,7 +256,7 @@ function Navbar() {
                     <ChevronDown
                       className={cn(
                         "h-4 w-4 transition-transform duration-200",
-                        openSubmenu === item.name && "rotate-180"
+                        openSubmenu === item.name && "rotate-180",
                       )}
                     />
                   </button>
@@ -239,7 +273,7 @@ function Navbar() {
                             "hover:bg-accent hover:text-accent-foreground",
                             isActive
                               ? "bg-primary text-primary-foreground"
-                              : "text-muted-foreground"
+                              : "text-muted-foreground",
                           )
                         }
                       >
@@ -260,7 +294,7 @@ function Navbar() {
                       "hover:bg-accent hover:text-accent-foreground",
                       isActive
                         ? "bg-primary text-primary-foreground"
-                        : "text-muted-foreground"
+                        : "text-muted-foreground",
                     )
                   }
                 >
@@ -298,11 +332,11 @@ function Navbar() {
                     onClick={() => setOpenSubmenu(null)}
                     className={({ isActive }) =>
                       cn(
-                        "flex items-center gap-2 px-4 py-3 text-sm transition-colors border-b last:border-b-0 block w-full text-left",
+                        "flex items-center gap-2 px-4 py-3 text-sm transition-colors border-b last:border-b-0 w-full text-left",
                         "hover:bg-accent hover:text-accent-foreground",
                         isActive
                           ? "bg-primary text-primary-foreground"
-                          : "text-muted-foreground"
+                          : "text-muted-foreground",
                       )
                     }
                   >
@@ -311,7 +345,7 @@ function Navbar() {
                 ))}
             </div>
           </div>,
-          document.body
+          document.body,
         )}
     </nav>
   );

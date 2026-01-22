@@ -1,10 +1,8 @@
 import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import {
-  updateMenuItemSchema,
-  type UpdateMenuItemFormData,
-} from "@/schemas/menuItem.schema";
+import { z } from "zod";
+import { updateMenuItemSchema } from "../../schemas/menu_items.schema";
 import {
   Dialog,
   DialogContent,
@@ -34,13 +32,13 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Save, UtensilsCrossed, Loader2, Upload, X } from "lucide-react";
-import type { MenuItemType } from "@/types/menuItem.type";
+import type { MenuItemType, UpdateMenuItemType } from "@/types/menuItem.type";
 
 interface MenuItemEditDialogProps {
   menuItem: MenuItemType | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSubmit?: (data: UpdateMenuItemFormData) => void;
+  onSubmit?: (data: UpdateMenuItemType) => void;
 }
 
 export function MenuItemEditDialog({
@@ -52,7 +50,9 @@ export function MenuItemEditDialog({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [imagePreview, setImagePreview] = useState<string>("");
 
-  const form = useForm<UpdateMenuItemFormData>({
+  type UpdateMenuItemFormType = z.infer<typeof updateMenuItemSchema>;
+
+  const form = useForm<UpdateMenuItemFormType>({
     resolver: zodResolver(updateMenuItemSchema),
     defaultValues: {
       name: "",
@@ -80,7 +80,7 @@ export function MenuItemEditDialog({
     }
   }, [menuItem, open, form]);
 
-  const handleSubmit = async (data: UpdateMenuItemFormData) => {
+  const handleSubmit = async (data: UpdateMenuItemType) => {
     setIsSubmitting(true);
     try {
       console.log("Update form data:", data);

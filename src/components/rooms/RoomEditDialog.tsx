@@ -2,10 +2,6 @@ import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
-  updateRoomSchema,
-  type UpdateRoomFormData,
-} from "@/schemas/room.schema";
-import {
   Dialog,
   DialogContent,
   DialogDescription,
@@ -33,28 +29,32 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Save, DoorOpen, Loader2 } from "lucide-react";
-import type { RoomType } from "@/types/room.type";
+import type { RoomType, UpdateRoomType } from "@/types/room.type";
+import type { FormatType } from "@/types/format.type";
+import { updateRoomSchema } from "../../schemas/room.schema.ts";
 
 interface RoomEditDialogProps {
   room: RoomType | null;
   open: boolean;
+  formats?: FormatType[];
   onOpenChange: (open: boolean) => void;
-  onSubmit?: (data: UpdateRoomFormData) => void;
+  onSubmit?: (data: UpdateRoomType) => void;
 }
 
 export function RoomEditDialog({
   room,
   open,
+  formats = [],
   onOpenChange,
   onSubmit,
 }: RoomEditDialogProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const form = useForm<UpdateRoomFormData>({
+  const form = useForm({
     resolver: zodResolver(updateRoomSchema),
     defaultValues: {
       name: "",
-      format: "2D",
+      format_id: "2D",
       location: "",
       is_active: true,
     },
@@ -64,14 +64,14 @@ export function RoomEditDialog({
     if (room && open) {
       form.reset({
         name: room.name,
-        format: room.format as "2D" | "3D" | "IMAX",
+        format_id: room.format_id,
         location: room.location || "",
         is_active: room.is_active,
       });
     }
   }, [room, open, form]);
 
-  const handleSubmit = async (data: UpdateRoomFormData) => {
+  const handleSubmit = async (data: UpdateRoomType) => {
     setIsSubmitting(true);
     try {
       console.log("Update form data:", data);
@@ -129,7 +129,7 @@ export function RoomEditDialog({
               {/* Format */}
               <FormField
                 control={form.control}
-                name="format"
+                name="format_id"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>
@@ -146,9 +146,11 @@ export function RoomEditDialog({
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="2D">2D</SelectItem>
-                        <SelectItem value="3D">3D</SelectItem>
-                        <SelectItem value="IMAX">IMAX</SelectItem>
+                        {formats.map((format) => (
+                          <SelectItem key={format.id} value={format.id || ""}>
+                            {format.name}
+                          </SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
                     <FormMessage />

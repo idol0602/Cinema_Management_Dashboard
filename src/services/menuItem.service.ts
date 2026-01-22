@@ -1,7 +1,7 @@
 import api, { handleApiError } from "./api.ts"
 import type {serviceResponse} from "../types/api.type.ts"
 import type {PaginationQuery, PaginatedResponse} from "@/types/pagination.type.ts"
-import type {CreateMenuItemType, UpdateMenuItemType} from "@/types/menuItem.type.ts"
+import type {CreateMenuItemType, UpdateMenuItemType, MenuItemType} from "@/types/menuItem.type.ts"
 
 export const menuItemService = {
   getAll: async () : Promise<serviceResponse> => {
@@ -94,7 +94,7 @@ export const menuItemService = {
     }
   },
 
-  findAndPaginate: async(query: PaginationQuery): Promise<PaginatedResponse> => {
+  findAndPaginate: async(query: PaginationQuery): Promise<PaginatedResponse<MenuItemType>> => {
     try {
       const response = await api.get("/menu-items", { params: query });
       return {

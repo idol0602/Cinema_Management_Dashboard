@@ -20,17 +20,17 @@ import type { CreateComboType } from "@/types/combo.type";
 import type { ComboItemType } from "@/types/comboItem.type";
 import type { ComboMovieType } from "@/types/comboMovie.type";
 import type { ComboEventType } from "@/types/comboEvent.type";
-import type { movieType } from "@/types/movie.type";
+import type { MovieType } from "@/types/movie.type";
 import type { EventType } from "@/types/event.type";
 
-interface MenuItem extends movieType {
+interface MenuItem extends MovieType {
   id?: string;
 }
 
 interface DetailComboType extends CreateComboType {
   id: string;
   combo_items?: (ComboItemType & { menu_item?: MenuItem })[];
-  combo_movies?: (ComboMovieType & { movie?: movieType })[];
+  combo_movies?: (ComboMovieType & { movie?: MovieType })[];
   combos_events?: (ComboEventType & { event?: EventType })[];
 }
 

@@ -14,23 +14,20 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { authService } from "@/services/auth.service";
-import {
-  forgotPasswordSchema,
-  type ForgotPasswordFormData,
-} from "@/schemas/auth.schema";
+import {} from "@/schemas/auth.schema";
 
 export function ForgotPasswordPage() {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
 
-  const form = useForm<ForgotPasswordFormData>({
-    resolver: zodResolver(forgotPasswordSchema),
+  const form = useForm({
+    // resolver: zodResolver(),
     defaultValues: {
       email: "",
     },
   });
 
-  async function onSubmit(data: ForgotPasswordFormData) {
+  async function onSubmit(data) {
     setIsLoading(true);
     try {
       const response = await authService.forgotPassword(data.email);
@@ -41,7 +38,7 @@ export function ForgotPasswordPage() {
       }
 
       toast.success(
-        response.message || "Check your email for password reset instructions"
+        response.message || "Check your email for password reset instructions",
       );
       // Reset form after success
       form.reset();

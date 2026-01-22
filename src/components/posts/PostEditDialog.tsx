@@ -2,10 +2,6 @@ import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
-  updatePostSchema,
-  type UpdatePostFormData,
-} from "@/schemas/post.schema";
-import {
   Dialog,
   DialogContent,
   DialogDescription,
@@ -27,13 +23,14 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Save, FileText, Loader2, Upload, X } from "lucide-react";
-import type { PostType } from "@/types/post.type";
+import type { PostType, UpdatePostType } from "@/types/post.type";
+import { updatePostSchema } from "../../schemas/post.schema.ts";
 
 interface PostEditDialogProps {
   post: PostType | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSubmit?: (data: UpdatePostFormData) => void;
+  onSubmit?: (data: UpdatePostType) => void;
 }
 
 export function PostEditDialog({
@@ -45,7 +42,7 @@ export function PostEditDialog({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [imagePreview, setImagePreview] = useState<string>("");
 
-  const form = useForm<UpdatePostFormData>({
+  const form = useForm({
     resolver: zodResolver(updatePostSchema),
     defaultValues: {
       title: "",
@@ -68,7 +65,7 @@ export function PostEditDialog({
     }
   }, [post, open, form]);
 
-  const handleSubmit = async (data: UpdatePostFormData) => {
+  const handleSubmit = async (data: UpdatePostType) => {
     setIsSubmitting(true);
     try {
       console.log("Update form data:", data);

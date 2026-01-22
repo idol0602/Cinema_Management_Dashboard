@@ -21,6 +21,11 @@ import ShowTimeList from "@/pages/ShowTimes/ShowTimeList";
 import NotFound from "@/pages/NotFound";
 import ComboList from "@/pages/Combos/ComboList";
 import Home from "@/pages/Home";
+import SeatTypeList from "@/pages/SeatTypes/SeatTypeList";
+import FormatList from "@/pages/Formats/FormatList";
+import EventTypeList from "@/pages/EventTypes/EventTypeList";
+import RoleList from "@/pages/Roles/RoleList";
+import ActionList from "@/pages/Actions/ActionList";
 
 export const AppRoutes = () => {
   return (
@@ -47,6 +52,10 @@ export const AppRoutes = () => {
         {/* User Management */}
         <Route path="/users" element={<UserList />} />
         <Route path="/agent" element={<SQLAgent></SQLAgent>} />
+
+        {/* System Management - ADMIN ONLY */}
+        <Route path="/roles" element={<RoleList />} />
+        <Route path="/actions" element={<ActionList />} />
       </Route>
 
       {/* STAFF */}
@@ -78,10 +87,15 @@ export const AppRoutes = () => {
         <Route path="/rooms/:id/seats" element={<SeatList />} />
         <Route path="/ticket-prices" element={<TicketPriceList />} />
 
+        {/* Facilities Management */}
+        <Route path="/seat-types" element={<SeatTypeList />} />
+        <Route path="/formats" element={<FormatList />} />
+
         {/* Services */}
         <Route path="/combos" element={<ComboList />} />
         <Route path="/menu-items" element={<MenuItemList />} />
         <Route path="/events" element={<EventList />} />
+        <Route path="/event-types" element={<EventTypeList />} />
         <Route path="/dashboard" element={<Home />} />
         <Route path="/orders" element={<>ORDERS PAGE</>} />
         <Route path="/profile" element={<Profile />} />

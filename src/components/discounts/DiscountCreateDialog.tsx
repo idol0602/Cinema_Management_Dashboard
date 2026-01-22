@@ -26,8 +26,7 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Combobox } from "@/components/ui/combobox";
 import { DatePickerInput } from "@/components/ui/date-picker-input";
-import { format, parse } from "date-fns";
-import { CalendarIcon } from "lucide-react";
+import { parse } from "date-fns";
 
 interface DiscountCreateDialogProps {
   open: boolean;

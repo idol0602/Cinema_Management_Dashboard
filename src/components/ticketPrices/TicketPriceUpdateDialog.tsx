@@ -21,19 +21,20 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Save, DollarSign, Loader2 } from "lucide-react";
-import type { TicketPriceType } from "@/types/ticketPrice.type";
+import type {
+  TicketPriceType,
+  UpdateTicketPriceType,
+} from "@/types/ticketPrice.type";
 
 const updateTicketPriceSchema = z.object({
   price: z.number().min(0, "Giá không được âm"),
 });
 
-type UpdateTicketPriceFormData = z.infer<typeof updateTicketPriceSchema>;
-
 interface TicketPriceUpdateDialogProps {
   ticketPrice?: TicketPriceType;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSubmit?: (data: UpdateTicketPriceFormData & { id: string }) => void;
+  onSubmit?: (data: UpdateTicketPriceType & { id: string }) => void;
 }
 
 export function TicketPriceUpdateDialog({
@@ -44,7 +45,7 @@ export function TicketPriceUpdateDialog({
 }: TicketPriceUpdateDialogProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const form = useForm<UpdateTicketPriceFormData>({
+  const form = useForm({
     resolver: zodResolver(updateTicketPriceSchema),
     defaultValues: {
       price: 0,
@@ -60,7 +61,7 @@ export function TicketPriceUpdateDialog({
     }
   }, [ticketPrice, open, form]);
 
-  const handleSubmit = async (data: UpdateTicketPriceFormData) => {
+  const handleSubmit = async (data: UpdateTicketPriceType) => {
     setIsSubmitting(true);
     try {
       // Include id in the data
@@ -68,7 +69,7 @@ export function TicketPriceUpdateDialog({
         ...data,
         id: ticketPrice?.id,
       };
-      onSubmit?.(updateData as any);
+      onSubmit?.(updateData as UpdateTicketPriceType & { id: string });
 
       // Close dialog
       onOpenChange(false);
@@ -90,7 +91,8 @@ export function TicketPriceUpdateDialog({
             Cập Nhật Giá Vé
           </DialogTitle>
           <DialogDescription>
-            Cập nhật giá vé cho {ticketPrice.format} - {ticketPrice.seat_type} ({ticketPrice.day_type})
+            Cập nhật giá vé cho {ticketPrice.format_id} -{" "}
+            {ticketPrice.seat_type_id} ({ticketPrice.day_type})
           </DialogDescription>
         </DialogHeader>
 

@@ -9,16 +9,19 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { DoorOpen, Calendar, MapPin, Film, Info } from "lucide-react";
 import type { RoomType } from "@/types/room.type";
+import type { FormatType } from "@/types/format.type";
 
 interface RoomDetailDialogProps {
   room: RoomType | null;
   open: boolean;
+  formats?: FormatType[];
   onOpenChange: (open: boolean) => void;
 }
 
 export function RoomDetailDialog({
   room,
   open,
+  formats = [],
   onOpenChange,
 }: RoomDetailDialogProps) {
   if (!room) return null;
@@ -34,15 +37,21 @@ export function RoomDetailDialog({
     });
   };
 
-  const getFormatBadge = (format: string) => {
+  const getFormatName = (formatId: string) => {
+    const format = formats.find((f) => f.id === formatId);
+    return format?.name || "N/A";
+  };
+
+  const getFormatBadge = (formatId: string) => {
+    const formatName = getFormatName(formatId);
     const variants: Record<string, any> = {
       "2D": "default",
       "3D": "secondary",
       IMAX: "destructive",
     };
     return (
-      <Badge variant={variants[format] || "default"} className="text-base">
-        {format}
+      <Badge variant={variants[formatName] || "default"} className="text-base">
+        {formatName}
       </Badge>
     );
   };
@@ -68,7 +77,7 @@ export function RoomDetailDialog({
                   <p className="text-sm font-medium text-muted-foreground">
                     Định Dạng
                   </p>
-                  <div className="mt-1">{getFormatBadge(room.format)}</div>
+                  <div className="mt-1">{getFormatBadge(room.format_id)}</div>
                 </div>
               </div>
 
@@ -116,20 +125,6 @@ export function RoomDetailDialog({
           </div>
 
           <Separator />
-
-          {/* Additional Information */}
-          <div className="rounded-lg bg-muted/50 p-4">
-            <div className="flex items-center gap-2 mb-2">
-              <Info className="h-4 w-4 text-muted-foreground" />
-              <h3 className="text-sm font-semibold">Thông Tin Bổ Sung</h3>
-            </div>
-            <div className="space-y-2 text-sm text-muted-foreground">
-              <p>• ID: {room.id}</p>
-              {room.updated_at && (
-                <p>• Cập nhật lần cuối: {formatDate(room.updated_at)}</p>
-              )}
-            </div>
-          </div>
         </div>
       </DialogContent>
     </Dialog>

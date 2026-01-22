@@ -16,7 +16,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { DatePickerInput } from "@/components/ui/date-picker-input";
 import { TimePickerInput } from "@/components/ui/time-picker-input";
-import type { movieType } from "@/types/movie.type";
+import type { MovieType } from "@/types/movie.type";
 import type { RoomType } from "@/types/room.type";
 import type { ShowTimeType } from "@/types/showTime.type";
 import { showTimeService } from "@/services/showTime.service";
@@ -25,7 +25,7 @@ import { showTimePaginateConfig } from "@/config/paginate/show_time.config";
 interface ShowTimeCreateDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  movies: movieType[];
+  movies: MovieType[];
   rooms: RoomType[];
   onSubmit?: (showTimes: unknown) => void;
   onRefresh?: () => void;
@@ -52,7 +52,7 @@ export function ShowTimeCreateDialog({
 
   const [showTimesList, setShowTimesList] = useState<ShowTimeType[]>([]);
   const [selectedIndices, setSelectedIndices] = useState<Set<number>>(
-    new Set()
+    new Set(),
   );
 
   /* ================== CALCULATE SHOW TIMES ================== */
@@ -64,7 +64,7 @@ export function ShowTimeCreateDialog({
       }
 
       const selectedMovies = movies.filter((movie) =>
-        formData.movieIds.includes(movie.id + "")
+        formData.movieIds.includes(movie.id + ""),
       );
       if (selectedMovies.length === 0) {
         toast.error("Vui lòng chọn ít nhất 1 phim");
@@ -103,7 +103,7 @@ export function ShowTimeCreateDialog({
             // Tính thời gian kết thúc của phim
             const endTime = addMinutesToTime(
               currentTime,
-              movieDuration + formData.adTime
+              movieDuration + formData.adTime,
             );
 
             if (endTime === "over closing time") {
@@ -123,7 +123,7 @@ export function ShowTimeCreateDialog({
 
             // Kiểm tra xem có overlap không
             const hasOverlap = existingShowTimes.some((existing) =>
-              isOverlapTime(proposedShowTime, existing)
+              isOverlapTime(proposedShowTime, existing),
             );
 
             if (!hasOverlap) {
@@ -163,7 +163,7 @@ export function ShowTimeCreateDialog({
         toast.warning("Không tìm được khoảng thời gian thích hợp cho phim nào");
       } else {
         toast.success(
-          `✓ Tính toán được ${finalShowTimes.length} suất chiếu hợp lệ`
+          `✓ Tính toán được ${finalShowTimes.length} suất chiếu hợp lệ`,
         );
       }
     } catch (error) {
@@ -175,7 +175,7 @@ export function ShowTimeCreateDialog({
   const findAndPaginate = async (
     page = 1,
     limit = undefined,
-    sortBy = `${showTimePaginateConfig.defaultSortBy[0][0]}:${showTimePaginateConfig.defaultSortBy[0][1]}`
+    sortBy = `${showTimePaginateConfig.defaultSortBy[0][0]}:${showTimePaginateConfig.defaultSortBy[0][1]}`,
   ) => {
     try {
       // Validate dữ liệu đầu vào
@@ -338,7 +338,7 @@ export function ShowTimeCreateDialog({
 
   const combineDateAndTimeToUTC = (
     dateStr: string, // "2026-01-15"
-    timeStr: string // "10:20 SA" | "10:20 CH"
+    timeStr: string, // "10:20 SA" | "10:20 CH"
   ): string => {
     // Parse date
     const [year, month, day] = dateStr.split("-").map(Number);
@@ -466,7 +466,7 @@ export function ShowTimeCreateDialog({
             <MultiSelectComboboxTable
               items={movies}
               selected={movies.filter((movie) =>
-                formData.movieIds.includes(movie.id + "")
+                formData.movieIds.includes(movie.id + ""),
               )}
               onChange={(selectedMovies) =>
                 setFormData({
@@ -482,7 +482,7 @@ export function ShowTimeCreateDialog({
             <MultiSelectComboboxTable
               items={rooms}
               selected={rooms.filter((room) =>
-                formData.roomId.includes(room.id + "")
+                formData.roomId.includes(room.id + ""),
               )}
               onChange={(selectedRooms) =>
                 setFormData({
@@ -636,7 +636,7 @@ export function ShowTimeCreateDialog({
                   const roomInfo = getRoomInfo(showTime.room_id);
                   const duration = getDuration(
                     showTime.start_time,
-                    showTime.end_time || ""
+                    showTime.end_time || "",
                   );
                   const startTime = formatTime(showTime.start_time);
                   const startDate = formatDate(showTime.start_time);

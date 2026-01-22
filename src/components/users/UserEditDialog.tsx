@@ -2,10 +2,6 @@ import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
-  updateUserSchema,
-  type UpdateUserFormData,
-} from "@/schemas/user.schema";
-import {
   Dialog,
   DialogContent,
   DialogDescription,
@@ -33,13 +29,14 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Save, Users, Loader2 } from "lucide-react";
-import type { User } from "@/types/user.type";
+import type { User, UpdateUserType } from "@/types/user.type";
+import { updateUserSchema } from "../../schemas/user.schema.ts";
 
 interface UserEditDialogProps {
   user: User | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSubmit?: (data: UpdateUserFormData) => void;
+  onSubmit?: (data: UpdateUserType) => void;
 }
 
 export function UserEditDialog({
@@ -50,14 +47,13 @@ export function UserEditDialog({
 }: UserEditDialogProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const form = useForm<UpdateUserFormData>({
+  const form = useForm({
     resolver: zodResolver(updateUserSchema),
     defaultValues: {
       name: "",
       email: "",
       phone: "",
       role: "CUSTOMER",
-      points: 0,
       is_active: true,
     },
   });
@@ -69,13 +65,12 @@ export function UserEditDialog({
         email: user.email,
         phone: user.phone || "",
         role: user.role,
-        points: user.points || 0,
         is_active: user.is_active,
       });
     }
   }, [user, open, form]);
 
-  const handleSubmit = async (data: UpdateUserFormData) => {
+  const handleSubmit = async (data: UpdateUserType) => {
     setIsSubmitting(true);
     try {
       onSubmit?.(data);
@@ -194,28 +189,6 @@ export function UserEditDialog({
                 )}
               />
             </div>
-
-            {/* Points */}
-            <FormField
-              control={form.control}
-              name="points"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Điểm Tích Lũy</FormLabel>
-                  <FormControl>
-                    <Input
-                      type="number"
-                      placeholder="0"
-                      {...field}
-                      onChange={(e) => field.onChange(parseInt(e.target.value))}
-                    />
-                  </FormControl>
-                  <FormDescription>Điểm thưởng của người dùng</FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
             {/* Is Active */}
             <FormField
               control={form.control}

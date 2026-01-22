@@ -17,7 +17,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Plus, Trash2, Eye, Image as ImageIcon } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import type { CreateComboType } from "@/types/combo.type";
-import type { movieType } from "@/types/movie.type";
+import type { MovieType } from "@/types/movie.type";
 import type { EventType } from "@/types/event.type";
 import type { MenuItemType } from "@/types/menuItem.type";
 
@@ -25,7 +25,7 @@ interface ComboCreateDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   menuItems: MenuItemType[];
-  movies: movieType[];
+  movies: MovieType[];
   events: EventType[];
 }
 
@@ -37,7 +37,7 @@ interface MenuItem {
 
 interface DetailModalState {
   type: "menuItem" | "movie" | "event" | null;
-  item: MenuItemType | movieType | EventType | null;
+  item: MenuItemType | MovieType | EventType | null;
 }
 
 export const ComboCreateDialog = ({
@@ -55,7 +55,7 @@ export const ComboCreateDialog = ({
   });
 
   const [selectedMenuItems, setSelectedMenuItems] = useState<MenuItem[]>([]);
-  const [selectedMovie, setSelectedMovie] = useState<movieType | null>(null);
+  const [selectedMovie, setSelectedMovie] = useState<MovieType | null>(null);
   const [selectedEvent, setSelectedEvent] = useState<EventType | null>(null);
   const [detailModal, setDetailModal] = useState<DetailModalState>({
     type: null,
@@ -166,7 +166,7 @@ export const ComboCreateDialog = ({
 
   const openDetailModal = (
     type: "menuItem" | "movie" | "event",
-    item: MenuItemType | movieType | EventType,
+    item: MenuItemType | MovieType | EventType,
   ) => {
     setDetailModal({ type, item });
   };
@@ -249,7 +249,7 @@ export const ComboCreateDialog = ({
     }
 
     if (detailModal.type === "movie") {
-      const item = detailModal.item as movieType;
+      const item = detailModal.item as MovieType;
       return (
         <Dialog open={!!detailModal.item} onOpenChange={closeDetailModal}>
           <DialogContent className="dark:text-foreground">

@@ -1,7 +1,7 @@
 import api, { handleApiError } from "./api.ts"
 import type {serviceResponse} from "../types/api.type.ts"
 import type {PaginationQuery, PaginatedResponse} from "@/types/pagination.type.ts"
-import type {CreatePostType, UpdatePostType} from "@/types/post.type.ts"
+import type {CreatePostType, UpdatePostType, PostType} from "@/types/post.type.ts"
 
 export const postService = {
   getAll: async () : Promise<serviceResponse> => {
@@ -94,7 +94,7 @@ export const postService = {
     }
   },
 
-  findAndPaginate: async(query: PaginationQuery): Promise<PaginatedResponse> => {
+  findAndPaginate: async(query: PaginationQuery): Promise<PaginatedResponse<PostType>> => {
     try {
       const response = await api.get("/posts", { params: query });
       return {

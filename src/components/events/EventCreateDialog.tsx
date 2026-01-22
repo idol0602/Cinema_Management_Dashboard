@@ -23,8 +23,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { DatePickerInput } from "@/components/ui/date-picker-input";
-import { format, parse } from "date-fns";
-import { CalendarIcon } from "lucide-react";
+import { parse } from "date-fns";
 
 interface EventCreateDialogProps {
   open: boolean;
