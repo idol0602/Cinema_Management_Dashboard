@@ -11,6 +11,7 @@ import {
   Ticket,
   Settings,
   ChevronDown,
+  Shield,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
@@ -175,6 +176,12 @@ const navItems = [
         name: "Actions",
         path: "/actions",
         label: "Hành động",
+        allow: ["ADMIN"],
+      },
+      {
+        name: "Authorizes",
+        path: "/authorizes",
+        label: "Phân quyền",
         allow: ["ADMIN"],
       },
       {

@@ -54,6 +54,8 @@ const TicketPriceList = () => {
   const [sortColumn, setSortColumn] = useState("");
   const [orderColumn, setOrderColumn] = useState("");
   const [dayTypeColumn, setDayTypeColumn] = useState("");
+  const [seatTypeIdColumn, setSeatTypeIdColumn] = useState("");
+  const [formatIdColumn, setFormatIdColumn] = useState("");
   const [selectedTicketPrice, setSelectedTicketPrice] =
     useState<TicketPriceType | null>(null);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
@@ -151,6 +153,12 @@ const TicketPriceList = () => {
     }
     if (dayTypeColumn) {
       filter.day_type = dayTypeColumn;
+    }
+    if (seatTypeIdColumn) {
+      filter.seat_type_id = seatTypeIdColumn;
+    }
+    if (formatIdColumn) {
+      filter.format_id = formatIdColumn;
     }
 
     findAndPaginate(
@@ -294,6 +302,24 @@ const TicketPriceList = () => {
               placeholder="Loại ngày"
               onChange={setDayTypeColumn}
               value={dayTypeColumn}
+            />
+            <Combobox
+              datas={seatTypes.map((st) => ({
+                value: st.id,
+                label: st.name,
+              }))}
+              placeholder="Loại ghế"
+              onChange={setSeatTypeIdColumn}
+              value={seatTypeIdColumn}
+            />
+            <Combobox
+              datas={formats.map((f) => ({
+                value: f.id,
+                label: f.name,
+              }))}
+              placeholder="Định dạng"
+              onChange={setFormatIdColumn}
+              value={formatIdColumn}
             />
             <Combobox
               datas={ticketPricePaginateConfig.filterableColumns.is_active}

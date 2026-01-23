@@ -40,6 +40,8 @@ export const ticketPricePaginateConfig = {
         label: "Cuối tuần",
       },
     ],
+    seat_type_id: [] as any,
+    format_id: [] as any,
   },
   defaultSortBy: ["created_at", "DESC"] as [string, string],
   defaultLimit: 10,

@@ -36,7 +36,7 @@ import {
 } from "lucide-react";
 import type { ShowTimeType } from "@/types/showTime.type";
 import type { RoomType } from "@/types/room.type";
-import type { movieType } from "@/types/movie.type";
+import type { MovieType } from "@/types/movie.type";
 import type { PaginationMeta } from "@/types/pagination.type";
 import { showTimePaginateConfig } from "@/config/paginate/show_time.config";
 import { ShowTimeCreateDialog } from "@/components/showTimes/ShowTimeCreateDialog";
@@ -44,7 +44,7 @@ import { ShowTimeDetailDialog } from "@/components/showTimes/ShowTimeDetailDialo
 
 const ShowTimeList = () => {
   const [showTimes, setShowTimes] = useState<ShowTimeType[]>([]);
-  const [movieCreate, setMovieCreate] = useState<movieType[]>([]);
+  const [movieCreate, setMovieCreate] = useState<MovieType[]>([]);
   const [rooms, setRooms] = useState<RoomType[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
@@ -85,7 +85,7 @@ const ShowTimeList = () => {
   const fetchMovieCreate = async () => {
     try {
       const movies = await movieService.getAll();
-      setMovieCreate(movies.data as movieType[]);
+      setMovieCreate(movies.data as MovieType[]);
     } catch (error) {
       console.error("Error fetching movies:", error);
     }
@@ -190,7 +190,6 @@ const ShowTimeList = () => {
     if (!confirm(`Bạn có chắc chắn muốn xóa lịch chiếu này không?`)) {
       return;
     }
-
     try {
       const response = await showTimeService.delete(showTime.id as string);
       if (response.success) {

@@ -26,6 +26,7 @@ import FormatList from "@/pages/Formats/FormatList";
 import EventTypeList from "@/pages/EventTypes/EventTypeList";
 import RoleList from "@/pages/Roles/RoleList";
 import ActionList from "@/pages/Actions/ActionList";
+import AuthorizeList from "@/pages/Authorizes/AuthorizeList";
 
 export const AppRoutes = () => {
   return (
@@ -56,6 +57,7 @@ export const AppRoutes = () => {
         {/* System Management - ADMIN ONLY */}
         <Route path="/roles" element={<RoleList />} />
         <Route path="/actions" element={<ActionList />} />
+        <Route path="/authorizes" element={<AuthorizeList />} />
       </Route>
 
       {/* STAFF */}

@@ -1,10 +1,13 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { User, Mail, Phone, Edit, Eye, EyeOff, X, Check } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import type { User as UserType } from "@/types/user.type";
+import { roleService } from "../../services/role.service";
+import type { RoleType } from "@/types/role.type";
 
 function Profile() {
   const { user, updateProfile } = useAuth();
+  const [roles, setRoles] = useState<RoleType[]>([]);
   const [isEditMode, setIsEditMode] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState<Partial<UserType>>({
@@ -14,7 +17,6 @@ function Profile() {
     phone: user?.phone || "",
     password: "hidden password",
     role: user?.role || "CUSTOMER",
-    points: user?.points || 0,
     is_active: user?.is_active || true,
     created_at: user?.created_at || "",
   });
@@ -25,18 +27,27 @@ function Profile() {
     return date.toLocaleDateString("vi-VN");
   };
 
-  const getRoleLabel = (role: string) => {
-    const roleMap: Record<string, string> = {
-      CUSTOMER: "Khách hàng",
-      STAFF: "Nhân viên",
-      ADMIN: "Quản trị viên",
-    };
-    return roleMap[role] || role;
+  const getRoleLabel = (roleId: string) => {
+    const roleName = roles.find((r) => r.id === roleId)?.name || "Khách hàng";
+    return roleName;
   };
 
   const handleChangeForm = (field: keyof UserType, value: string) => {
     setFormData({ ...formData, [field]: value });
   };
+
+  const fetchRoles = async () => {
+    try {
+      const response = await roleService.getAll();
+      setRoles(response.data as RoleType[]);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  useEffect(() => {
+    fetchRoles();
+  }, []);
 
   const handleSaveChanges = async () => {
     setLoading(true);
@@ -58,7 +69,6 @@ function Profile() {
       phone: user?.phone || "",
       password: "hidden password",
       role: user?.role || "CUSTOMER",
-      points: user?.points || 0,
       is_active: user?.is_active || true,
       created_at: user?.created_at || "",
     });
@@ -181,16 +191,6 @@ function Profile() {
                   {getRoleLabel(formData.role || "CUSTOMER")}
                 </div>
               </div>
-
-              <div>
-                <label className="block text-sm font-medium text-foreground mb-2">
-                  Điểm thưởng
-                </label>
-                <p className="text-3xl font-bold text-purple-600">
-                  {formData.points || 0}
-                </p>
-              </div>
-
               <div>
                 <label className="block text-sm font-medium text-foreground mb-2">
                   Mật khẩu
@@ -243,15 +243,7 @@ function Profile() {
         </div>
 
         {/* Statistics */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-          <div className="bg-card rounded-lg shadow-md p-6 hover:shadow-lg transition border border-border">
-            <p className="text-muted-foreground text-sm mb-2">
-              Điểm thưởng tích lũy
-            </p>
-            <p className="text-4xl font-bold text-purple-600">
-              {formData.points || 0}
-            </p>
-          </div>
+        <div className="grid grid-cols-1 md:grid-cols-1 gap-6 mb-8">
           <div className="bg-card rounded-lg shadow-md p-6 hover:shadow-lg transition border border-border">
             <p className="text-muted-foreground text-sm mb-2">
               Trạng thái tài khoản

@@ -131,4 +131,40 @@ export const authorizeService = {
       };
     }
   },
+
+  bulkCreate: async (data: CreateAuthorizeType[]): Promise<serviceResponse> => {
+    try {
+      const response = await api.post("/authorizes/bulk/create", data);
+      return {
+        data: response.data.data,
+        success: true,
+        error: response.data.error,
+      };
+    } catch (error) {
+      const apiError = handleApiError(error);
+      return {
+        data: [],
+        success: false,
+        error: apiError.message,
+      };
+    }
+  },
+
+  bulkRemove: async (ids: string[]): Promise<serviceResponse> => {
+    try {
+      const response = await api.post("/authorizes/bulk/remove", { ids });
+      return {
+        data: response.data.data,
+        success: true,
+        error: response.data.error,
+      };
+    } catch (error) {
+      const apiError = handleApiError(error);
+      return {
+        data: [],
+        success: false,
+        error: apiError.message,
+      };
+    }
+  },
 };
