@@ -20,7 +20,12 @@ import type { CreateComboType } from "@/types/combo.type";
 import type { MovieType } from "@/types/movie.type";
 import type { EventType } from "@/types/event.type";
 import type { MenuItemType } from "@/types/menuItem.type";
+import type { CreateComboItemType } from "@/types/comboItem.type";
 import type { DiscountType } from "@/types/discount.type";
+import type { CreateComboEventType } from "@/types/comboEvent.type";
+import type { CreateComboMovieType } from "@/types/comboMovie.type";
+import {comboService} from "../../services/combo.service"
+import { toast } from "sonner";
 
 interface EventWithDiscount extends EventType {
   discount?: DiscountType | null;
@@ -33,12 +38,6 @@ interface ComboCreateDialogProps {
   menuItems: MenuItemType[];
   movies: MovieType[];
   events: EventWithDiscount[];
-}
-
-interface MenuItem {
-  menu_item_id: string;
-  quantity: number;
-  unit_price: number;
 }
 
 interface DetailModalState {
@@ -60,7 +59,7 @@ export const ComboCreateDialog = ({
     is_active: true,
   });
 
-  const [selectedMenuItems, setSelectedMenuItems] = useState<MenuItem[]>([]);
+  const [selectedMenuItems, setSelectedMenuItems] = useState<CreateComboItemType[]>([]);
   const [selectedMovie, setSelectedMovie] = useState<MovieType | null>(null);
   const [selectedEvent, setSelectedEvent] = useState<EventWithDiscount | null>(null);
   const [detailModal, setDetailModal] = useState<DetailModalState>({
@@ -89,7 +88,9 @@ export const ComboCreateDialog = ({
     if (!exists && menuItem) {
       setSelectedMenuItems((prev) => [
         ...prev,
-        {
+        { 
+          combo_id: "",
+          combo_item_id: "",
           menu_item_id: menuItemId,
           quantity: 1,
           unit_price: menuItem.price,
@@ -147,6 +148,41 @@ export const ComboCreateDialog = ({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    const comboEvent : CreateComboEventType = {
+      combo_id: "",
+      event_id: selectedEvent?.id || "",
+    }
+
+    const comboMovie : CreateComboMovieType = {
+      combo_id: "",
+      movie_id: selectedMovie?.id || "",
+    }
+
+    const comboItems : CreateComboItemType[] = selectedMenuItems.map((item) => ({
+      combo_id: "",
+      menu_item_id: item.menu_item_id,
+      quantity: item.quantity,
+      unit_price: item.unit_price,
+    }))
+    let totalPrice = 0;
+    if(formData.total_price != 0) totalPrice = formData.total_price;
+    else totalPrice = selectedMenuItems.reduce((acc, item) => acc + item.unit_price * item.quantity, 0);
+    
+    const combo : CreateComboType = {
+      name: formData.name,
+      description: formData.description,
+      total_price: totalPrice,
+      is_active: formData.is_active,
+    }
+
+    const result = await comboService.create(combo, comboItems, comboMovie, comboEvent);
+    if (result.error) {
+      toast.error(result.error.message || "Failed to create combo");
+    } else {
+      toast.success("Combo created successfully");
+      resetForm();
+      onOpenChange(false);
+    }
   };
 
   const resetForm = () => {

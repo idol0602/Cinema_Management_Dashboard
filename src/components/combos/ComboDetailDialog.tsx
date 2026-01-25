@@ -17,16 +17,13 @@ import {
   Ticket,
 } from "lucide-react";
 import type { CreateComboType } from "@/types/combo.type";
-import type { ComboItemType } from "@/types/comboItem.type";
 import type { ComboMovieType } from "@/types/comboMovie.type";
 import type { ComboEventType } from "@/types/comboEvent.type";
 import type { MovieType } from "@/types/movie.type";
 import type { EventType } from "@/types/event.type";
 import type { DiscountType } from "@/types/discount.type";
-
-interface MenuItem extends MovieType {
-  id?: string;
-}
+import type { ComboItemType } from "@/types/comboItem.type"
+import type { MenuItemType } from "@/types/menuItem.type"
 
 interface EventWithDiscount extends EventType {
   discount?: DiscountType | null;
@@ -34,7 +31,7 @@ interface EventWithDiscount extends EventType {
 
 interface DetailComboType extends CreateComboType {
   id: string;
-  combo_items?: (ComboItemType & { menu_item?: MenuItem })[];
+  combo_items?: (ComboItemType & { menu_item?: MenuItemType })[];
   combo_movies?: (ComboMovieType & { movie?: MovieType })[];
   combos_events?: (ComboEventType & { event?: EventWithDiscount | null })[];
 }

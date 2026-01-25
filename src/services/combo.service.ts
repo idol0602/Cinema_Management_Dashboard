@@ -2,6 +2,9 @@ import api, { handleApiError } from "./api.ts"
 import type {serviceResponse} from "../types/api.type.ts"
 import type {PaginationQuery, PaginatedResponse} from "@/types/pagination.type.ts"
 import type {CreateComboType, UpdateComboType, ComboType} from "@/types/combo.type.ts"
+import type {CreateComboItemType} from "../types/comboItem.type.ts"
+import type {CreateComboMovieType} from "../types/comboMovie.type.ts"
+import type {CreateComboEventType} from "../types/comboEvent.type.ts"
 
 export const comboService = {
   getAll: async () : Promise<serviceResponse> => {
@@ -40,9 +43,15 @@ export const comboService = {
     }
   },
 
-  create: async (data: CreateComboType) : Promise<serviceResponse> => {
+  create: async (combo: CreateComboType, comboItems?: CreateComboItemType[], comboMovie?: CreateComboMovieType, comboEvent?: CreateComboEventType) : Promise<serviceResponse> => {
     try {
-      const response = await api.post('/combos', data);
+      const payload = {
+        combo,
+        comboItems : comboItems || [],
+        comboMovie : comboMovie || {},
+        comboEvent : comboEvent || {},
+      }
+      const response = await api.post('/combos', payload);
       return {
         data: response.data.data,
         success: true,
