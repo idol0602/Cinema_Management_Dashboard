@@ -19,9 +19,9 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
+import { RichTextEditor } from "@/components/ui/rich-text-editor";
 import { Save, FileText, Loader2, Upload, X } from "lucide-react";
 import type { PostType, UpdatePostType } from "@/types/post.type";
 import { updatePostSchema } from "../../schemas/post.schema.ts";
@@ -138,11 +138,10 @@ export function PostEditDialog({
                     Nội Dung <span className="text-destructive">*</span>
                   </FormLabel>
                   <FormControl>
-                    <Textarea
+                    <RichTextEditor
+                      content={field.value || ""}
+                      onChange={field.onChange}
                       placeholder="Nhập nội dung bài viết..."
-                      className="resize-none"
-                      rows={8}
-                      {...field}
                     />
                   </FormControl>
                   <FormMessage />

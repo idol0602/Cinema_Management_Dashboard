@@ -20,13 +20,19 @@ import type { CreateComboType } from "@/types/combo.type";
 import type { MovieType } from "@/types/movie.type";
 import type { EventType } from "@/types/event.type";
 import type { MenuItemType } from "@/types/menuItem.type";
+import type { DiscountType } from "@/types/discount.type";
+
+interface EventWithDiscount extends EventType {
+  discount?: DiscountType | null;
+}
 
 interface ComboCreateDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  onSubmit: (data: CreateComboType) => void;
   menuItems: MenuItemType[];
   movies: MovieType[];
-  events: EventType[];
+  events: EventWithDiscount[];
 }
 
 interface MenuItem {
@@ -37,7 +43,7 @@ interface MenuItem {
 
 interface DetailModalState {
   type: "menuItem" | "movie" | "event" | null;
-  item: MenuItemType | MovieType | EventType | null;
+  item: MenuItemType | MovieType | EventWithDiscount | null;
 }
 
 export const ComboCreateDialog = ({
@@ -56,7 +62,7 @@ export const ComboCreateDialog = ({
 
   const [selectedMenuItems, setSelectedMenuItems] = useState<MenuItem[]>([]);
   const [selectedMovie, setSelectedMovie] = useState<MovieType | null>(null);
-  const [selectedEvent, setSelectedEvent] = useState<EventType | null>(null);
+  const [selectedEvent, setSelectedEvent] = useState<EventWithDiscount | null>(null);
   const [detailModal, setDetailModal] = useState<DetailModalState>({
     type: null,
     item: null,
@@ -326,7 +332,7 @@ export const ComboCreateDialog = ({
     }
 
     if (detailModal.type === "event") {
-      const item = detailModal.item as EventType;
+      const item = detailModal.item as EventWithDiscount;
       return (
         <Dialog open={!!detailModal.item} onOpenChange={closeDetailModal}>
           <DialogContent className="dark:text-foreground">
@@ -348,7 +354,7 @@ export const ComboCreateDialog = ({
                   <ImageIcon className="w-12 h-12 text-slate-400" />
                 </div>
               )}
-              <div className="space-y-2">
+              <div className="space-y-3">
                 {item.start_date && (
                   <div className="flex justify-between items-center">
                     <span className="text-sm font-medium text-muted-foreground">
@@ -367,6 +373,40 @@ export const ComboCreateDialog = ({
                     <span className="text-sm">
                       {new Date(item.end_date).toLocaleDateString("vi-VN")}
                     </span>
+                  </div>
+                )}
+                {item.discount && (
+                  <div className="p-3 rounded-lg bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-800">
+                    <div className="flex justify-between items-center mb-2">
+                      <span className="text-sm font-medium text-muted-foreground">
+                        Giảm giá:
+                      </span>
+                      <span className="text-lg font-bold text-green-600">
+                        {item.discount.discount_percent}%
+                      </span>
+                    </div>
+                    <div className="text-sm font-medium text-foreground">
+                      {item.discount.name}
+                    </div>
+                    {item.discount.description && (
+                      <p className="text-xs text-muted-foreground mt-1">
+                        {item.discount.description}
+                      </p>
+                    )}
+                    {(item.discount.valid_from || item.discount.valid_to) && (
+                      <div className="text-xs text-muted-foreground mt-2">
+                        Hiệu lực: {item.discount.valid_from && new Date(item.discount.valid_from).toLocaleDateString("vi-VN")}
+                        {item.discount.valid_to && ` - ${new Date(item.discount.valid_to).toLocaleDateString("vi-VN")}`}
+                      </div>
+                    )}
+                  </div>
+                )}
+                {!item.discount && (
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm font-medium text-muted-foreground">
+                      Giảm giá:
+                    </span>
+                    <span className="text-sm text-muted-foreground">Không có</span>
                   </div>
                 )}
                 {item.description && (

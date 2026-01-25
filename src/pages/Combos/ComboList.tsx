@@ -287,7 +287,7 @@ const ComboList = () => {
 
   const handleEdit = (combo: ComboType) => {
     setSelectedCombo(combo);
-    setEditDialogOpen(true);
+    // setEditDialogOpen(true);
   };
 
   const handleEditSubmit = async (data: UpdateComboType) => {
@@ -348,11 +348,9 @@ const ComboList = () => {
   };
 
   const collectDataForDetail = (combo: ComboType) => {
-    // lấy ra danh sách combo item trong comboItems có comboId trùng với comboId truyền vào
     const items = comboItems
       .filter((item) => item.combo_id === combo.id)
       .map((item) => {
-        // từ mỗi combo item lấy ra menu item tương ứng trong menuItems
         const menuItem = menuItems.find(
           (menu) => menu.id === item.menu_item_id,
         );
@@ -650,7 +648,10 @@ const ComboList = () => {
         onSubmit={handleCreateSubmit}
         menuItems={menuItems}
         movies={movies}
-        events={events}
+        events={events.map((event) => ({
+          ...event,
+          discount: discounts.find((d) => d.event_id === event.id) || null,
+        }))}
       />
       {/* <ComboEditDialog
         combo={selectedCombo}

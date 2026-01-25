@@ -22,16 +22,21 @@ import type { ComboMovieType } from "@/types/comboMovie.type";
 import type { ComboEventType } from "@/types/comboEvent.type";
 import type { MovieType } from "@/types/movie.type";
 import type { EventType } from "@/types/event.type";
+import type { DiscountType } from "@/types/discount.type";
 
 interface MenuItem extends MovieType {
   id?: string;
+}
+
+interface EventWithDiscount extends EventType {
+  discount?: DiscountType | null;
 }
 
 interface DetailComboType extends CreateComboType {
   id: string;
   combo_items?: (ComboItemType & { menu_item?: MenuItem })[];
   combo_movies?: (ComboMovieType & { movie?: MovieType })[];
-  combos_events?: (ComboEventType & { event?: EventType })[];
+  combos_events?: (ComboEventType & { event?: EventWithDiscount | null })[];
 }
 
 interface ComboDetailDialogProps {
@@ -352,8 +357,8 @@ export const ComboDetailDialog = ({
                         className="hover:shadow-md transition-shadow"
                       >
                         <CardContent className="pt-6">
-                          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 items-center">
-                            <div className="sm:col-span-2 lg:col-span-1">
+                          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4 items-center">
+                            <div>
                               <label className="text-xs font-medium text-muted-foreground uppercase">
                                 STT
                               </label>
@@ -361,14 +366,14 @@ export const ComboDetailDialog = ({
                                 {index + 1}
                               </p>
                             </div>
-                            <div className="sm:col-span-2 lg:col-span-1 flex justify-center">
+                            <div className="flex justify-center">
                               <img
                                 className="h-20 w-20 object-cover rounded border"
                                 src={comboEvent.event?.image || ""}
                                 alt={comboEvent.event?.name || "N/A"}
                               />
                             </div>
-                            <div className="sm:col-span-2 lg:col-span-2">
+                            <div className="lg:col-span-2">
                               <label className="text-xs font-medium text-muted-foreground uppercase">
                                 Tên Sự Kiện
                               </label>
@@ -378,6 +383,45 @@ export const ComboDetailDialog = ({
                               {comboEvent.event?.description && (
                                 <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
                                   {comboEvent.event.description}
+                                </p>
+                              )}
+                            </div>
+                            <div>
+                              <label className="text-xs font-medium text-muted-foreground uppercase">
+                                Thời Gian
+                              </label>
+                              <p className="text-xs mt-1">
+                                {comboEvent.event?.start_date
+                                  ? new Date(comboEvent.event.start_date).toLocaleDateString("vi-VN")
+                                  : "N/A"}
+                                {" - "}
+                                {comboEvent.event?.end_date
+                                  ? new Date(comboEvent.event.end_date).toLocaleDateString("vi-VN")
+                                  : "N/A"}
+                              </p>
+                              <Badge
+                                variant={comboEvent.event?.is_active ? "default" : "secondary"}
+                                className="mt-1"
+                              >
+                                {comboEvent.event?.is_active ? "Hoạt động" : "Ngừng"}
+                              </Badge>
+                            </div>
+                            <div>
+                              <label className="text-xs font-medium text-muted-foreground uppercase">
+                                Giảm Giá
+                              </label>
+                              {comboEvent.event?.discount ? (
+                                <div className="mt-1">
+                                  <p className="text-lg font-bold text-green-600">
+                                    {comboEvent.event.discount.discount_percent}%
+                                  </p>
+                                  <p className="text-xs text-muted-foreground">
+                                    {comboEvent.event.discount.name}
+                                  </p>
+                                </div>
+                              ) : (
+                                <p className="text-sm text-muted-foreground mt-1">
+                                  Không có
                                 </p>
                               )}
                             </div>
