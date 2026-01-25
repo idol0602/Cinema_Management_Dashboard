@@ -33,12 +33,22 @@ searchableColumns : [
   filterableColumns: {
     is_active: [
       {
-      value: "true",
-      label: "Đang hoạt động",
+        value: "true",
+        label: "Đang hoạt động",
       },
       {
-      value: "false",
-      label: "Ngưng hoạt động",
+        value: "false",
+        label: "Ngưng hoạt động",
+      },
+    ],
+    only_at_counter: [
+      {
+        value: "true",
+        label: "Chỉ tại quầy",
+      },
+      {
+        value: "false",
+        label: "Online & Quầy",
       },
     ],
   },

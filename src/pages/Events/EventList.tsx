@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
 import { eventService } from "@/services/event.service";
+import { eventTypeService } from "@/services/eventType.service";
 import type { EventType } from "@/types/event.type";
+import type { EventTypeType } from "@/types/eventType.type";
 import type { PaginationMeta } from "@/types/pagination.type";
 import { eventPaginateConfig } from "@/config/paginate/event.config";
 import { toast } from "sonner";
@@ -41,10 +43,13 @@ import EventDetailDialog from "@/components/events/EventDetailDialog";
 
 const EventList = () => {
   const [events, setEvents] = useState<EventType[]>([]);
+  const [eventTypes, setEventTypes] = useState<EventTypeType[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [statusColumn, setStatusColumn] = useState("");
+  const [eventTypeFilter, setEventTypeFilter] = useState("");
+  const [onlyAtCounterFilter, setOnlyAtCounterFilter] = useState("");
   const [searchColumn, setSearchColumn] = useState("");
   const [sortColumn, setSortColumn] = useState("");
   const [orderColumn, setOrderColumn] = useState("");
@@ -62,14 +67,14 @@ const EventList = () => {
   const [selectedEvent, setSelectedEvent] = useState<EventType | null>(null);
 
   const findAndPaginate = async (
-    page = 1,
-    limit = eventPaginateConfig.defaultLimit,
-    sortBy = eventPaginateConfig.defaultSortBy[0] +
+    page: number = 1,
+    limit: number = eventPaginateConfig.defaultLimit,
+    sortBy: string = eventPaginateConfig.defaultSortBy[0] +
       ":" +
       eventPaginateConfig.defaultSortBy[1],
-    search = undefined,
-    searchBy = undefined,
-    filter = {}
+    search: string | undefined = undefined,
+    searchBy: string | undefined = undefined,
+    filter: Record<string, any> = {}
   ) => {
     setLoading(true);
     try {
@@ -99,6 +104,21 @@ const EventList = () => {
   };
 
   useEffect(() => {
+    // Fetch event types on mount
+    const fetchEventTypes = async () => {
+      try {
+        const response = await eventTypeService.getAll();
+        if (response.success && response.data) {
+          setEventTypes(response.data as EventTypeType[]);
+        }
+      } catch (error) {
+        console.error("Failed to fetch event types:", error);
+      }
+    };
+    fetchEventTypes();
+  }, []);
+
+  useEffect(() => {
     handleSearch();
   }, [currentPage]);
 
@@ -116,6 +136,12 @@ const EventList = () => {
     const filter: Record<string, any> = {};
     if (statusColumn) {
       filter.is_active = statusColumn === "true";
+    }
+    if (eventTypeFilter) {
+      filter.event_type_id = eventTypeFilter;
+    }
+    if (onlyAtCounterFilter) {
+      filter.only_at_counter = onlyAtCounterFilter === "true";
     }
 
     findAndPaginate(
@@ -248,6 +274,21 @@ const EventList = () => {
               value={statusColumn}
             />
             <Combobox
+              datas={eventTypes.map((et) => ({
+                value: et.id || "",
+                label: et.name,
+              }))}
+              placeholder="Loại sự kiện"
+              onChange={setEventTypeFilter}
+              value={eventTypeFilter}
+            />
+            <Combobox
+              datas={eventPaginateConfig.filterableColumns.only_at_counter}
+              placeholder="Kênh bán"
+              onChange={setOnlyAtCounterFilter}
+              value={onlyAtCounterFilter}
+            />
+            <Combobox
               datas={eventPaginateConfig.searchableColumns}
               placeholder="Tìm theo"
               onChange={setSearchColumn}
@@ -295,8 +336,8 @@ const EventList = () => {
                     <TableRow>
                       <TableHead className="w-[50px]">#</TableHead>
                       <TableHead className="w-[80px]">Hình Ảnh</TableHead>
-                      <TableHead className="min-w-[200px]">Tên</TableHead>
-                      <TableHead>Mô Tả</TableHead>
+                      <TableHead className="min-w-[180px]">Tên</TableHead>
+                      <TableHead>Loại SK</TableHead>
                       <TableHead>
                         <Calendar className="h-4 w-4 inline mr-1" />
                         Từ Ngày
@@ -305,7 +346,12 @@ const EventList = () => {
                         <Calendar className="h-4 w-4 inline mr-1" />
                         Đến Ngày
                       </TableHead>
+                      <TableHead className="text-center">Kênh Bán</TableHead>
                       <TableHead className="text-center">Trạng Thái</TableHead>
+                      <TableHead>
+                        <Calendar className="h-4 w-4 inline mr-1" />
+                        Ngày Tạo
+                      </TableHead>
                       <TableHead className="text-center">Thao Tác</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -334,12 +380,23 @@ const EventList = () => {
                           <div className="font-medium">{event.name}</div>
                         </TableCell>
                         <TableCell>
-                          <div className="text-sm text-muted-foreground line-clamp-2">
-                            {event.description || "N/A"}
+                          <div className="text-sm text-muted-foreground">
+                            {eventTypes.find(
+                              (et) => et.id === event.event_type_id
+                            )?.name || "N/A"}
                           </div>
                         </TableCell>
                         <TableCell>{formatDate(event.start_date)}</TableCell>
                         <TableCell>{formatDate(event.end_date)}</TableCell>
+                        <TableCell className="text-center">
+                          <Badge
+                            variant={
+                              event.only_at_counter ? "secondary" : "outline"
+                            }
+                          >
+                            {event.only_at_counter ? "Quầy" : "Online & Quầy"}
+                          </Badge>
+                        </TableCell>
                         <TableCell className="text-center">
                           <Badge
                             variant={event.is_active ? "default" : "secondary"}
@@ -347,6 +404,7 @@ const EventList = () => {
                             {event.is_active ? "Hoạt động" : "Vô hiệu"}
                           </Badge>
                         </TableCell>
+                        <TableCell>{formatDate(event.created_at)}</TableCell>
                         <TableCell className="text-center">
                           <div className="flex items-center justify-center gap-2">
                             <Button
@@ -477,11 +535,13 @@ const TableSkeleton = () => {
           <TableRow>
             <TableHead className="w-[50px]">#</TableHead>
             <TableHead className="w-[80px]">Hình Ảnh</TableHead>
-            <TableHead className="min-w-[200px]">Tên</TableHead>
-            <TableHead>Mô Tả</TableHead>
+            <TableHead className="min-w-[180px]">Tên</TableHead>
+            <TableHead>Loại SK</TableHead>
             <TableHead>Từ Ngày</TableHead>
             <TableHead>Đến Ngày</TableHead>
+            <TableHead className="text-center">Kênh Bán</TableHead>
             <TableHead className="text-center">Trạng Thái</TableHead>
+            <TableHead>Ngày Tạo</TableHead>
             <TableHead className="text-center">Thao Tác</TableHead>
           </TableRow>
         </TableHeader>
@@ -498,16 +558,22 @@ const TableSkeleton = () => {
                 <Skeleton className="h-4 w-32" />
               </TableCell>
               <TableCell>
-                <Skeleton className="h-4 w-48" />
+                <Skeleton className="h-4 w-20" />
               </TableCell>
               <TableCell>
                 <Skeleton className="h-4 w-24" />
               </TableCell>
               <TableCell>
                 <Skeleton className="h-4 w-24" />
+              </TableCell>
+              <TableCell>
+                <Skeleton className="h-6 w-16 mx-auto rounded-full" />
               </TableCell>
               <TableCell>
                 <Skeleton className="h-6 w-20 mx-auto rounded-full" />
+              </TableCell>
+              <TableCell>
+                <Skeleton className="h-4 w-24" />
               </TableCell>
               <TableCell>
                 <div className="flex items-center justify-center gap-1">

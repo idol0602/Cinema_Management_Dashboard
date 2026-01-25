@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
@@ -7,8 +8,10 @@ import {
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { Info, Calendar, Image } from "lucide-react";
+import { Info, Calendar, Image, Tag, Store } from "lucide-react";
 import type { EventType } from "@/types/event.type";
+import type { EventTypeType } from "@/types/eventType.type";
+import { eventTypeService } from "@/services/eventType.service";
 
 interface EventDetailDialogProps {
   event: EventType | null;
@@ -21,11 +24,33 @@ export default function EventDetailDialog({
   open,
   onOpenChange,
 }: EventDetailDialogProps) {
+  const [eventTypes, setEventTypes] = useState<EventTypeType[]>([]);
+
+  useEffect(() => {
+    const fetchEventTypes = async () => {
+      try {
+        const response = await eventTypeService.getAll();
+        if (response.success && response.data) {
+          setEventTypes(response.data as EventTypeType[]);
+        }
+      } catch (error) {
+        console.error("Failed to fetch event types:", error);
+      }
+    };
+    fetchEventTypes();
+  }, []);
+
   if (!event) return null;
 
   const formatDate = (dateString?: string) => {
     if (!dateString) return "N/A";
     return new Date(dateString).toLocaleDateString("vi-VN");
+  };
+
+  const getEventTypeName = (typeId?: string) => {
+    if (!typeId) return "N/A";
+    const eventType = eventTypes.find((t) => t.id === typeId);
+    return eventType?.name || "N/A";
   };
 
   return (
@@ -90,6 +115,37 @@ export default function EventDetailDialog({
               <Separator />
             </>
           )}
+
+          <div className="flex items-start gap-3">
+            <Tag className="h-5 w-5 text-muted-foreground mt-0.5" />
+            <div className="flex-1">
+              <p className="text-sm font-medium text-muted-foreground">
+                Loại Sự Kiện
+              </p>
+              <Badge variant="outline" className="mt-1">
+                {getEventTypeName(event.event_type_id)}
+              </Badge>
+            </div>
+          </div>
+
+          <Separator />
+
+          <div className="flex items-start gap-3">
+            <Store className="h-5 w-5 text-muted-foreground mt-0.5" />
+            <div className="flex-1">
+              <p className="text-sm font-medium text-muted-foreground">
+                Kênh Bán
+              </p>
+              <Badge
+                variant={event.only_at_counter ? "secondary" : "outline"}
+                className="mt-1"
+              >
+                {event.only_at_counter ? "Chỉ tại Quầy" : "Online & Quầy"}
+              </Badge>
+            </div>
+          </div>
+
+          <Separator />
 
           <div className="flex items-start gap-3">
             <Calendar className="h-5 w-5 text-muted-foreground mt-0.5" />

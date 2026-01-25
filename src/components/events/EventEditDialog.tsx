@@ -3,6 +3,8 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { updateEventSchema } from "@/schemas/event.schema";
 import type { EventType } from "@/types/event.type";
+import type { EventTypeType } from "@/types/eventType.type";
+import { eventTypeService } from "@/services/eventType.service";
 import {
   Dialog,
   DialogContent,
@@ -18,6 +20,13 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
@@ -39,6 +48,7 @@ export default function EventEditDialog({
   onSubmit,
 }: EventEditDialogProps) {
   const [loading, setLoading] = useState(false);
+  const [eventTypes, setEventTypes] = useState<EventTypeType[]>([]);
   const [imagePreview, setImagePreview] = useState<string>("");
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -50,6 +60,8 @@ export default function EventEditDialog({
       start_date: "",
       end_date: "",
       image: "",
+      event_type_id: "",
+      only_at_counter: false,
       is_active: true,
     },
   });
@@ -68,6 +80,20 @@ export default function EventEditDialog({
   };
 
   useEffect(() => {
+    const fetchEventTypes = async () => {
+      try {
+        const response = await eventTypeService.getAll();
+        if (response.success && response.data) {
+          setEventTypes(response.data as EventTypeType[]);
+        }
+      } catch (error) {
+        console.error("Failed to fetch event types:", error);
+      }
+    };
+    fetchEventTypes();
+  }, []);
+
+  useEffect(() => {
     if (event && open) {
       form.reset({
         name: event.name || "",
@@ -75,6 +101,8 @@ export default function EventEditDialog({
         start_date: event.start_date || "",
         end_date: event.end_date || "",
         image: event.image || "",
+        event_type_id: event.event_type_id || "",
+        only_at_counter: event.only_at_counter ?? false,
         is_active: event.is_active ?? true,
       });
       setImagePreview(event.image || "");
@@ -229,10 +257,54 @@ export default function EventEditDialog({
 
             <FormField
               control={form.control}
+              name="event_type_id"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Loại Sự Kiện</FormLabel>
+                  <Select
+                    onValueChange={field.onChange}
+                    value={field.value}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Chọn loại sự kiện" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {eventTypes.map((type) => (
+                        <SelectItem key={type.id} value={type.id || ""}>
+                          {type.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="only_at_counter"
+              render={({ field }) => (
+                <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3">
+                  <FormLabel>Chỉ Bán Tại Quầy</FormLabel>
+                  <FormControl>
+                    <Checkbox
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                    />
+                  </FormControl>
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
               name="is_active"
               render={({ field }) => (
                 <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3">
-                  <FormLabel>Kích Hoạt</FormLabel>
+                  <FormLabel>Online & Quầy</FormLabel>
                   <FormControl>
                     <Checkbox
                       checked={field.value}

@@ -398,10 +398,6 @@ const ComboList = () => {
     };
   };
 
-  if (combos[0]) {
-    console.log("combo", collectDataForDetail(combos[1]));
-  }
-
   return (
     <div className="container mx-auto py-6 space-y-6">
       {/* Header */}
