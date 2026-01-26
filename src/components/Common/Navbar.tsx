@@ -11,7 +11,6 @@ import {
   Ticket,
   Settings,
   ChevronDown,
-  Shield,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
@@ -105,6 +104,12 @@ const navItems = [
         path: "/orders",
         label: "Đơn hàng",
         allow: ["ADMIN", "STAFF"],
+      },
+      {
+        name: "Refunds",
+        path: "/refunds",
+        label: "Hoàn tiền",
+        allow: ["ADMIN"],
       },
     ],
   },

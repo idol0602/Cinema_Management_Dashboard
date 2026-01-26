@@ -8,7 +8,7 @@ import { menuItemService } from "@/services/menuItem.service";
 import { discountService } from "@/services/discount.service";
 import { toast } from "sonner";
 import { ComboCreateDialog } from "../../components/combos/ComboCreateDialog";
-// import { ComboEditDialog } from "@/components/combos/ComboEditDialog";
+import { ComboEditDialog } from "@/components/combos/ComboEditDialog";
 import { ComboDetailDialog } from "../../components/combos/ComboDetailDialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -45,9 +45,10 @@ import {
 import type { CreateComboType, UpdateComboType } from "@/types/combo.type";
 import type { ComboMovieType } from "@/types/comboMovie.type";
 import type { ComboEventType } from "@/types/comboEvent.type";
-import type { movieType } from "@/types/movie.type";
+import type { MovieType } from "@/types/movie.type";
 import type { EventType } from "@/types/event.type";
 import type { ComboItemType } from "@/types/comboItem.type";
+import type { MenuItemType } from "@/types/menuItem.type";
 import type { PaginationMeta } from "@/types/pagination.type";
 import type { DiscountType } from "@/types/discount.type";
 import { comboPaginateConfig } from "@/config/paginate/combo.config";
@@ -61,10 +62,10 @@ const ComboList = () => {
   const [combos, setCombos] = useState<ComboType[]>([]);
   const [discounts, setDiscounts] = useState<DiscountType[]>([]);
   const [comboItems, setComboItems] = useState<ComboItemType[]>([]);
-  const [menuItems, setMenuItems] = useState<movieType[]>([]);
+  const [menuItems, setMenuItems] = useState<MenuItemType[]>([]);
   const [comboMovies, setComboMovies] = useState<ComboMovieType[]>([]);
   const [comboEvents, setComboEvents] = useState<ComboEventType[]>([]);
-  const [movies, setMovies] = useState<movieType[]>([]);
+  const [movies, setMovies] = useState<MovieType[]>([]);
   const [events, setEvents] = useState<EventType[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
@@ -126,7 +127,7 @@ const ComboList = () => {
         },
       });
       if (response.success) {
-        setMovies(response.data as movieType[]);
+        setMovies(response.data as MovieType[]);
       }
     } catch (error) {
       console.error(error);
@@ -164,7 +165,7 @@ const ComboList = () => {
         filter: { is_active: true },
       });
       if (response.success) {
-        setMenuItems(response.data as movieType[]);
+        setMenuItems(response.data as MenuItemType[]);
       }
     } catch (error) {
       console.error(error);
@@ -201,19 +202,19 @@ const ComboList = () => {
 
   // Dialog states
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
-  //   const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [detailDialogOpen, setDetailDialogOpen] = useState(false);
   const [selectedCombo, setSelectedCombo] = useState<ComboType | null>(null);
 
   const findAndPaginate = async (
-    page = 1,
-    limit = comboPaginateConfig.defaultLimit,
-    sortBy = comboPaginateConfig.defaultSortBy[0] +
+    page: number = 1,
+    limit: number = comboPaginateConfig.defaultLimit,
+    sortBy: string = comboPaginateConfig.defaultSortBy[0] +
       ":" +
       comboPaginateConfig.defaultSortBy[1],
-    search = undefined,
-    searchBy = undefined,
-    filter = {},
+    search: string | undefined = undefined,
+    searchBy: string | undefined = undefined,
+    filter: Record<string, any> = {},
   ) => {
     setLoading(true);
     try {
@@ -280,31 +281,13 @@ const ComboList = () => {
     }
   };
 
-  // Handle create combo
-  const handleCreateSubmit = async (data: CreateComboType) => {
+  const handleCreateSubmit = async () => {
     handleSearch(); // Refresh list
   };
 
   const handleEdit = (combo: ComboType) => {
     setSelectedCombo(combo);
-    // setEditDialogOpen(true);
-  };
-
-  const handleEditSubmit = async (data: UpdateComboType) => {
-    if (!selectedCombo) return;
-
-    try {
-      const response = await comboService.update(selectedCombo.id, data);
-      if (response.success) {
-        toast.success("Cập nhật combo thành công!");
-        handleSearch(); // Refresh list
-      } else {
-        toast.error("Không thể cập nhật combo");
-      }
-    } catch (error) {
-      toast.error("Có lỗi xảy ra khi cập nhật combo");
-      console.error(error);
-    }
+    setEditDialogOpen(true);
   };
 
   const handleDelete = async (combo: ComboType) => {
@@ -653,13 +636,26 @@ const ComboList = () => {
           discount: discounts.find((d) => d.event_id === event.id) || null,
         }))}
       />
-      {/* <ComboEditDialog
+      <ComboEditDialog
         combo={selectedCombo}
         open={editDialogOpen}
         onOpenChange={setEditDialogOpen}
-        onSubmit={handleEditSubmit}
-      /> */}{" "}
-      */
+        onSubmit={() => {
+          handleSearch();
+          fetchComboItems();
+          fetchComboMovies();
+          fetchComboEvents();
+        }}
+        menuItems={menuItems}
+        movies={movies}
+        events={events.map((event) => ({
+          ...event,
+          discount: discounts.find((d) => d.event_id === event.id) || null,
+        }))}
+        comboItems={comboItems}
+        comboMovies={comboMovies}
+        comboEvents={comboEvents}
+      />
       <ComboDetailDialog
         combo={selectedCombo}
         open={detailDialogOpen}

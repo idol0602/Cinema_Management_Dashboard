@@ -67,11 +67,28 @@ export const comboService = {
     }
   },
 
-  update: async (id: string, data: UpdateComboType) : Promise<serviceResponse>  => {
+  update: async (id: string, data: UpdateComboType, comboItems?: CreateComboItemType[], comboMovie?: CreateComboMovieType, comboEvent?: CreateComboEventType) : Promise<serviceResponse>  => {
     try {
-      const response = await api.put(`/combos/${id}`, data);
+      const payload = {
+        combo: data,
+        comboItems: comboItems || [],
+        comboMovie: comboMovie || {},
+        comboEvent: comboEvent || {},
+      };
+      const response = await api.put(`/combos/${id}`, payload);
+      
+      // Check if RPC returned success: false in the data
+      const rpcResult = response.data.data;
+      if (rpcResult && rpcResult.success === false) {
+        return {
+          data: null,
+          success: false,
+          error: rpcResult.error || "Cập nhật combo thất bại",
+        };
+      }
+      
       return {
-        data: response.data.data,
+        data: rpcResult,
         success: true,
         error: response.data.error,
       };
