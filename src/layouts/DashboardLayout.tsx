@@ -2,6 +2,7 @@ import { Outlet } from "react-router-dom";
 import Header from "@/components/Common/Header";
 import Navbar from "@/components/Common/Navbar";
 import Footer from "@/components/Common/Footer";
+import ChatBotDialog from "@/components/chatbots/ChatBotDialog";
 
 export default function DashboardLayout() {
   return (
@@ -19,6 +20,10 @@ export default function DashboardLayout() {
 
       {/* Footer */}
       <Footer />
+
+      {/* Chatbot */}
+      <ChatBotDialog />
     </div>
   );
 }
+

@@ -113,4 +113,22 @@ export const orderService = {
         };
     }
   },
+
+  getOrderDetails: async (id: string): Promise<serviceResponse> => {
+    try {
+      const response = await api.get(`/orders/detail/${id}`);
+      return {
+        data: response.data.data,
+        success: true,
+        error: response.data.error,
+      };
+    } catch (error) {
+      const apiError = handleApiError(error);
+      return {
+        data: null,
+        success: false,
+        error: apiError.message,
+      };
+    }
+  },
 }
