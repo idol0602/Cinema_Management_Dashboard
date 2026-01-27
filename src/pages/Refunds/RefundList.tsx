@@ -64,141 +64,8 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { orderService } from "@/services/order.service";
-import type { OrderType, PaymentStatus } from "@/types/order.type";
-
-// Types based on API response
-interface OrderDetails {
-  order: {
-    id: string;
-    user_id: string;
-    movie_id: string;
-    discount_id: string | null;
-    service_vat: number;
-    payment_status: string;
-    payment_method: string;
-    trans_id: string | null;
-    total_price: number;
-    created_at: string;
-    requested_at: string | null;
-  };
-  user: {
-    id: string;
-    name: string;
-    email: string;
-    phone: string;
-  };
-  movie: {
-    id: string;
-    title: string;
-    director: string;
-    country: string;
-    description: string;
-    release_date: string;
-    duration: number;
-    rating: number;
-    trailer: string;
-    image: string;
-    thumbnail: string;
-    movie_type: {
-      id: string;
-      type: string;
-    };
-  };
-  tickets: Array<{
-    id: string;
-    checked_in: boolean;
-    qr_code: string;
-    ticket_price: {
-      id: string;
-      price: number;
-      day_type: string;
-    };
-    showtime_seat: {
-      id: string;
-      status_seat: string;
-      seat: {
-        id: string;
-        seat_number: string;
-        seat_type: {
-          id: string;
-          name: string;
-        };
-      };
-    };
-    showtime: {
-      id: string;
-      start_time: string;
-      end_time: string;
-      day_type: string;
-      room: {
-        id: string;
-        name: string;
-        location: string;
-        format: {
-          id: string;
-          name: string;
-        };
-      };
-    };
-  }>;
-  menu_items: Array<{
-    id: string;
-    quantity: number;
-    unit_price: number;
-    total_price: number;
-    item: {
-      id: string;
-      name: string;
-      description: string;
-      price: number;
-      item_type: string;
-      image: string;
-    };
-  }>;
-  combos: Array<{
-    id: string;
-    combo: {
-      id: string;
-      name: string;
-      description: string;
-      total_price: number;
-      items: Array<{
-        id: string;
-        quantity: number;
-        unit_price: number;
-        menu_item: {
-          id: string;
-          name: string;
-          description: string;
-          price: number;
-          item_type: string;
-          image: string;
-        };
-      }>;
-    };
-  }>;
-  discount: {
-    id: string;
-    name: string;
-    description: string;
-    discount_percent: number;
-    valid_from: string;
-    valid_to: string;
-  } | null;
-  event: {
-    id: string;
-    name: string;
-    description: string;
-    start_date: string;
-    end_date: string;
-    image: string;
-    only_at_counter: boolean;
-    event_type: {
-      id: string;
-      name: string;
-    };
-  } | null;
-}
+import { momoService } from "@/services/payment/momo.service";
+import type { OrderType, PaymentStatus, OrderDetails } from "@/types/order.type";
 
 const RefundList = () => {
   const [orders, setOrders] = useState<OrderType[]>([]);
@@ -211,6 +78,7 @@ const RefundList = () => {
   const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
   const [orderToRefund, setOrderToRefund] = useState<OrderType | null>(null);
   const [isRefunding, setIsRefunding] = useState(false);
+  const [startTimeForRefund, setStartTimeForRefund] = useState<string>("");
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
@@ -332,9 +200,24 @@ const RefundList = () => {
     toast.info("Đang tải lại danh sách...");
   };
 
-  const handleRefundClick = (order: OrderType) => {
-    setOrderToRefund(order);
-    setConfirmDialogOpen(true);
+  const handleRefundClick = async (order: OrderType) => {
+    // Fetch order details để lấy startTime từ showtime
+    try {
+      const response = await orderService.getOrderDetails(order.id as string);
+      if (response.success && response.data) {
+        const details = response.data as OrderDetails;
+        const startTime = details.tickets.length > 0 
+          ? details.tickets[0].showtime.start_time 
+          : "";
+        setStartTimeForRefund(startTime);
+        setOrderToRefund(order);
+        setConfirmDialogOpen(true);
+      } else {
+        toast.error("Không thể tải thông tin đơn hàng");
+      }
+    } catch {
+      toast.error("Có lỗi xảy ra");
+    }
   };
 
   const handleRefundFromDetails = () => {
@@ -353,6 +236,11 @@ const RefundList = () => {
         created_at: orderDetails.order.created_at,
         requested_at: orderDetails.order.requested_at as string,
       };
+      // Lấy startTime từ ticket đầu tiên
+      const startTime = orderDetails.tickets.length > 0 
+        ? orderDetails.tickets[0].showtime.start_time 
+        : "";
+      setStartTimeForRefund(startTime);
       setOrderToRefund(order);
       setDetailDialogOpen(false);
       setConfirmDialogOpen(true);
@@ -361,32 +249,33 @@ const RefundList = () => {
 
   const handleConfirmRefund = async () => {
     if (!orderToRefund) return;
-
+    
     setIsRefunding(true);
     try {
-      // TODO: Implement actual refund logic here
-      // Example:
-      // const response = await orderService.refund(orderToRefund.id);
-      // if (response.success) {
-      //   toast.success(`Hoàn tiền thành công cho đơn hàng ${orderToRefund.id}`);
-      //   fetchOrders(currentPage);
-      // } else {
-      //   toast.error(response.error || "Hoàn tiền thất bại");
-      // }
+      // Gọi API refund MoMo
+      const response = await momoService.refundPayment({
+        orderId: orderToRefund.id as string,
+        transId: orderToRefund.trans_id as string,
+        amount: orderToRefund.total_price as number,
+        startTime: startTimeForRefund,
+        paymentMethod: orderToRefund.payment_method || "MOMO",
+        paymentStatus: orderToRefund.payment_status || "REFUND_PENDING",
+      });
 
-      toast.success(`Đã gửi yêu cầu hoàn tiền cho đơn hàng ${orderToRefund.id}`);
-      setConfirmDialogOpen(false);
-      setOrderToRefund(null);
-      fetchOrders(currentPage);
+      if (response.success) {
+        toast.success(`Hoàn tiền thành công cho đơn hàng ${orderToRefund.id}`);
+        setConfirmDialogOpen(false);
+        setOrderToRefund(null);
+        setStartTimeForRefund("");
+        fetchOrders(currentPage);
+      } else {
+        toast.error(response.error || "Hoàn tiền thất bại");
+      }
     } catch {
       toast.error("Có lỗi xảy ra khi hoàn tiền");
     } finally {
       setIsRefunding(false);
     }
-  };
-
-  const getPaymentStatusBadge = (status: string) => {
-    return <Badge variant="outline" className={"bg-amber-50 text-amber-700 border-amber-300"}>{"Chờ hoàn tiền"}</Badge>;
   };
 
   return (
@@ -525,7 +414,7 @@ const RefundList = () => {
                         </TableCell>
                         <TableCell>{formatDateTime(order.created_at as string)}</TableCell>
                         <TableCell className="text-center">
-                          {getPaymentStatusBadge(order.payment_status as PaymentStatus)}
+                          <Badge variant="outline" className={"bg-amber-50 text-amber-700 border-amber-300"}>{"Chờ hoàn tiền"}</Badge>
                         </TableCell>
                         <TableCell>
                           <div className="flex items-center justify-center gap-2">
@@ -595,7 +484,7 @@ const RefundList = () => {
             </DialogTitle>
             <DialogDescription className="flex items-center gap-2">
               Mã đơn hàng: <span className="font-mono font-semibold">{orderDetails?.order.id}</span>
-              {orderDetails && getPaymentStatusBadge(orderDetails.order.payment_status)}
+              {orderDetails && <Badge variant="outline" className={"bg-amber-50 text-amber-700 border-amber-300"}>{"Chờ hoàn tiền"}</Badge>}
             </DialogDescription>
           </DialogHeader>
 
