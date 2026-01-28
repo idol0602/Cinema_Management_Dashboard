@@ -12,6 +12,19 @@ export interface OrderType {
   total_price: number;
   created_at?: string;
   requested_at?: string;
+  // Joined table data
+  movies?: {
+    id: string;
+    title: string;
+    thumbnail: string;
+    duration: number;
+  };
+  users?: {
+    id: string;
+    name: string;
+    email: string;
+    phone: string;
+  };
 }
 
 export interface CreateOrderType {

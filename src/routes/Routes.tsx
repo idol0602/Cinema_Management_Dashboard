@@ -28,6 +28,7 @@ import RoleList from "@/pages/Roles/RoleList";
 import ActionList from "@/pages/Actions/ActionList";
 import AuthorizeList from "@/pages/Authorizes/AuthorizeList";
 import RefundList from "@/pages/Refunds/RefundList";
+import OrderList from "@/pages/Orders/OrderList";
 
 export const AppRoutes = () => {
   return (
@@ -101,7 +102,7 @@ export const AppRoutes = () => {
         <Route path="/events" element={<EventList />} />
         <Route path="/event-types" element={<EventTypeList />} />
         <Route path="/dashboard" element={<Home />} />
-        <Route path="/orders" element={<>ORDERS PAGE</>} />
+        <Route path="/orders" element={<OrderList />} />
         <Route path="/profile" element={<Profile />} />
       </Route>
 

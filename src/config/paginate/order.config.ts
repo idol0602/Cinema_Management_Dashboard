@@ -13,8 +13,20 @@ export const orderPaginationConfig = {
 
 searchableColumns : [
   {
-    value: "user_id",
-    label: "Mã người dùng",
+    value : "id",
+    label : "Mã đơn hàng",
+  },
+  {
+    value: "movies.title",
+    label: "Tên phim",
+  },
+  {
+    value: "users.name",
+    label: "Tên khách hàng",
+  },
+  {
+    value: "users.email",
+    label: "Email khách hàng",
   },
   ],
   // dùng combobox chọn tiêu chí lọc
