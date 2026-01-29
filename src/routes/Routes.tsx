@@ -29,6 +29,8 @@ import ActionList from "@/pages/Actions/ActionList";
 import AuthorizeList from "@/pages/Authorizes/AuthorizeList";
 import RefundList from "@/pages/Refunds/RefundList";
 import OrderList from "@/pages/Orders/OrderList";
+import SellPage from "@/pages/Sells/SellPage";
+import StatisticalPage from "@/pages/Statisticals/StatisticalPage";
 
 export const AppRoutes = () => {
   return (
@@ -71,7 +73,8 @@ export const AppRoutes = () => {
           </ProtectedRoute>
         }
       >
-        <Route path="/ticket" element={<>BUY TICKET ONLY STAFF</>} />
+        <Route path="/ticket" element={<SellPage />} />
+        <Route path="/statisticals" element={<StatisticalPage />} />
       </Route>
 
       {/* ADMIN AND STAFF */}

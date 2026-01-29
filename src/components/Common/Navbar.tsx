@@ -195,6 +195,12 @@ const navItems = [
         label: "AI Agent SQL",
         allow: ["ADMIN"],
       },
+      {
+        name: "Statisticals",
+        path: "/statisticals",
+        label: "Thống kê",
+        allow: ["ADMIN"],
+      },
     ],
   },
   {
@@ -235,7 +241,7 @@ function Navbar() {
   };
 
   return (
-    <nav className="border-b bg-background w-full">
+    <nav className="w-full">
       <div className="px-4">
         <div className="flex items-center gap-1 overflow-x-auto py-2 w-full">
           {navItems.map((item) => {

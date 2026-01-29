@@ -10,9 +10,6 @@ export default function DashboardLayout() {
       {/* Header */}
       <Header />
 
-      {/* Navigation */}
-      <Navbar />
-
       {/* Main Content */}
       <main className="flex-1 container mx-auto px-4 py-6">
         <Outlet />

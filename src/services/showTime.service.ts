@@ -148,5 +148,23 @@ export const showTimeService = {
         error: apiError.message,
       };
     }
+  },
+
+  getShowTimeDetails: async (id: string) : Promise<serviceResponse> => {
+    try {
+      const response = await api.get(`/show-times/details/${id}`);
+      return {
+        data: response.data.data,
+        success: true,
+        error: response.data.error,
+      };
+    } catch (error) {
+      const apiError = handleApiError(error);
+      return {
+        data: {},
+        success: false,
+        error: apiError.message,
+      };
+    }
   }
 };

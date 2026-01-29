@@ -11,12 +11,12 @@ import {
 import type { chartType } from "../../types/chart.type";
 
 const COLORS = [
-  "#3b82f6",
-  "#10b981",
-  "#f59e0b",
-  "#ef4444",
-  "#8b5cf6",
-  "#ec4899",
+  "#f97316", // orange-500 - primary
+  "#fb923c", // orange-400
+  "#fdba74", // orange-300
+  "#ea580c", // orange-600
+  "#c2410c", // orange-700
+  "#ffedd5", // orange-100
 ];
 
 export function DynamicBarChart({

@@ -5,7 +5,7 @@ import type {CreateShowTimeSeatType, UpdateShowTimeSeatType} from "@/types/showT
 export const showTimeSeatService = {
   getAll: async () : Promise<serviceResponse> => {
     try {
-      const response = await api.get('/show-time-seats')
+      const response = await api.get('/show-time-seats/all')
       return {
         data: response.data.data,
         success : true,
@@ -110,4 +110,22 @@ export const showTimeSeatService = {
       };
     }
   },
+
+  findAndPaginate: async (query: any) : Promise<serviceResponse> => {
+    try {
+      const response = await api.get('/show-time-seats', { params: query });
+      return {
+        data: response.data.data,
+        success: true,
+        error: response.data.error,
+      };
+    } catch (error) {
+      const apiError = handleApiError(error);
+      return {
+        data: {},
+        success: false,
+        error: apiError.message,
+      };
+    }
+  }
 }
