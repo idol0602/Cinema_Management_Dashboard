@@ -37,6 +37,16 @@ searchableColumns : [
       label: "Ngưng hoạt động",
       },
     ],
+    is_event_combo: [
+      {
+      value: "true",
+      label: "Combo sự kiện",
+      },
+      {
+      value: "false",
+      label: "Combo món ăn",
+      },
+    ],
   },
 
   defaultSortBy: [["created_at", "DESC"]],

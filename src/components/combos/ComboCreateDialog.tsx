@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -25,6 +25,7 @@ import type { DiscountType } from "@/types/discount.type";
 import type { CreateComboEventType } from "@/types/comboEvent.type";
 import type { CreateComboMovieType } from "@/types/comboMovie.type";
 import {comboService} from "../../services/combo.service"
+import { eventService } from "@/services/event.service";
 import { toast } from "sonner";
 
 interface EventWithDiscount extends EventType {
@@ -56,6 +57,8 @@ export const ComboCreateDialog = ({
     name: "",
     description: "",
     total_price: 0,
+    image: "",
+    is_event_combo: false,
     is_active: true,
   });
 
@@ -69,6 +72,8 @@ export const ComboCreateDialog = ({
   const [searchMenuItems, setSearchMenuItems] = useState("");
   const [searchMovies, setSearchMovies] = useState("");
   const [searchEvents, setSearchEvents] = useState("");
+  const [imagePreview, setImagePreview] = useState<string>("");
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
@@ -146,6 +151,19 @@ export const ComboCreateDialog = ({
     }
   };
 
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const result = reader.result as string;
+        setImagePreview(result);
+        setFormData((prev) => ({ ...prev, image: result }));
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const comboEvent : CreateComboEventType = {
@@ -172,13 +190,22 @@ export const ComboCreateDialog = ({
       name: formData.name,
       description: formData.description,
       total_price: totalPrice,
+      image: formData.image,
+      is_event_combo: !!selectedEvent, // Set true if event is selected
       is_active: formData.is_active,
     }
 
     const result = await comboService.create(combo, comboItems, comboMovie, comboEvent);
     if (result.error) {
-      toast.error(result.error.message || "Failed to create combo");
+      toast.error(result.error || "Failed to create combo");
     } else {
+      if (selectedEvent && selectedEvent.id) {
+        try {
+          await eventService.update(selectedEvent.id, { is_in_combo: true });
+        } catch (err) {
+          console.error("Failed to update event is_in_combo:", err);
+        }
+      }
       toast.success("Combo created successfully");
       resetForm();
       onOpenChange(false);
@@ -190,6 +217,7 @@ export const ComboCreateDialog = ({
       name: "",
       description: "",
       total_price: 0,
+      is_event_combo: false,
       is_active: true,
     });
     setSelectedMenuItems([]);
@@ -198,6 +226,7 @@ export const ComboCreateDialog = ({
     setSearchMenuItems("");
     setSearchMovies("");
     setSearchEvents("");
+    setImagePreview("");
   };
 
   const getMenuItemName = (menuItemId: string) => {
@@ -505,8 +534,37 @@ export const ComboCreateDialog = ({
                   placeholder="Nhập mô tả combo"
                   value={formData.description || ""}
                   onChange={handleInputChange}
-                  rows={3}
                 />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="image">Hình ảnh</Label>
+                <div className="space-y-2">
+                  {imagePreview && (
+                    <div className="relative w-full h-40 rounded-lg overflow-hidden border">
+                      <img
+                        src={imagePreview}
+                        alt="Preview"
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                  )}
+                  <input
+                    type="file"
+                    ref={fileInputRef}
+                    onChange={handleImageChange}
+                    accept="image/*"
+                    className="hidden"
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => fileInputRef.current?.click()}
+                    className="w-full"
+                  >
+                    {imagePreview ? "Thay Đổi Hình Ảnh" : "Chọn Hình Ảnh"}
+                  </Button>
+                </div>
               </div>
 
               <div className="space-y-2">

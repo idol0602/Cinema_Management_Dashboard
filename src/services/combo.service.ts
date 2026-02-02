@@ -139,4 +139,22 @@ export const comboService = {
       };
     }
   },
+
+  getDetails: async (id: string): Promise<serviceResponse> => {
+    try {
+      const response = await api.get(`/combos/details/${id}`);
+      return {
+        data: response.data.data,
+        success: true,
+        error: response.data.error,
+      };
+    } catch (error) {
+      const apiError = handleApiError(error);
+      return {
+        data: null,
+        success: false,
+        error: apiError.message
+      };
+    }
+  },
 }

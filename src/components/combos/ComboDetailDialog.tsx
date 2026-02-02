@@ -15,6 +15,7 @@ import {
   ShoppingCart,
   Film,
   Ticket,
+  Image as ImageIcon,
 } from "lucide-react";
 import type { CreateComboType } from "@/types/combo.type";
 import type { ComboMovieType } from "@/types/comboMovie.type";
@@ -117,7 +118,27 @@ export const ComboDetailDialog = ({
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {/* Hình ảnh */}
+                  <div className="sm:col-span-2 lg:col-span-1 row-span-2">
+                    <label className="text-sm font-medium text-muted-foreground block mb-2">
+                      Hình ảnh
+                    </label>
+                     {combo.image ? (
+                        <div className="w-full h-full min-h-[200px] overflow-hidden rounded-lg border bg-slate-100 dark:bg-slate-800">
+                          <img
+                            src={combo.image}
+                            alt={combo.name}
+                            className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+                          />
+                        </div>
+                      ) : (
+                        <div className="w-full h-full min-h-[200px] bg-slate-100 dark:bg-slate-800 rounded-lg border flex items-center justify-center">
+                          <ImageIcon className="h-16 w-16 text-slate-400" />
+                        </div>
+                      )}
+                  </div>
+
                   {/* Tên combo */}
                   <div>
                     <label className="text-sm font-medium text-muted-foreground">

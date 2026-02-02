@@ -71,6 +71,7 @@ const ComboList = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [statusColumn, setStatusColumn] = useState("");
+  const [comboTypeFilter, setComboTypeFilter] = useState("");
   const [searchColumn, setSearchColumn] = useState("");
   const [sortColumn, setSortColumn] = useState("");
   const [orderColumn, setOrderColumn] = useState("");
@@ -262,6 +263,9 @@ const ComboList = () => {
     if (statusColumn) {
       filter.is_active = statusColumn === "true";
     }
+    if (comboTypeFilter) {
+      filter.is_event_combo = comboTypeFilter === "true";
+    }
 
     findAndPaginate(
       currentPage,
@@ -309,10 +313,19 @@ const ComboList = () => {
     }
   };
 
-  const handleView = (combo: ComboType) => {
-    const detailedCombo = collectDataForDetail(combo);
-    setSelectedCombo(detailedCombo as any);
-    setDetailDialogOpen(true);
+  const handleView = async (combo: ComboType) => {
+    try {
+      const response = await comboService.getDetails(combo.id);
+      if (response.success && response.data) {
+        setSelectedCombo(response.data as any);
+        setDetailDialogOpen(true);
+      } else {
+        toast.error("Không thể tải chi tiết combo");
+      }
+    } catch (error) {
+      toast.error("Có lỗi xảy ra khi tải chi tiết combo");
+      console.error(error);
+    }
   };
 
   // Format date
@@ -328,55 +341,6 @@ const ComboList = () => {
       style: "currency",
       currency: "VND",
     }).format(price);
-  };
-
-  const collectDataForDetail = (combo: ComboType) => {
-    const items = comboItems
-      .filter((item) => item.combo_id === combo.id)
-      .map((item) => {
-        const menuItem = menuItems.find(
-          (menu) => menu.id === item.menu_item_id,
-        );
-        return {
-          ...item,
-          menu_item: menuItem,
-        };
-      });
-
-    const moviesInCombo = comboMovies
-      .filter((cm) => cm.combo_id === combo.id)
-      .map((cm) => {
-        const movie = movies.find((m) => m.id === cm.movie_id);
-        return {
-          ...cm,
-          movie: movie,
-        };
-      });
-
-    const eventsInCombo = comboEvents
-      .filter((ce) => ce.combo_id === combo.id)
-      .map((ce) => {
-        const event = events.find((e) => e.id === ce.event_id);
-        const discount = event
-          ? discounts.find((d) => d.event_id === event.id)
-          : null;
-        return {
-          ...ce,
-          event: event
-            ? {
-                ...event,
-                discount: discount || null,
-              }
-            : null,
-        };
-      });
-
-    return {
-      ...combo,
-      combo_items: items,
-      combo_movies: moviesInCombo,
-      combos_events: eventsInCombo,
-    };
   };
 
   return (
@@ -418,6 +382,12 @@ const ComboList = () => {
               placeholder="Trạng thái"
               onChange={setStatusColumn}
               value={statusColumn}
+            ></Combobox>
+            <Combobox
+              datas={comboPaginateConfig.filterableColumns.is_event_combo}
+              placeholder="Loại combo"
+              onChange={setComboTypeFilter}
+              value={comboTypeFilter}
             ></Combobox>
             <Combobox
               datas={comboPaginateConfig.searchableColumns}
@@ -467,6 +437,9 @@ const ComboList = () => {
                       <TableHead className="min-w-[250px]">
                         Thông Tin Combo
                       </TableHead>
+                      <TableHead className="w-[100px] text-center">
+                        Hình ảnh
+                      </TableHead>
                       <TableHead className="text-center">
                         <DollarSign className="h-4 w-4 inline mr-1" />
                         Tổng Giá
@@ -475,6 +448,7 @@ const ComboList = () => {
                         <Calendar className="h-4 w-4 inline mr-1" />
                         Ngày Tạo
                       </TableHead>
+                      <TableHead className="text-center">Loại Combo</TableHead>
                       <TableHead className="text-center">Trạng Thái</TableHead>
                       <TableHead className="text-center">Thao Tác</TableHead>
                     </TableRow>
@@ -500,6 +474,19 @@ const ComboList = () => {
                           </div>
                         </TableCell>
                         <TableCell className="text-center">
+                          {combo.image ? (
+                            <img
+                              src={combo.image}
+                              alt={combo.name}
+                              className="w-16 h-16 object-cover rounded-md mx-auto"
+                            />
+                          ) : (
+                            <div className="w-16 h-16 bg-muted rounded-md mx-auto flex items-center justify-center">
+                              <span className="text-xs text-muted-foreground">No Image</span>
+                            </div>
+                          )}
+                        </TableCell>
+                        <TableCell className="text-center">
                           <div className="font-semibold text-green-600">
                             {formatCurrency(combo.total_price)}
                           </div>
@@ -508,6 +495,15 @@ const ComboList = () => {
                           <div className="flex items-center gap-1">
                             {formatDate(combo.created_at)}
                           </div>
+                        </TableCell>
+                        <TableCell className="text-center">
+                          {combo.is_event_combo ? (
+                            <Badge variant="default" className="bg-purple-500">
+                              Combo Sự kiện
+                            </Badge>
+                          ) : (
+                            <Badge variant="secondary">Combo Món ăn</Badge>
+                          )}
                         </TableCell>
                         <TableCell className="text-center">
                           {combo.is_active !== false ? (
@@ -675,6 +671,7 @@ const TableSkeleton = () => {
             <TableHead className="min-w-[250px]">Thông Tin Combo</TableHead>
             <TableHead className="text-center">Tổng Giá</TableHead>
             <TableHead>Ngày Tạo</TableHead>
+            <TableHead className="text-center">Loại Combo</TableHead>
             <TableHead className="text-center">Trạng Thái</TableHead>
             <TableHead className="text-center">Thao Tác</TableHead>
           </TableRow>
@@ -694,6 +691,9 @@ const TableSkeleton = () => {
               </TableCell>
               <TableCell>
                 <Skeleton className="h-4 w-24" />
+              </TableCell>
+              <TableCell>
+                <Skeleton className="h-6 w-20 mx-auto rounded-full" />
               </TableCell>
               <TableCell>
                 <Skeleton className="h-6 w-20 mx-auto rounded-full" />

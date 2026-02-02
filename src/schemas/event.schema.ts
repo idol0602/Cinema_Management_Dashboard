@@ -6,6 +6,7 @@ const eventBaseSchema = z.object({
   start_date: z.string().min(1, "Ngày bắt đầu là bắt buộc"),
   end_date: z.string().min(1, "Ngày kết thúc là bắt buộc"),
   image: z.string().optional(),
+  is_in_combo: z.boolean().default(false).optional(),
   event_type_id: z.string().min(1, "Loại sự kiện là bắt buộc"), // Reference to event_types table
   only_at_counter: z.boolean().default(false).optional(),
   is_active: z.boolean().default(true).optional(),

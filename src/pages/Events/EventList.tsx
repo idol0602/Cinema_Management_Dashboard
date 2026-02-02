@@ -50,6 +50,7 @@ const EventList = () => {
   const [statusColumn, setStatusColumn] = useState("");
   const [eventTypeFilter, setEventTypeFilter] = useState("");
   const [onlyAtCounterFilter, setOnlyAtCounterFilter] = useState("");
+  const [isInComboFilter, setIsInComboFilter] = useState("");
   const [searchColumn, setSearchColumn] = useState("");
   const [sortColumn, setSortColumn] = useState("");
   const [orderColumn, setOrderColumn] = useState("");
@@ -142,6 +143,9 @@ const EventList = () => {
     }
     if (onlyAtCounterFilter) {
       filter.only_at_counter = onlyAtCounterFilter === "true";
+    }
+    if (isInComboFilter) {
+      filter.is_in_combo = isInComboFilter === "true";
     }
 
     findAndPaginate(
@@ -289,6 +293,12 @@ const EventList = () => {
               value={onlyAtCounterFilter}
             />
             <Combobox
+              datas={eventPaginateConfig.filterableColumns.is_in_combo}
+              placeholder="Trong combo"
+              onChange={setIsInComboFilter}
+              value={isInComboFilter}
+            />
+            <Combobox
               datas={eventPaginateConfig.searchableColumns}
               placeholder="Tìm theo"
               onChange={setSearchColumn}
@@ -347,6 +357,7 @@ const EventList = () => {
                         Đến Ngày
                       </TableHead>
                       <TableHead className="text-center">Kênh Bán</TableHead>
+                      <TableHead className="text-center">Trong Combo</TableHead>
                       <TableHead className="text-center">Trạng Thái</TableHead>
                       <TableHead>
                         <Calendar className="h-4 w-4 inline mr-1" />
@@ -395,6 +406,16 @@ const EventList = () => {
                             }
                           >
                             {event.only_at_counter ? "Quầy" : "Online & Quầy"}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-center">
+                          <Badge
+                            variant={
+                              event.is_in_combo ? "default" : "outline"
+                            }
+                            className={event.is_in_combo ? "bg-purple-500" : ""}
+                          >
+                            {event.is_in_combo ? "Có" : "Không"}
                           </Badge>
                         </TableCell>
                         <TableCell className="text-center">

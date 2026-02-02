@@ -51,6 +51,16 @@ searchableColumns : [
         label: "Online & Quầy",
       },
     ],
+    is_in_combo: [
+      {
+        value: "true",
+        label: "Có trong combo",
+      },
+      {
+        value: "false",
+        label: "Không có trong combo",
+      },
+    ],
   },
 
   defaultSortBy: [["created_at", "DESC"]],
