@@ -13,7 +13,6 @@ import {
 } from "@/components/ui/dialog";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Plus, Trash2, Eye, Image as ImageIcon } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import type { CreateComboType } from "@/types/combo.type";
@@ -63,7 +62,7 @@ export const ComboCreateDialog = ({
   });
 
   const [selectedMenuItems, setSelectedMenuItems] = useState<CreateComboItemType[]>([]);
-  const [selectedMovie, setSelectedMovie] = useState<MovieType | null>(null);
+  const [selectedMovies, setSelectedMovies] = useState<MovieType[]>([]);
   const [selectedEvent, setSelectedEvent] = useState<EventWithDiscount | null>(null);
   const [detailModal, setDetailModal] = useState<DetailModalState>({
     type: null,
@@ -134,12 +133,15 @@ export const ComboCreateDialog = ({
   };
 
   const handleMovieToggle = (movieId: string) => {
-    if (selectedMovie?.id === movieId) {
-      setSelectedMovie(null);
-    } else {
-      const movie = movies.find((m) => String(m.id) === movieId);
-      setSelectedMovie(movie || null);
-    }
+    const movie = movies.find((m) => String(m.id) === movieId);
+    if (!movie) return;
+    setSelectedMovies((prev) => {
+      const exists = prev.find((m) => String(m.id) === movieId);
+      if (exists) {
+        return prev.filter((m) => String(m.id) !== movieId);
+      }
+      return [...prev, movie];
+    });
   };
 
   const handleEventToggle = (eventId: string) => {
@@ -171,10 +173,10 @@ export const ComboCreateDialog = ({
       event_id: selectedEvent?.id || "",
     }
 
-    const comboMovie : CreateComboMovieType = {
+    const comboMovies : CreateComboMovieType[] = selectedMovies.map((movie) => ({
       combo_id: "",
-      movie_id: selectedMovie?.id || "",
-    }
+      movie_id: movie.id || "",
+    }));
 
     const comboItems : CreateComboItemType[] = selectedMenuItems.map((item) => ({
       combo_id: "",
@@ -195,7 +197,7 @@ export const ComboCreateDialog = ({
       is_active: formData.is_active,
     }
 
-    const result = await comboService.create(combo, comboItems, comboMovie, comboEvent);
+    const result = await comboService.create(combo, comboItems, comboMovies[0] || { combo_id: "", movie_id: "" }, comboEvent);
     if (result.error) {
       toast.error(result.error || "Failed to create combo");
     } else {
@@ -221,7 +223,7 @@ export const ComboCreateDialog = ({
       is_active: true,
     });
     setSelectedMenuItems([]);
-    setSelectedMovie(null);
+    setSelectedMovies([]);
     setSelectedEvent(null);
     setSearchMenuItems("");
     setSearchMovies("");
@@ -866,65 +868,71 @@ export const ComboCreateDialog = ({
                 className="dark:bg-slate-700 dark:border-slate-600"
               />
               {movies && movies.length > 0 ? (
-                <RadioGroup
-                  value={selectedMovie?.id ? String(selectedMovie.id) : ""}
-                  onValueChange={handleMovieToggle}
-                >
-                  <div className="space-y-2 max-h-56 overflow-y-auto">
-                    {movies
-                      .filter((movie) =>
-                        movie.title.toLowerCase().includes(searchMovies),
-                      )
-                      .map((movie) => {
-                        const movieId = movie.id ? String(movie.id) : "";
-                        const isSelected = selectedMovie?.id === movie.id;
-                        return (
-                          <div
-                            key={movieId}
-                            className={`flex items-center gap-3 p-3 rounded-lg border transition ${
-                              isSelected
-                                ? "bg-blue-50 dark:bg-blue-950/20 border-blue-300 dark:border-blue-700"
-                                : "bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-750"
-                            }`}
-                          >
-                            <RadioGroupItem
-                              value={movieId}
-                              id={`movie-${movieId}`}
-                            />
-                            <div className="flex-1 min-w-0">
-                              <label
-                                htmlFor={`movie-${movieId}`}
-                                className="text-sm font-medium text-foreground cursor-pointer block"
-                              >
-                                {movie.title || "Unnamed"}
-                              </label>
-                              <div className="text-xs text-muted-foreground flex gap-2 flex-wrap mt-1">
-                                {movie.director && (
-                                  <span>👤 {movie.director}</span>
-                                )}
-                                {movie.duration && (
-                                  <span>⏱️ {movie.duration} phút</span>
-                                )}
-                                {movie.rating && (
-                                  <span>⭐ {movie.rating}/10</span>
-                                )}
-                              </div>
-                            </div>
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => openDetailModal("movie", movie)}
-                              className="text-blue-600 hover:text-blue-700 hover:bg-blue-50 dark:hover:bg-blue-900/30 flex-shrink-0"
-                              title="Xem chi tiết"
-                            >
-                              <Eye className="h-4 w-4" />
-                            </Button>
+                <div className="space-y-2 max-h-56 overflow-y-auto">
+                  {movies
+                    .filter((movie) =>
+                      movie.title.toLowerCase().includes(searchMovies),
+                    )
+                    .map((movie) => {
+                      const movieId = movie.id ? String(movie.id) : "";
+                      const isSelected = selectedMovies.some((m) => String(m.id) === movieId);
+                      return (
+                        <div
+                          key={movieId}
+                          className={`flex items-center gap-3 p-3 rounded-lg border transition cursor-pointer ${
+                            isSelected
+                              ? "bg-blue-50 dark:bg-blue-950/20 border-blue-300 dark:border-blue-700"
+                              : "bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-750"
+                          }`}
+                          onClick={() => handleMovieToggle(movieId)}
+                        >
+                          <div className={`w-4 h-4 border-2 rounded flex items-center justify-center flex-shrink-0 ${
+                            isSelected 
+                              ? "bg-primary border-primary" 
+                              : "border-gray-300 dark:border-gray-600"
+                          }`}>
+                            {isSelected && (
+                              <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                              </svg>
+                            )}
                           </div>
-                        );
-                      })}
-                  </div>
-                </RadioGroup>
+                          <div className="flex-1 min-w-0">
+                            <label
+                              htmlFor={`movie-${movieId}`}
+                              className="text-sm font-medium text-foreground cursor-pointer block"
+                            >
+                              {movie.title || "Unnamed"}
+                            </label>
+                            <div className="text-xs text-muted-foreground flex gap-2 flex-wrap mt-1">
+                              {movie.director && (
+                                <span>👤 {movie.director}</span>
+                              )}
+                              {movie.duration && (
+                                <span>⏱️ {movie.duration} phút</span>
+                              )}
+                              {movie.rating && (
+                                <span>⭐ {movie.rating}/10</span>
+                              )}
+                            </div>
+                          </div>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              openDetailModal("movie", movie);
+                            }}
+                            className="text-blue-600 hover:text-blue-700 hover:bg-blue-50 dark:hover:bg-blue-900/30 flex-shrink-0"
+                            title="Xem chi tiết"
+                          >
+                            <Eye className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      );
+                    })}
+                </div>
               ) : (
                 <div className="text-center py-6">
                   <p className="text-sm text-muted-foreground">

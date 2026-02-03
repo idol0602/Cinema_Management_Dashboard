@@ -4,7 +4,6 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useTheme } from "@/components/theme-provider";
-import Navbar from "./Navbar";
 
 function Header() {
   const { theme, setTheme } = useTheme();
@@ -86,9 +85,6 @@ function Header() {
             <span className="hidden sm:inline">Đăng xuất</span>
           </Button>
         </div>
-      </div>
-      <div className="container mx-auto px-4">
-        <Navbar />
       </div>
     </header>
   );
