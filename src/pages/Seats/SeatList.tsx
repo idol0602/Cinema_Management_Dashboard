@@ -43,74 +43,36 @@ import type { RoomType } from "@/types/room.type";
 import type { PaginationMeta } from "@/types/pagination.type";
 import { seatPaginateConfig } from "@/config/paginate/seat.config";
 import { MovieImportDialog } from "@/components/Dialog/MovieImportDialog";
+import {
+  seatTypeColors,
+  getSeatTypeColor as getSharedSeatTypeColor,
+} from "@/config/seatTypeColors";
 
-// Color palette for seat types
-const SEAT_TYPE_COLORS = [
+// Fallback color palette for seat types not defined in shared config
+const FALLBACK_COLORS = [
   {
-    bg: "bg-blue-100",
-    border: "border-blue-400",
-    text: "text-blue-800",
-    hover: "hover:bg-blue-200",
+    bg: "bg-slate-100",
+    border: "border-slate-400",
+    text: "text-slate-800",
+    hover: "hover:bg-slate-200",
   },
   {
-    bg: "bg-yellow-100",
-    border: "border-yellow-400",
-    text: "text-yellow-800",
-    hover: "hover:bg-yellow-200",
+    bg: "bg-teal-100",
+    border: "border-teal-400",
+    text: "text-teal-800",
+    hover: "hover:bg-teal-200",
   },
   {
-    bg: "bg-red-100",
-    border: "border-red-400",
-    text: "text-red-800",
-    hover: "hover:bg-red-200",
-  },
-  {
-    bg: "bg-green-100",
-    border: "border-green-400",
-    text: "text-green-800",
-    hover: "hover:bg-green-200",
-  },
-  {
-    bg: "bg-purple-100",
-    border: "border-purple-400",
-    text: "text-purple-800",
-    hover: "hover:bg-purple-200",
-  },
-  {
-    bg: "bg-pink-100",
-    border: "border-pink-400",
-    text: "text-pink-800",
-    hover: "hover:bg-pink-200",
-  },
-  {
-    bg: "bg-indigo-100",
-    border: "border-indigo-400",
-    text: "text-indigo-800",
-    hover: "hover:bg-indigo-200",
-  },
-  {
-    bg: "bg-amber-100",
-    border: "border-amber-400",
-    text: "text-amber-800",
-    hover: "hover:bg-amber-200",
-  },
-  {
-    bg: "bg-cyan-100",
-    border: "border-cyan-400",
-    text: "text-cyan-800",
-    hover: "hover:bg-cyan-200",
-  },
-  {
-    bg: "bg-orange-100",
-    border: "border-orange-400",
-    text: "text-orange-800",
-    hover: "hover:bg-orange-200",
+    bg: "bg-fuchsia-100",
+    border: "border-fuchsia-400",
+    text: "text-fuchsia-800",
+    hover: "hover:bg-fuchsia-200",
   },
 ];
 
-// Get color for seat type based on index
-const getSeatTypeColorByIndex = (index: number) => {
-  return SEAT_TYPE_COLORS[index % SEAT_TYPE_COLORS.length];
+// Get fallback color for seat types not in shared config
+const getFallbackColor = (index: number) => {
+  return FALLBACK_COLORS[index % FALLBACK_COLORS.length];
 };
 
 const TableSkeleton = () => {
@@ -379,9 +341,19 @@ const SeatList = () => {
   };
 
   const getSeatTypeColor = (typeId: string) => {
+    const seatType = seatTypes.find((st) => st.id === typeId);
+    const typeName = seatType?.name?.toUpperCase() || "STANDARD";
+
+    // Check if the type exists in shared config
+    if (seatTypeColors[typeName]) {
+      const sharedColor = getSharedSeatTypeColor(typeName);
+      return `${sharedColor.bg} ${sharedColor.textColor || "text-foreground"}`;
+    }
+
+    // Fallback for unknown types
     const index = seatTypes.findIndex((st) => st.id === typeId);
     if (index === -1) return "bg-blue-100 text-blue-800";
-    const color = getSeatTypeColorByIndex(index);
+    const color = getFallbackColor(index);
     return `${color.bg} ${color.text}`;
   };
 
@@ -390,8 +362,18 @@ const SeatList = () => {
     return seatType?.name || "N/A";
   };
 
-  const getSeatTypeBgClass = (index: number) => {
-    const color = getSeatTypeColorByIndex(index);
+  const getSeatTypeBgClass = (typeId: string, index: number) => {
+    const seatType = seatTypes.find((st) => st.id === typeId);
+    const typeName = seatType?.name?.toUpperCase() || "STANDARD";
+
+    // Check if the type exists in shared config
+    if (seatTypeColors[typeName]) {
+      const sharedColor = getSharedSeatTypeColor(typeName);
+      return `${sharedColor.bg} ${sharedColor.border}`;
+    }
+
+    // Fallback for unknown types
+    const color = getFallbackColor(index);
     return `${color.bg} ${color.border}`;
   };
 
@@ -667,6 +649,7 @@ const SeatList = () => {
                     <div key={type.id} className="flex items-center gap-2">
                       <div
                         className={`w-8 h-8 border-2 rounded ${getSeatTypeBgClass(
+                          type.id!,
                           index,
                         )}`}
                       ></div>
@@ -769,10 +752,20 @@ const SeatDiagram = ({
   };
 
   const getSeatBgClass = (typeId: string) => {
+    const seatType = seatTypes.find((st) => st.id === typeId);
+    const typeName = seatType?.name?.toUpperCase() || "STANDARD";
+
+    // Check if the type exists in shared config
+    if (seatTypeColors[typeName]) {
+      const sharedColor = getSharedSeatTypeColor(typeName);
+      return `${sharedColor.bg} ${sharedColor.border} ${sharedColor.textColor || "text-foreground"} hover:opacity-80`;
+    }
+
+    // Fallback for unknown types
     const index = seatTypes.findIndex((st) => st.id === typeId);
     if (index === -1)
       return "bg-blue-100 border-blue-400 text-blue-800 hover:bg-blue-200";
-    const color = getSeatTypeColorByIndex(index);
+    const color = getFallbackColor(index);
     return `${color.bg} ${color.border} ${color.text} ${color.hover}`;
   };
 

@@ -47,36 +47,46 @@ import {
 
 import { showTimeService } from "@/services/showTime.service";
 import { comboService } from "@/services/combo.service";
-import { menuItemService } from "@/services/menuItem.service";
-import { eventService } from "@/services/event.service";
 import { showTimeSeatService } from "@/services/showTimeSeat.service";
 
-import type { ShowTimeType, ShowTimeDetailType, SeatDetail } from "@/types/showTime.type";
+import type {
+  ShowTimeType,
+  ShowTimeDetailType,
+  SeatDetail,
+} from "@/types/showTime.type";
 import type { ComboType } from "@/types/combo.type";
 import type { MenuItemType } from "@/types/menuItem.type";
 import type { EventType } from "@/types/event.type";
 import { ComboDetailDialog } from "@/components/combos/ComboDetailDialog";
 import { MenuItemDetailDialog } from "@/components/menuItems/MenuItemDetailDialog";
 import EventDetailDialog from "@/components/events/EventDetailDialog";
+import { getSeatTypeColor } from "@/config/seatTypeColors";
 
 const SellPage = () => {
   const navigate = useNavigate();
-  
+
   // Data states
   const [showTimes, setShowTimes] = useState<ShowTimeType[]>([]);
-  const [showTimeDetail, setShowTimeDetail] = useState<ShowTimeDetailType | null>(null);
+  const [showTimeDetail, setShowTimeDetail] =
+    useState<ShowTimeDetailType | null>(null);
   const [selectedSeats, setSelectedSeats] = useState<SeatDetail[]>([]);
 
   // Event Combos (is_event_combo = true)
   const [eventCombos, setEventCombos] = useState<ComboType[]>([]);
   const [eventComboSearch, setEventComboSearch] = useState("");
   const [eventComboPage, setEventComboPage] = useState(1);
-  const [eventComboMeta, setEventComboMeta] = useState<{ totalPages: number; total: number }>({ totalPages: 1, total: 0 });
+  const [eventComboMeta, setEventComboMeta] = useState<{
+    totalPages: number;
+    total: number;
+  }>({ totalPages: 1, total: 0 });
   const [loadingEventCombos, setLoadingEventCombos] = useState(true);
-  const [selectedEventComboDetail, setSelectedEventComboDetail] = useState<any>(null);
+  const [selectedEventComboDetail, setSelectedEventComboDetail] =
+    useState<any>(null);
   const [eventComboDialogOpen, setEventComboDialogOpen] = useState(false);
-  const [eventCombosWithDetails, setEventCombosWithDetails] = useState<any[]>([]); // Store combo details for matching
-  const [selectedEventComboForBooking, setSelectedEventComboForBooking] = useState<any>(null); // Selected combo for booking
+  const [eventCombosWithDetails, setEventCombosWithDetails] = useState<any[]>(
+    [],
+  ); // Store combo details for matching
+  const [selectedEventComboForBooking] = useState<any>(null); // Selected combo for booking
 
   // Food/Drink Combos (is_event_combo = false)
   const [foodCombos, setFoodCombos] = useState<ComboType[]>([]);
@@ -87,7 +97,9 @@ const SellPage = () => {
   // Menu Items
   const [menuItems, setMenuItems] = useState<MenuItemType[]>([]);
   const [menuItemSearch, setMenuItemSearch] = useState("");
-  const [selectedMenuItems, setSelectedMenuItems] = useState<{ item: MenuItemType; quantity: number }[]>([]);
+  const [selectedMenuItems, setSelectedMenuItems] = useState<
+    { item: MenuItemType; quantity: number }[]
+  >([]);
   const [loadingMenuItems, setLoadingMenuItems] = useState(false);
 
   // Events (is_in_combo = false)
@@ -97,12 +109,17 @@ const SellPage = () => {
   const [loadingEvents, setLoadingEvents] = useState(false);
 
   // Detail dialog states
-  const [selectedMenuItemDetail, setSelectedMenuItemDetail] = useState<MenuItemType | null>(null);
-  const [menuItemDetailDialogOpen, setMenuItemDetailDialogOpen] = useState(false);
-  const [selectedEventDetail, setSelectedEventDetail] = useState<EventType | null>(null);
+  const [selectedMenuItemDetail, setSelectedMenuItemDetail] =
+    useState<MenuItemType | null>(null);
+  const [menuItemDetailDialogOpen, setMenuItemDetailDialogOpen] =
+    useState(false);
+  const [selectedEventDetail, setSelectedEventDetail] =
+    useState<EventType | null>(null);
   const [eventDetailDialogOpen, setEventDetailDialogOpen] = useState(false);
-  const [selectedFoodComboDetail, setSelectedFoodComboDetail] = useState<any>(null);
-  const [foodComboDetailDialogOpen, setFoodComboDetailDialogOpen] = useState(false);
+  const [selectedFoodComboDetail, setSelectedFoodComboDetail] =
+    useState<any>(null);
+  const [foodComboDetailDialogOpen, setFoodComboDetailDialogOpen] =
+    useState(false);
 
   // Loading states
   const [loadingShowTimes, setLoadingShowTimes] = useState(true);
@@ -110,7 +127,9 @@ const SellPage = () => {
 
   // UI states
   const [searchQuery, setSearchQuery] = useState("");
-  const [viewMode, setViewMode] = useState<"list" | "detail" | "booking">("list");
+  const [viewMode, setViewMode] = useState<"list" | "detail" | "booking">(
+    "list",
+  );
   const [bookingDialogOpen, setBookingDialogOpen] = useState(false);
 
   // Seat Hold states
@@ -118,7 +137,9 @@ const SellPage = () => {
   const [heldSeatIds, setHeldSeatIds] = useState<string[]>([]);
   const [holdCountdown, setHoldCountdown] = useState(0); // seconds remaining
   const [holdLoading, setHoldLoading] = useState(false);
-  const countdownIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const countdownIntervalRef = useRef<ReturnType<typeof setInterval> | null>(
+    null,
+  );
   const HOLD_TTL_SECONDS = 600; // 10 minutes
 
   // Load Event Combos (is_event_combo = true)
@@ -142,14 +163,14 @@ const SellPage = () => {
           totalPages: response.meta?.totalPages || 1,
           total: response.meta?.totalItems || 0,
         });
-        
+
         // Load details for each combo for matching
         const detailsPromises = combos.map(async (combo) => {
           const detailRes = await comboService.getDetails(combo.id!);
           return detailRes.success ? detailRes.data : null;
         });
         const details = await Promise.all(detailsPromises);
-        setEventCombosWithDetails(details.filter(d => d !== null));
+        setEventCombosWithDetails(details.filter((d) => d !== null));
       }
     } catch (error) {
       console.error("Error loading event combos:", error);
@@ -185,74 +206,6 @@ const SellPage = () => {
       }
     } catch (error) {
       toast.error("Có lỗi xảy ra khi tải chi tiết combo");
-    }
-  };
-
-  // Load Food/Drink Combos (is_event_combo = false)
-  const loadFoodCombos = async () => {
-    setLoadingFoodCombos(true);
-    try {
-      const response = await comboService.findAndPaginate({
-        page: 1,
-        limit: 100,
-        sortBy: "name:ASC",
-        filter: {
-          is_event_combo: false,
-          is_active: true,
-        },
-      });
-      if (response.success) {
-        setFoodCombos(response.data as ComboType[]);
-      }
-    } catch (error) {
-      console.error("Error loading food combos:", error);
-    } finally {
-      setLoadingFoodCombos(false);
-    }
-  };
-
-  // Load Menu Items
-  const loadMenuItems = async () => {
-    setLoadingMenuItems(true);
-    try {
-      const response = await menuItemService.findAndPaginate({
-        page: 1,
-        limit: 100,
-        sortBy: "name:ASC",
-        filter: {
-          is_active: true,
-        },
-      });
-      if (response.success) {
-        setMenuItems(response.data as MenuItemType[]);
-      }
-    } catch (error) {
-      console.error("Error loading menu items:", error);
-    } finally {
-      setLoadingMenuItems(false);
-    }
-  };
-
-  // Load Events (is_in_combo = false)
-  const loadEvents = async () => {
-    setLoadingEvents(true);
-    try {
-      const response = await eventService.findAndPaginate({
-        page: 1,
-        limit: 100,
-        sortBy: "name:ASC",
-        filter: {
-          is_in_combo: false,
-          is_active: true,
-        },
-      });
-      if (response.success) {
-        setEvents(response.data as EventType[]);
-      }
-    } catch (error) {
-      console.error("Error loading events:", error);
-    } finally {
-      setLoadingEvents(false);
     }
   };
 
@@ -321,7 +274,7 @@ const SellPage = () => {
     return showTimes.filter(
       (st) =>
         st.movies?.title?.toLowerCase().includes(query) ||
-        st.rooms?.name?.toLowerCase().includes(query)
+        st.rooms?.name?.toLowerCase().includes(query),
     );
   }, [showTimes, searchQuery]);
 
@@ -329,7 +282,7 @@ const SellPage = () => {
   const filteredFoodCombos = useMemo(() => {
     if (!foodComboSearch.trim()) return foodCombos;
     return foodCombos.filter((c) =>
-      c.name.toLowerCase().includes(foodComboSearch.toLowerCase())
+      c.name.toLowerCase().includes(foodComboSearch.toLowerCase()),
     );
   }, [foodCombos, foodComboSearch]);
 
@@ -337,7 +290,7 @@ const SellPage = () => {
   const filteredMenuItems = useMemo(() => {
     if (!menuItemSearch.trim()) return menuItems;
     return menuItems.filter((m) =>
-      m.name.toLowerCase().includes(menuItemSearch.toLowerCase())
+      m.name.toLowerCase().includes(menuItemSearch.toLowerCase()),
     );
   }, [menuItems, menuItemSearch]);
 
@@ -345,25 +298,9 @@ const SellPage = () => {
   const filteredEvents = useMemo(() => {
     if (!eventSearch.trim()) return events;
     return events.filter((e) =>
-      e.name.toLowerCase().includes(eventSearch.toLowerCase())
+      e.name.toLowerCase().includes(eventSearch.toLowerCase()),
     );
   }, [events, eventSearch]);
-
-  // Get applicable combos for current showtime (matching movie name)
-  const applicableCombos = useMemo(() => {
-    if (!showTimeDetail?.movie?.title || eventCombosWithDetails.length === 0) return [];
-    const movieTitle = showTimeDetail.movie.title.toLowerCase();
-    
-    return eventCombosWithDetails.filter((comboDetail: any) => {
-      // Check if combo has movie with matching title
-      if (comboDetail?.combo_movies && Array.isArray(comboDetail.combo_movies)) {
-        return comboDetail.combo_movies.some((cm: any) => 
-          cm.movie?.title?.toLowerCase() === movieTitle
-        );
-      }
-      return false;
-    });
-  }, [showTimeDetail, eventCombosWithDetails]);
 
   // Format helpers
   const formatTime = (dateString: string) => {
@@ -399,83 +336,18 @@ const SellPage = () => {
     }).format(price);
   };
 
-  // Seat helpers - Scalable colors for seat types + 4 statuses
-  // Color palette for different seat types - easily extendable
-  // Pre-defined Tailwind classes for each color and status combination
-  const seatTypeColors: Record<string, { 
-    name: string; 
-    available: string;
-    holding: string;
-    booked: string;
-    legendBg: string;
-  }> = {
-    STANDARD: {
-      name: "Thường",
-      available: "bg-blue-100 hover:bg-blue-200 text-blue-800 cursor-pointer border-blue-400 border-2",
-      holding: "bg-blue-200 text-blue-900 cursor-not-allowed border-blue-500 border-2 border-dashed",
-      booked: "bg-blue-500 text-white cursor-not-allowed border-blue-700 border-2",
-      legendBg: "bg-blue-100 border-blue-400",
-    },
-    VIP: {
-      name: "VIP",
-      available: "bg-amber-100 hover:bg-amber-200 text-amber-800 cursor-pointer border-amber-400 border-2",
-      holding: "bg-amber-200 text-amber-900 cursor-not-allowed border-amber-500 border-2 border-dashed",
-      booked: "bg-amber-500 text-white cursor-not-allowed border-amber-700 border-2",
-      legendBg: "bg-amber-100 border-amber-400",
-    },
-    COUPLE: {
-      name: "Đôi",
-      available: "bg-pink-100 hover:bg-pink-200 text-pink-800 cursor-pointer border-pink-400 border-2",
-      holding: "bg-pink-200 text-pink-900 cursor-not-allowed border-pink-500 border-2 border-dashed",
-      booked: "bg-pink-500 text-white cursor-not-allowed border-pink-700 border-2",
-      legendBg: "bg-pink-100 border-pink-400",
-    },
-    SWEETBOX: {
-      name: "Sweet Box",
-      available: "bg-purple-100 hover:bg-purple-200 text-purple-800 cursor-pointer border-purple-400 border-2",
-      holding: "bg-purple-200 text-purple-900 cursor-not-allowed border-purple-500 border-2 border-dashed",
-      booked: "bg-purple-500 text-white cursor-not-allowed border-purple-700 border-2",
-      legendBg: "bg-purple-100 border-purple-400",
-    },
-    DELUXE: {
-      name: "Deluxe",
-      available: "bg-emerald-100 hover:bg-emerald-200 text-emerald-800 cursor-pointer border-emerald-400 border-2",
-      holding: "bg-emerald-200 text-emerald-900 cursor-not-allowed border-emerald-500 border-2 border-dashed",
-      booked: "bg-emerald-500 text-white cursor-not-allowed border-emerald-700 border-2",
-      legendBg: "bg-emerald-100 border-emerald-400",
-    },
-    PREMIUM: {
-      name: "Premium",
-      available: "bg-rose-100 hover:bg-rose-200 text-rose-800 cursor-pointer border-rose-400 border-2",
-      holding: "bg-rose-200 text-rose-900 cursor-not-allowed border-rose-500 border-2 border-dashed",
-      booked: "bg-rose-500 text-white cursor-not-allowed border-rose-700 border-2",
-      legendBg: "bg-rose-100 border-rose-400",
-    },
-    IMAX: {
-      name: "IMAX",
-      available: "bg-cyan-100 hover:bg-cyan-200 text-cyan-800 cursor-pointer border-cyan-400 border-2",
-      holding: "bg-cyan-200 text-cyan-900 cursor-not-allowed border-cyan-500 border-2 border-dashed",
-      booked: "bg-cyan-500 text-white cursor-not-allowed border-cyan-700 border-2",
-      legendBg: "bg-cyan-100 border-cyan-400",
-    },
-    DBOX: {
-      name: "D-Box",
-      available: "bg-orange-100 hover:bg-orange-200 text-orange-800 cursor-pointer border-orange-400 border-2",
-      holding: "bg-orange-200 text-orange-900 cursor-not-allowed border-orange-500 border-2 border-dashed",
-      booked: "bg-orange-500 text-white cursor-not-allowed border-orange-700 border-2",
-      legendBg: "bg-orange-100 border-orange-400",
-    },
-  };
-
+  // Seat helpers - Using shared seat type colors from config
   // Get color classes based on seat type and status
-  const getSeatColor = (seat: SeatDetail, isSelected: boolean) => {
-    if (!seat.is_active) return "bg-gray-300 text-gray-500 cursor-not-allowed border-gray-400 border-2 opacity-50";
-    if (isSelected) return "bg-primary text-primary-foreground ring-2 ring-offset-1 ring-primary cursor-pointer shadow-lg";
-    
+  const getSeatColorForSeat = (seat: SeatDetail, isSelected: boolean) => {
+    if (!seat.is_active)
+      return "bg-gray-300 text-gray-500 cursor-not-allowed border-gray-400 border-2 opacity-50";
+    if (isSelected)
+      return "bg-primary text-primary-foreground ring-2 ring-offset-1 ring-primary cursor-pointer shadow-lg";
+
     const status = seat.show_time_seat?.status_seat || "AVAILABLE";
     const seatType = seat.seat_type?.name?.toUpperCase() || "STANDARD";
-    const colorSet = seatTypeColors[seatType] || seatTypeColors.STANDARD;
-    
+    const colorSet = getSeatTypeColor(seatType);
+
     switch (status) {
       case "AVAILABLE":
         return colorSet.available;
@@ -500,7 +372,7 @@ const SellPage = () => {
     });
     return Array.from(types).map((type) => ({
       type,
-      ...(seatTypeColors[type] || seatTypeColors.STANDARD)
+      ...getSeatTypeColor(type),
     }));
   }, [showTimeDetail]);
 
@@ -531,7 +403,7 @@ const SellPage = () => {
   const groupedSeats = useMemo(() => {
     if (!showTimeDetail?.room?.seats) return {};
     const groups: Record<string, SeatDetail[]> = {};
-    
+
     showTimeDetail.room.seats.forEach((seat) => {
       const row = seat.seat_number.charAt(0);
       if (!groups[row]) groups[row] = [];
@@ -581,7 +453,7 @@ const SellPage = () => {
   };
 
   // === Seat Hold Functions ===
-  
+
   // Format countdown for display (MM:SS)
   const formatCountdown = (seconds: number) => {
     const minutes = Math.floor(seconds / 60);
@@ -595,9 +467,9 @@ const SellPage = () => {
     if (countdownIntervalRef.current) {
       clearInterval(countdownIntervalRef.current);
     }
-    
+
     setHoldCountdown(seconds);
-    
+
     countdownIntervalRef.current = setInterval(() => {
       setHoldCountdown((prev) => {
         if (prev <= 1) {
@@ -624,15 +496,22 @@ const SellPage = () => {
 
     setHoldLoading(true);
     try {
-      const seatIds = selectedSeats.map((seat) => seat.show_time_seat?.id).filter(Boolean) as string[];
-      
-      const response = await showTimeSeatService.bulkHoldSeats(seatIds, HOLD_TTL_SECONDS);
-      
+      const seatIds = selectedSeats
+        .map((seat) => seat.show_time_seat?.id)
+        .filter(Boolean) as string[];
+
+      const response = await showTimeSeatService.bulkHoldSeats(
+        seatIds,
+        HOLD_TTL_SECONDS,
+      );
+
       if (response.success) {
         setIsHolding(true);
         setHeldSeatIds(seatIds);
         startCountdown(HOLD_TTL_SECONDS);
-        toast.success(`Đã giữ ${selectedSeats.length} ghế thành công. Bạn có ${HOLD_TTL_SECONDS / 60} phút để hoàn tất đặt vé.`);
+        toast.success(
+          `Đã giữ ${selectedSeats.length} ghế thành công. Bạn có ${HOLD_TTL_SECONDS / 60} phút để hoàn tất đặt vé.`,
+        );
       } else {
         toast.error(response.error || "Không thể giữ ghế. Vui lòng thử lại.");
       }
@@ -650,8 +529,9 @@ const SellPage = () => {
 
     setHoldLoading(true);
     try {
-      const response = await showTimeSeatService.bulkCancelHoldSeats(heldSeatIds);
-      
+      const response =
+        await showTimeSeatService.bulkCancelHoldSeats(heldSeatIds);
+
       if (response.success) {
         // Clear countdown
         if (countdownIntervalRef.current) {
@@ -672,33 +552,6 @@ const SellPage = () => {
       setHoldLoading(false);
     }
   };
-
-  // Load hold info on page load (to restore countdown after refresh)
-  const loadHoldInfo = useCallback(async () => {
-    if (selectedSeats.length === 0) return;
-    
-    const seatIds = selectedSeats.map((seat) => seat.show_time_seat?.id).filter(Boolean) as string[];
-    if (seatIds.length === 0) return;
-
-    // Check first seat to see if any are held
-    try {
-      const response = await showTimeSeatService.getHoldInfo(seatIds[0]);
-      const data = response.data as any;
-      if (response.success && data?.holdInfo) {
-        const expiresAt = new Date(data.holdInfo.expiresAt);
-        const now = new Date();
-        const remainingSeconds = Math.max(0, Math.floor((expiresAt.getTime() - now.getTime()) / 1000));
-        
-        if (remainingSeconds > 0) {
-          setIsHolding(true);
-          setHeldSeatIds(seatIds);
-          startCountdown(remainingSeconds);
-        }
-      }
-    } catch (error) {
-      console.error("Error loading hold info:", error);
-    }
-  }, [selectedSeats, startCountdown]);
 
   // Cleanup on unmount or when leaving booking view
   useEffect(() => {
@@ -742,7 +595,7 @@ const SellPage = () => {
           return prev.filter((m) => m.item.id !== item.id);
         }
         return prev.map((m) =>
-          m.item.id === item.id ? { ...m, quantity: newQuantity } : m
+          m.item.id === item.id ? { ...m, quantity: newQuantity } : m,
         );
       }
       if (delta > 0) {
@@ -768,7 +621,10 @@ const SellPage = () => {
     // Food combos
     total += selectedFoodCombos.reduce((sum, c) => sum + c.total_price, 0);
     // Menu items
-    total += selectedMenuItems.reduce((sum, m) => sum + m.item.price * m.quantity, 0);
+    total += selectedMenuItems.reduce(
+      (sum, m) => sum + m.item.price * m.quantity,
+      0,
+    );
     return total;
   };
 
@@ -832,7 +688,9 @@ const SellPage = () => {
                     </Button>
                   </div>
                   <CardContent className="p-2 space-y-1">
-                    <h4 className="font-medium text-sm line-clamp-1">{combo.name}</h4>
+                    <h4 className="font-medium text-sm line-clamp-1">
+                      {combo.name}
+                    </h4>
                     <p className="text-xs text-primary font-semibold">
                       {formatPrice(combo.total_price)}
                     </p>
@@ -841,8 +699,12 @@ const SellPage = () => {
                       className="w-full h-7 text-xs"
                       onClick={() => {
                         // Get movie name from combo details
-                        const comboDetail = eventCombosWithDetails.find((d: any) => d?.id === combo.id);
-                        const movieName = comboDetail?.combo_movies?.[0]?.movie?.title || combo.name;
+                        const comboDetail = eventCombosWithDetails.find(
+                          (d: any) => d?.id === combo.id,
+                        );
+                        const movieName =
+                          comboDetail?.combo_movies?.[0]?.movie?.title ||
+                          combo.name;
                         handleFillMovieSearch(movieName);
                       }}
                     >
@@ -925,7 +787,9 @@ const SellPage = () => {
       ) : filteredShowTimes.length === 0 ? (
         <div className="text-center py-12">
           <Film className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
-          <p className="text-lg text-muted-foreground">Không có suất chiếu nào trong hôm nay</p>
+          <p className="text-lg text-muted-foreground">
+            Không có suất chiếu nào trong hôm nay
+          </p>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
@@ -937,7 +801,11 @@ const SellPage = () => {
             >
               <div className="relative h-48 overflow-hidden">
                 <img
-                  src={showTime.movies?.thumbnail || showTime.movies?.image || "/placeholder.png"}
+                  src={
+                    showTime.movies?.thumbnail ||
+                    showTime.movies?.image ||
+                    "/placeholder.png"
+                  }
                   alt={showTime.movies?.title || "Movie"}
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                 />
@@ -962,7 +830,8 @@ const SellPage = () => {
                 <div className="flex items-center gap-2 text-sm">
                   <Clock className="h-4 w-4 text-muted-foreground" />
                   <span className="font-medium">
-                    {formatTime(showTime.start_time)} - {formatTime(showTime.end_time || "")}
+                    {formatTime(showTime.start_time)} -{" "}
+                    {formatTime(showTime.end_time || "")}
                   </span>
                 </div>
                 <div className="flex items-center gap-2 text-sm">
@@ -1017,18 +886,28 @@ const SellPage = () => {
           <Card className="lg:col-span-1">
             <div className="relative h-64 overflow-hidden rounded-t-lg">
               <img
-                src={showTimeDetail.movie?.image || showTimeDetail.movie?.thumbnail || "/placeholder.png"}
+                src={
+                  showTimeDetail.movie?.image ||
+                  showTimeDetail.movie?.thumbnail ||
+                  "/placeholder.png"
+                }
                 alt={showTimeDetail.movie?.title}
                 className="w-full h-full object-cover"
               />
             </div>
             <CardContent className="p-4 space-y-3">
-              <h2 className="text-xl font-bold">{showTimeDetail.movie?.title}</h2>
-              
+              <h2 className="text-xl font-bold">
+                {showTimeDetail.movie?.title}
+              </h2>
+
               <div className="space-y-2 text-sm">
                 <div className="flex items-center gap-2">
-                  <Badge variant="outline">{showTimeDetail.movie?.movie_type?.type || "N/A"}</Badge>
-                  <Badge variant="outline">⭐ {showTimeDetail.movie?.rating || 0}</Badge>
+                  <Badge variant="outline">
+                    {showTimeDetail.movie?.movie_type?.type || "N/A"}
+                  </Badge>
+                  <Badge variant="outline">
+                    ⭐ {showTimeDetail.movie?.rating || 0}
+                  </Badge>
                 </div>
 
                 <div className="flex items-center gap-2 text-muted-foreground">
@@ -1046,8 +925,12 @@ const SellPage = () => {
                 </p>
 
                 <div className="pt-2 border-t">
-                  <p><strong>Đạo diễn:</strong> {showTimeDetail.movie?.director}</p>
-                  <p><strong>Quốc gia:</strong> {showTimeDetail.movie?.country}</p>
+                  <p>
+                    <strong>Đạo diễn:</strong> {showTimeDetail.movie?.director}
+                  </p>
+                  <p>
+                    <strong>Quốc gia:</strong> {showTimeDetail.movie?.country}
+                  </p>
                 </div>
               </div>
             </CardContent>
@@ -1069,11 +952,15 @@ const SellPage = () => {
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <div className="p-3 bg-muted rounded-lg">
                   <p className="text-xs text-muted-foreground">Giờ bắt đầu</p>
-                  <p className="font-bold text-lg">{formatTime(showTimeDetail.start_time)}</p>
+                  <p className="font-bold text-lg">
+                    {formatTime(showTimeDetail.start_time)}
+                  </p>
                 </div>
                 <div className="p-3 bg-muted rounded-lg">
                   <p className="text-xs text-muted-foreground">Giờ kết thúc</p>
-                  <p className="font-bold text-lg">{formatTime(showTimeDetail.end_time)}</p>
+                  <p className="font-bold text-lg">
+                    {formatTime(showTimeDetail.end_time)}
+                  </p>
                 </div>
                 <div className="p-3 bg-muted rounded-lg">
                   <p className="text-xs text-muted-foreground">Loại ngày</p>
@@ -1089,7 +976,11 @@ const SellPage = () => {
                 </div>
                 <div className="p-3 bg-muted rounded-lg">
                   <p className="text-xs text-muted-foreground">Trạng thái</p>
-                  <Badge variant={showTimeDetail.is_active ? "default" : "destructive"}>
+                  <Badge
+                    variant={
+                      showTimeDetail.is_active ? "default" : "destructive"
+                    }
+                  >
                     {showTimeDetail.is_active ? "Hoạt động" : "Ngừng"}
                   </Badge>
                 </div>
@@ -1108,34 +999,47 @@ const SellPage = () => {
                   </div>
                   <div>
                     <p className="text-xs text-muted-foreground">Vị trí</p>
-                    <p className="font-medium">{showTimeDetail.room?.location}</p>
+                    <p className="font-medium">
+                      {showTimeDetail.room?.location}
+                    </p>
                   </div>
                   <div>
                     <p className="text-xs text-muted-foreground">Định dạng</p>
-                    <Badge variant="secondary">{showTimeDetail.room?.format?.name}</Badge>
+                    <Badge variant="secondary">
+                      {showTimeDetail.room?.format?.name}
+                    </Badge>
                   </div>
                 </div>
               </div>
               {/* Seat Summary */}
               <div className="p-4 border rounded-lg">
                 <h3 className="font-semibold mb-3">Chú thích ghế ngồi</h3>
-                
+
                 {/* Seat Types - Dynamic based on room */}
                 <div className="mb-4">
-                  <p className="text-xs text-muted-foreground mb-2 font-medium">Loại ghế:</p>
+                  <p className="text-xs text-muted-foreground mb-2 font-medium">
+                    Loại ghế:
+                  </p>
                   <div className="flex flex-wrap gap-3">
                     {uniqueSeatTypes.map((seatType) => (
-                      <div key={seatType.type} className="flex items-center gap-2">
-                        <div className={`w-6 h-6 ${seatType.legendBg} border-2 rounded`} />
+                      <div
+                        key={seatType.type}
+                        className="flex items-center gap-2"
+                      >
+                        <div
+                          className={`w-6 h-6 ${seatType.legendBg} border-2 rounded`}
+                        />
                         <span className="text-sm">{seatType.name}</span>
                       </div>
                     ))}
                   </div>
                 </div>
-                
+
                 {/* Seat Statuses with distinct visual patterns */}
                 <div>
-                  <p className="text-xs text-muted-foreground mb-2 font-medium">Trạng thái:</p>
+                  <p className="text-xs text-muted-foreground mb-2 font-medium">
+                    Trạng thái:
+                  </p>
                   <div className="flex flex-wrap gap-3">
                     <div className="flex items-center gap-2">
                       <div className="w-6 h-6 bg-gray-100 border-2 border-gray-400 rounded" />
@@ -1163,7 +1067,7 @@ const SellPage = () => {
                     </div>
                   </div>
                 </div>
-                
+
                 <p className="text-sm text-muted-foreground mt-3">
                   Tổng số ghế: {showTimeDetail.room?.seats?.length || 0}
                 </p>
@@ -1188,7 +1092,11 @@ const SellPage = () => {
     return (
       <div className="space-y-6">
         {/* Back Button - calls handleExitBooking to cancel holds */}
-        <Button variant="ghost" onClick={handleExitBooking} disabled={holdLoading}>
+        <Button
+          variant="ghost"
+          onClick={handleExitBooking}
+          disabled={holdLoading}
+        >
           <ArrowLeft className="h-4 w-4 mr-2" />
           Quay lại chi tiết
         </Button>
@@ -1203,7 +1111,9 @@ const SellPage = () => {
                 className="w-20 h-28 object-cover rounded-lg"
               />
               <div className="flex-1">
-                <h3 className="font-bold text-lg">{showTimeDetail.movie?.title}</h3>
+                <h3 className="font-bold text-lg">
+                  {showTimeDetail.movie?.title}
+                </h3>
                 <div className="text-sm text-muted-foreground space-y-1 mt-2">
                   <p className="flex items-center gap-2">
                     <MapPin className="h-4 w-4" />
@@ -1215,25 +1125,35 @@ const SellPage = () => {
                   </p>
                 </div>
               </div>
-              
+
               {/* Countdown Timer & Hold Status */}
               {isHolding && holdCountdown > 0 && (
                 <div className="flex flex-col items-center p-3 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-lg">
                   <Timer className="h-5 w-5 text-amber-600 mb-1" />
-                  <p className="text-xs text-amber-600 font-medium">Thời gian giữ ghế</p>
-                  <p className={`text-2xl font-bold ${holdCountdown <= 60 ? 'text-red-500 animate-pulse' : 'text-amber-600'}`}>
+                  <p className="text-xs text-amber-600 font-medium">
+                    Thời gian giữ ghế
+                  </p>
+                  <p
+                    className={`text-2xl font-bold ${holdCountdown <= 60 ? "text-red-500 animate-pulse" : "text-amber-600"}`}
+                  >
                     {formatCountdown(holdCountdown)}
                   </p>
                 </div>
               )}
-              
+
               <div className="text-right">
                 <p className="text-sm text-muted-foreground">Ghế đã chọn</p>
-                <p className="text-2xl font-bold text-primary">{selectedSeats.length}</p>
+                <p className="text-2xl font-bold text-primary">
+                  {selectedSeats.length}
+                </p>
                 {selectedSeats.length > 0 && (
                   <div className="flex flex-wrap gap-1 mt-2 justify-end max-w-[200px]">
                     {selectedSeats.map((seat) => (
-                      <Badge key={seat.id} variant="secondary" className="text-xs">
+                      <Badge
+                        key={seat.id}
+                        variant="secondary"
+                        className="text-xs"
+                      >
                         {seat.seat_number}
                       </Badge>
                     ))}
@@ -1264,7 +1184,10 @@ const SellPage = () => {
             <ScrollArea className="max-h-[500px]">
               <div className="flex flex-col items-center space-y-2 p-4">
                 {sortedRows.map((row) => (
-                  <div key={row} className="flex items-center gap-2 justify-center">
+                  <div
+                    key={row}
+                    className="flex items-center gap-2 justify-center"
+                  >
                     <span className="w-8 text-center font-bold text-muted-foreground">
                       {row}
                     </span>
@@ -1277,7 +1200,7 @@ const SellPage = () => {
                           className={`
                             w-9 h-9 rounded-md border text-xs font-medium
                             transition-all duration-200
-                            ${getSeatColor(seat, isSeatSelected(seat))}
+                            ${getSeatColorForSeat(seat, isSeatSelected(seat))}
                             ${seat.seat_type?.name === "VIP" ? "ring-1 ring-amber-400" : ""}
                           `}
                           title={`${seat.seat_number} - ${seat.seat_type?.name || "STANDARD"}`}
@@ -1299,20 +1222,29 @@ const SellPage = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {/* Seat Types - Dynamic based on room */}
                 <div>
-                  <p className="text-xs text-muted-foreground mb-2 font-medium">Loại ghế:</p>
+                  <p className="text-xs text-muted-foreground mb-2 font-medium">
+                    Loại ghế:
+                  </p>
                   <div className="flex flex-wrap gap-3">
                     {uniqueSeatTypes.map((seatType) => (
-                      <div key={seatType.type} className="flex items-center gap-2">
-                        <div className={`w-6 h-6 ${seatType.legendBg} border-2 rounded-md`} />
+                      <div
+                        key={seatType.type}
+                        className="flex items-center gap-2"
+                      >
+                        <div
+                          className={`w-6 h-6 ${seatType.legendBg} border-2 rounded-md`}
+                        />
                         <span className="text-sm">{seatType.name}</span>
                       </div>
                     ))}
                   </div>
                 </div>
-                
+
                 {/* Seat Statuses with distinct visual patterns */}
                 <div>
-                  <p className="text-xs text-muted-foreground mb-2 font-medium">Trạng thái:</p>
+                  <p className="text-xs text-muted-foreground mb-2 font-medium">
+                    Trạng thái:
+                  </p>
                   <div className="flex flex-wrap gap-3">
                     <div className="flex items-center gap-2">
                       <div className="w-6 h-6 bg-gray-100 border-2 border-gray-400 rounded-md" />
@@ -1341,7 +1273,7 @@ const SellPage = () => {
                   </div>
                 </div>
               </div>
-              
+
               {/* Hold/Cancel Buttons */}
               <div className="flex gap-2 pt-4 border-t">
                 {!isHolding ? (
@@ -1351,7 +1283,9 @@ const SellPage = () => {
                     disabled={selectedSeats.length === 0 || holdLoading}
                   >
                     <Lock className="h-4 w-4 mr-2" />
-                    {holdLoading ? "Đang xử lý..." : `Giữ ${selectedSeats.length} ghế (${HOLD_TTL_SECONDS / 60} phút)`}
+                    {holdLoading
+                      ? "Đang xử lý..."
+                      : `Giữ ${selectedSeats.length} ghế (${HOLD_TTL_SECONDS / 60} phút)`}
                   </Button>
                 ) : (
                   <Button
@@ -1394,21 +1328,25 @@ const SellPage = () => {
                     ))}
                   </div>
                 ) : filteredFoodCombos.length === 0 ? (
-                  <p className="text-sm text-muted-foreground text-center py-4">Không có combo</p>
+                  <p className="text-sm text-muted-foreground text-center py-4">
+                    Không có combo
+                  </p>
                 ) : (
                   <div className="space-y-1">
                     {filteredFoodCombos.map((combo) => (
                       <div
                         key={combo.id}
                         className={`flex items-center gap-2 p-2 rounded cursor-pointer transition-colors ${
-                          selectedFoodCombos.some((c) => c.id === combo.id) 
-                            ? "bg-primary/10 border border-primary" 
+                          selectedFoodCombos.some((c) => c.id === combo.id)
+                            ? "bg-primary/10 border border-primary"
                             : "hover:bg-muted"
                         }`}
                         onClick={() => handleFoodComboToggle(combo)}
                       >
                         <Checkbox
-                          checked={selectedFoodCombos.some((c) => c.id === combo.id)}
+                          checked={selectedFoodCombos.some(
+                            (c) => c.id === combo.id,
+                          )}
                         />
                         {combo.image && (
                           <img
@@ -1418,7 +1356,9 @@ const SellPage = () => {
                           />
                         )}
                         <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium truncate">{combo.name}</p>
+                          <p className="text-sm font-medium truncate">
+                            {combo.name}
+                          </p>
                           <p className="text-xs text-muted-foreground">
                             {formatPrice(combo.total_price)}
                           </p>
@@ -1472,16 +1412,22 @@ const SellPage = () => {
                     ))}
                   </div>
                 ) : filteredMenuItems.length === 0 ? (
-                  <p className="text-sm text-muted-foreground text-center py-4">Không có món</p>
+                  <p className="text-sm text-muted-foreground text-center py-4">
+                    Không có món
+                  </p>
                 ) : (
                   <div className="space-y-1">
                     {filteredMenuItems.map((item) => {
-                      const selected = selectedMenuItems.find((m) => m.item.id === item.id);
+                      const selected = selectedMenuItems.find(
+                        (m) => m.item.id === item.id,
+                      );
                       return (
                         <div
                           key={item.id}
                           className={`flex items-center gap-2 p-2 rounded transition-colors ${
-                            selected ? "bg-primary/10 border border-primary" : "hover:bg-muted"
+                            selected
+                              ? "bg-primary/10 border border-primary"
+                              : "hover:bg-muted"
                           }`}
                         >
                           {item.image && (
@@ -1492,7 +1438,9 @@ const SellPage = () => {
                             />
                           )}
                           <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium truncate">{item.name}</p>
+                            <p className="text-sm font-medium truncate">
+                              {item.name}
+                            </p>
                             <p className="text-xs text-muted-foreground">
                               {formatPrice(item.price)}
                             </p>
@@ -1514,7 +1462,9 @@ const SellPage = () => {
                               variant="outline"
                               size="icon"
                               className="h-7 w-7"
-                              onClick={() => handleMenuItemQuantityChange(item, -1)}
+                              onClick={() =>
+                                handleMenuItemQuantityChange(item, -1)
+                              }
                               disabled={!selected}
                             >
                               <Minus className="h-3 w-3" />
@@ -1526,7 +1476,9 @@ const SellPage = () => {
                               variant="outline"
                               size="icon"
                               className="h-7 w-7"
-                              onClick={() => handleMenuItemQuantityChange(item, 1)}
+                              onClick={() =>
+                                handleMenuItemQuantityChange(item, 1)
+                              }
                             >
                               <Plus className="h-3 w-3" />
                             </Button>
@@ -1570,7 +1522,9 @@ const SellPage = () => {
                     ))}
                   </div>
                 ) : filteredEvents.length === 0 ? (
-                  <p className="text-sm text-muted-foreground text-center py-4">Không có sự kiện</p>
+                  <p className="text-sm text-muted-foreground text-center py-4">
+                    Không có sự kiện
+                  </p>
                 ) : (
                   <div className="space-y-1">
                     {filteredEvents.map((event) => (
@@ -1591,9 +1545,13 @@ const SellPage = () => {
                           />
                         )}
                         <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium truncate">{event.name}</p>
+                          <p className="text-sm font-medium truncate">
+                            {event.name}
+                          </p>
                           {event.description && (
-                            <p className="text-xs text-muted-foreground truncate">{event.description}</p>
+                            <p className="text-xs text-muted-foreground truncate">
+                              {event.description}
+                            </p>
                           )}
                         </div>
                         <Button
@@ -1656,23 +1614,44 @@ const SellPage = () => {
             <DialogHeader>
               <DialogTitle>Xác nhận đặt vé</DialogTitle>
               <DialogDescription>
-                Bạn đang đặt {selectedSeats.length} ghế cho phim {showTimeDetail.movie?.title}
+                Bạn đang đặt {selectedSeats.length} ghế cho phim{" "}
+                {showTimeDetail.movie?.title}
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-4">
               <div className="p-4 bg-muted rounded-lg space-y-2">
-                <p><strong>Phim:</strong> {showTimeDetail.movie?.title}</p>
-                <p><strong>Phòng:</strong> {showTimeDetail.room?.name}</p>
-                <p><strong>Giờ chiếu:</strong> {formatTime(showTimeDetail.start_time)}</p>
-                <p><strong>Ghế:</strong> {selectedSeats.map(s => s.seat_number).join(", ")}</p>
+                <p>
+                  <strong>Phim:</strong> {showTimeDetail.movie?.title}
+                </p>
+                <p>
+                  <strong>Phòng:</strong> {showTimeDetail.room?.name}
+                </p>
+                <p>
+                  <strong>Giờ chiếu:</strong>{" "}
+                  {formatTime(showTimeDetail.start_time)}
+                </p>
+                <p>
+                  <strong>Ghế:</strong>{" "}
+                  {selectedSeats.map((s) => s.seat_number).join(", ")}
+                </p>
                 {selectedFoodCombos.length > 0 && (
-                  <p><strong>Combo:</strong> {selectedFoodCombos.map(c => c.name).join(", ")}</p>
+                  <p>
+                    <strong>Combo:</strong>{" "}
+                    {selectedFoodCombos.map((c) => c.name).join(", ")}
+                  </p>
                 )}
                 {selectedMenuItems.length > 0 && (
-                  <p><strong>Món lẻ:</strong> {selectedMenuItems.map(m => `${m.item.name} x${m.quantity}`).join(", ")}</p>
+                  <p>
+                    <strong>Món lẻ:</strong>{" "}
+                    {selectedMenuItems
+                      .map((m) => `${m.item.name} x${m.quantity}`)
+                      .join(", ")}
+                  </p>
                 )}
                 {selectedEvent && (
-                  <p><strong>Sự kiện:</strong> {selectedEvent.name}</p>
+                  <p>
+                    <strong>Sự kiện:</strong> {selectedEvent.name}
+                  </p>
                 )}
                 <p className="text-lg font-bold text-primary">
                   <strong>Tổng cộng:</strong> {formatPrice(calculateTotal())}
@@ -1680,19 +1659,24 @@ const SellPage = () => {
               </div>
             </div>
             <DialogFooter>
-              <Button variant="outline" onClick={() => setBookingDialogOpen(false)}>
+              <Button
+                variant="outline"
+                onClick={() => setBookingDialogOpen(false)}
+              >
                 Hủy
               </Button>
-              <Button onClick={() => {
-                toast.success("Đặt vé thành công! (Demo)");
-                setBookingDialogOpen(false);
-                setSelectedSeats([]);
-                setSelectedFoodCombos([]);
-                setSelectedMenuItems([]);
-                setSelectedEvent(null);
-                setViewMode("list");
-                setShowTimeDetail(null);
-              }}>
+              <Button
+                onClick={() => {
+                  toast.success("Đặt vé thành công! (Demo)");
+                  setBookingDialogOpen(false);
+                  setSelectedSeats([]);
+                  setSelectedFoodCombos([]);
+                  setSelectedMenuItems([]);
+                  setSelectedEvent(null);
+                  setViewMode("list");
+                  setShowTimeDetail(null);
+                }}
+              >
                 Xác nhận đặt vé
               </Button>
             </DialogFooter>
