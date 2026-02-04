@@ -1,4 +1,5 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -39,12 +40,16 @@ import {
   Minus,
   ChevronLeft,
   ChevronRight,
+  Timer,
+  XCircle,
+  Lock,
 } from "lucide-react";
 
 import { showTimeService } from "@/services/showTime.service";
 import { comboService } from "@/services/combo.service";
 import { menuItemService } from "@/services/menuItem.service";
 import { eventService } from "@/services/event.service";
+import { showTimeSeatService } from "@/services/showTimeSeat.service";
 
 import type { ShowTimeType, ShowTimeDetailType, SeatDetail } from "@/types/showTime.type";
 import type { ComboType } from "@/types/combo.type";
@@ -55,6 +60,8 @@ import { MenuItemDetailDialog } from "@/components/menuItems/MenuItemDetailDialo
 import EventDetailDialog from "@/components/events/EventDetailDialog";
 
 const SellPage = () => {
+  const navigate = useNavigate();
+  
   // Data states
   const [showTimes, setShowTimes] = useState<ShowTimeType[]>([]);
   const [showTimeDetail, setShowTimeDetail] = useState<ShowTimeDetailType | null>(null);
@@ -105,6 +112,14 @@ const SellPage = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [viewMode, setViewMode] = useState<"list" | "detail" | "booking">("list");
   const [bookingDialogOpen, setBookingDialogOpen] = useState(false);
+
+  // Seat Hold states
+  const [isHolding, setIsHolding] = useState(false);
+  const [heldSeatIds, setHeldSeatIds] = useState<string[]>([]);
+  const [holdCountdown, setHoldCountdown] = useState(0); // seconds remaining
+  const [holdLoading, setHoldLoading] = useState(false);
+  const countdownIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const HOLD_TTL_SECONDS = 600; // 10 minutes
 
   // Load Event Combos (is_event_combo = true)
   const loadEventCombos = async (page: number = 1, search: string = "") => {
@@ -490,6 +505,8 @@ const SellPage = () => {
   }, [showTimeDetail]);
 
   const canSelectSeat = (seat: SeatDetail) => {
+    // Don't allow selection if currently holding seats
+    if (isHolding) return false;
     if (!seat.is_active) return false;
     const status = seat.show_time_seat?.status_seat;
     return !status || status === "AVAILABLE";
@@ -544,14 +561,11 @@ const SellPage = () => {
   };
 
   const handleOpenBooking = () => {
-    setSelectedSeats([]);
-    setSelectedFoodCombos([]);
-    setSelectedMenuItems([]);
-    setSelectedEvent(null);
-    loadFoodCombos();
-    loadMenuItems();
-    loadEvents();
-    setViewMode("booking");
+    if (!showTimeDetail?.id) {
+      toast.error("Vui lòng chọn suất chiếu");
+      return;
+    }
+    navigate(`/seat-booking/${showTimeDetail.id}`);
   };
 
   const handleConfirmBooking = () => {
@@ -564,6 +578,144 @@ const SellPage = () => {
 
   const handleFillMovieSearch = (movieName: string) => {
     setSearchQuery(movieName);
+  };
+
+  // === Seat Hold Functions ===
+  
+  // Format countdown for display (MM:SS)
+  const formatCountdown = (seconds: number) => {
+    const minutes = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${minutes.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
+  };
+
+  // Start countdown timer
+  const startCountdown = useCallback((seconds: number) => {
+    // Clear any existing interval
+    if (countdownIntervalRef.current) {
+      clearInterval(countdownIntervalRef.current);
+    }
+    
+    setHoldCountdown(seconds);
+    
+    countdownIntervalRef.current = setInterval(() => {
+      setHoldCountdown((prev) => {
+        if (prev <= 1) {
+          // Time expired
+          if (countdownIntervalRef.current) {
+            clearInterval(countdownIntervalRef.current);
+          }
+          setIsHolding(false);
+          setHeldSeatIds([]);
+          toast.warning("Thời gian giữ ghế đã hết. Ghế đã được trả lại.");
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+  }, []);
+
+  // Hold multiple seats
+  const handleHoldSeats = async () => {
+    if (selectedSeats.length === 0) {
+      toast.error("Vui lòng chọn ít nhất một ghế để giữ chỗ");
+      return;
+    }
+
+    setHoldLoading(true);
+    try {
+      const seatIds = selectedSeats.map((seat) => seat.show_time_seat?.id).filter(Boolean) as string[];
+      
+      const response = await showTimeSeatService.bulkHoldSeats(seatIds, HOLD_TTL_SECONDS);
+      
+      if (response.success) {
+        setIsHolding(true);
+        setHeldSeatIds(seatIds);
+        startCountdown(HOLD_TTL_SECONDS);
+        toast.success(`Đã giữ ${selectedSeats.length} ghế thành công. Bạn có ${HOLD_TTL_SECONDS / 60} phút để hoàn tất đặt vé.`);
+      } else {
+        toast.error(response.error || "Không thể giữ ghế. Vui lòng thử lại.");
+      }
+    } catch (error) {
+      toast.error("Có lỗi xảy ra khi giữ ghế");
+      console.error(error);
+    } finally {
+      setHoldLoading(false);
+    }
+  };
+
+  // Cancel held seats
+  const handleCancelHold = async () => {
+    if (heldSeatIds.length === 0) return;
+
+    setHoldLoading(true);
+    try {
+      const response = await showTimeSeatService.bulkCancelHoldSeats(heldSeatIds);
+      
+      if (response.success) {
+        // Clear countdown
+        if (countdownIntervalRef.current) {
+          clearInterval(countdownIntervalRef.current);
+        }
+        setIsHolding(false);
+        setHeldSeatIds([]);
+        setHoldCountdown(0);
+        setSelectedSeats([]);
+        toast.success("Đã hủy giữ ghế thành công");
+      } else {
+        toast.error(response.error || "Không thể hủy giữ ghế");
+      }
+    } catch (error) {
+      toast.error("Có lỗi xảy ra khi hủy giữ ghế");
+      console.error(error);
+    } finally {
+      setHoldLoading(false);
+    }
+  };
+
+  // Load hold info on page load (to restore countdown after refresh)
+  const loadHoldInfo = useCallback(async () => {
+    if (selectedSeats.length === 0) return;
+    
+    const seatIds = selectedSeats.map((seat) => seat.show_time_seat?.id).filter(Boolean) as string[];
+    if (seatIds.length === 0) return;
+
+    // Check first seat to see if any are held
+    try {
+      const response = await showTimeSeatService.getHoldInfo(seatIds[0]);
+      const data = response.data as any;
+      if (response.success && data?.holdInfo) {
+        const expiresAt = new Date(data.holdInfo.expiresAt);
+        const now = new Date();
+        const remainingSeconds = Math.max(0, Math.floor((expiresAt.getTime() - now.getTime()) / 1000));
+        
+        if (remainingSeconds > 0) {
+          setIsHolding(true);
+          setHeldSeatIds(seatIds);
+          startCountdown(remainingSeconds);
+        }
+      }
+    } catch (error) {
+      console.error("Error loading hold info:", error);
+    }
+  }, [selectedSeats, startCountdown]);
+
+  // Cleanup on unmount or when leaving booking view
+  useEffect(() => {
+    return () => {
+      // Clear countdown interval
+      if (countdownIntervalRef.current) {
+        clearInterval(countdownIntervalRef.current);
+      }
+    };
+  }, []);
+
+  // Cancel holds when navigating away from booking view
+  const handleExitBooking = async () => {
+    if (isHolding && heldSeatIds.length > 0) {
+      await handleCancelHold();
+    }
+    setViewMode("detail");
   };
 
   const handleEventComboSearch = () => {
@@ -780,6 +932,7 @@ const SellPage = () => {
           {filteredShowTimes.map((showTime) => (
             <Card
               key={showTime.id}
+              onClick={() => loadShowTimeDetails(showTime.id as string)}
               className="overflow-hidden hover:shadow-lg transition-shadow cursor-pointer group"
             >
               <div className="relative h-48 overflow-hidden">
@@ -963,68 +1116,6 @@ const SellPage = () => {
                   </div>
                 </div>
               </div>
-
-              {/* Applicable Combos - Selectable */}
-              {applicableCombos.length > 0 && (
-                <div className="p-4 border rounded-lg bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-950/20 dark:to-orange-950/20">
-                  <h3 className="font-semibold mb-3 flex items-center gap-2">
-                    <Package className="h-4 w-4" />
-                    Chọn combo áp dụng cho phim này
-                  </h3>
-                  <div className="space-y-2">
-                    {applicableCombos.map((combo: any) => (
-                      <div
-                        key={combo.id}
-                        className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-all ${
-                          selectedEventComboForBooking?.id === combo.id
-                            ? "bg-primary/10 border-primary"
-                            : "bg-white/50 dark:bg-gray-800/50 hover:bg-white dark:hover:bg-gray-800 border-gray-200 dark:border-gray-700"
-                        }`}
-                        onClick={() => {
-                          setSelectedEventComboForBooking(
-                            selectedEventComboForBooking?.id === combo.id ? null : combo
-                          );
-                        }}
-                      >
-                        <Checkbox
-                          checked={selectedEventComboForBooking?.id === combo.id}
-                          onCheckedChange={() => {
-                            setSelectedEventComboForBooking(
-                              selectedEventComboForBooking?.id === combo.id ? null : combo
-                            );
-                          }}
-                        />
-                        {combo.image && (
-                          <img
-                            src={combo.image}
-                            alt={combo.name}
-                            className="w-12 h-12 object-cover rounded"
-                          />
-                        )}
-                        <div className="flex-1">
-                          <p className="font-medium">{combo.name}</p>
-                          <p className="text-sm text-muted-foreground">{combo.description}</p>
-                        </div>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-8 w-8 shrink-0"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            loadEventComboDetails(combo.id);
-                          }}
-                        >
-                          <Eye className="h-4 w-4" />
-                        </Button>
-                        <div className="text-right">
-                          <p className="font-bold text-primary">{formatPrice(combo.total_price)}</p>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
               {/* Seat Summary */}
               <div className="p-4 border rounded-lg">
                 <h3 className="font-semibold mb-3">Chú thích ghế ngồi</h3>
@@ -1096,13 +1187,13 @@ const SellPage = () => {
 
     return (
       <div className="space-y-6">
-        {/* Back Button */}
-        <Button variant="ghost" onClick={() => setViewMode("detail")}>
+        {/* Back Button - calls handleExitBooking to cancel holds */}
+        <Button variant="ghost" onClick={handleExitBooking} disabled={holdLoading}>
           <ArrowLeft className="h-4 w-4 mr-2" />
           Quay lại chi tiết
         </Button>
 
-        {/* Movie & Showtime Info */}
+        {/* Movie & Showtime Info + Hold Controls */}
         <Card>
           <CardContent className="pt-4">
             <div className="flex items-center gap-4">
@@ -1124,6 +1215,18 @@ const SellPage = () => {
                   </p>
                 </div>
               </div>
+              
+              {/* Countdown Timer & Hold Status */}
+              {isHolding && holdCountdown > 0 && (
+                <div className="flex flex-col items-center p-3 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-lg">
+                  <Timer className="h-5 w-5 text-amber-600 mb-1" />
+                  <p className="text-xs text-amber-600 font-medium">Thời gian giữ ghế</p>
+                  <p className={`text-2xl font-bold ${holdCountdown <= 60 ? 'text-red-500 animate-pulse' : 'text-amber-600'}`}>
+                    {formatCountdown(holdCountdown)}
+                  </p>
+                </div>
+              )}
+              
               <div className="text-right">
                 <p className="text-sm text-muted-foreground">Ghế đã chọn</p>
                 <p className="text-2xl font-bold text-primary">{selectedSeats.length}</p>
@@ -1237,6 +1340,30 @@ const SellPage = () => {
                     </div>
                   </div>
                 </div>
+              </div>
+              
+              {/* Hold/Cancel Buttons */}
+              <div className="flex gap-2 pt-4 border-t">
+                {!isHolding ? (
+                  <Button
+                    className="flex-1"
+                    onClick={handleHoldSeats}
+                    disabled={selectedSeats.length === 0 || holdLoading}
+                  >
+                    <Lock className="h-4 w-4 mr-2" />
+                    {holdLoading ? "Đang xử lý..." : `Giữ ${selectedSeats.length} ghế (${HOLD_TTL_SECONDS / 60} phút)`}
+                  </Button>
+                ) : (
+                  <Button
+                    variant="destructive"
+                    className="flex-1"
+                    onClick={handleCancelHold}
+                    disabled={holdLoading}
+                  >
+                    <XCircle className="h-4 w-4 mr-2" />
+                    {holdLoading ? "Đang hủy..." : "Hủy giữ ghế"}
+                  </Button>
+                )}
               </div>
             </div>
           </CardContent>

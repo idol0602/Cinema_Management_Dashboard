@@ -64,11 +64,14 @@ export interface FormatDetail {
 export interface SeatTypeDetail {
   id: string;
   name: string;
+  type?: string;
+  price?: number;
 }
 
 export interface ShowTimeSeatDetail {
   id: string;
   status_seat: "AVAILABLE" | "HOLDING" | "BOOKED" | "FIXING";
+  price?: number;
 }
 
 export interface SeatDetail {

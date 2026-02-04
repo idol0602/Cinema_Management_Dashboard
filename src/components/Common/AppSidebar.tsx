@@ -247,7 +247,7 @@ export function AppSidebar() {
   return (
     <Sidebar>
       <SidebarContent>
-        <SidebarGroup>
+        <SidebarGroup className="pt-[30%]">
           <SidebarGroupLabel>Cinema Management</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>

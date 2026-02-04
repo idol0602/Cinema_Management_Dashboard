@@ -127,5 +127,115 @@ export const showTimeSeatService = {
         error: apiError.message,
       };
     }
-  }
+  },
+
+  // === Seat Hold Operations ===
+
+  holdSeat: async (id: string, ttlSeconds: number = 600) : Promise<serviceResponse> => {
+    try {
+      const response = await api.post(`/show-time-seats/hold/${id}`, { ttlSeconds });
+      return {
+        data: response.data.data,
+        success: true,
+        error: response.data.error,
+      };
+    } catch (error) {
+      const apiError = handleApiError(error);
+      return {
+        data: {},
+        success: false,
+        error: apiError.message,
+      };
+    }
+  },
+
+  cancelHoldSeat: async (id: string) : Promise<serviceResponse> => {
+    try {
+      const response = await api.delete(`/show-time-seats/hold/${id}`);
+      return {
+        data: response.data.data,
+        success: true,
+        error: response.data.error,
+      };
+    } catch (error) {
+      const apiError = handleApiError(error);
+      return {
+        data: {},
+        success: false,
+        error: apiError.message,
+      };
+    }
+  },
+
+  getHoldInfo: async (id: string) : Promise<serviceResponse> => {
+    try {
+      const response = await api.get(`/show-time-seats/hold/${id}`);
+      return {
+        data: response.data.data,
+        success: true,
+        error: response.data.error,
+      };
+    } catch (error) {
+      const apiError = handleApiError(error);
+      return {
+        data: {},
+        success: false,
+        error: apiError.message,
+      };
+    }
+  },
+
+  bulkHoldSeats: async (showTimeSeatIds: string[], ttlSeconds: number = 600) : Promise<serviceResponse> => {
+    try {
+      const response = await api.post('/show-time-seats/hold/bulk', { showTimeSeatIds, ttlSeconds });
+      return {
+        data: response.data.data,
+        success: true,
+        error: response.data.error,
+      };
+    } catch (error) {
+      const apiError = handleApiError(error);
+      return {
+        data: {},
+        success: false,
+        error: apiError.message,
+      };
+    }
+  },
+
+  bulkCancelHoldSeats: async (showTimeSeatIds: string[]) : Promise<serviceResponse> => {
+    try {
+      const response = await api.delete('/show-time-seats/hold/bulk', { data: { showTimeSeatIds } });
+      return {
+        data: response.data.data,
+        success: true,
+        error: response.data.error,
+      };
+    } catch (error) {
+      const apiError = handleApiError(error);
+      return {
+        data: {},
+        success: false,
+        error: apiError.message,
+      };
+    }
+  },
+
+  getAllHeldSeatsByUserId : async () : Promise<serviceResponse> => {
+    try {
+      const response = await api.get('/show-time-seats/hold-by-user/all');
+      return {
+        data: response.data.data,
+        success: true,
+        error: response.data.error,
+      };
+    } catch (error) {
+      const apiError = handleApiError(error);
+      return {
+        data: [],
+        success: false,
+        error: apiError.message,
+      };
+    }
+  },
 }

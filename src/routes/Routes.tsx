@@ -30,6 +30,7 @@ import AuthorizeList from "@/pages/Authorizes/AuthorizeList";
 import RefundList from "@/pages/Refunds/RefundList";
 import OrderList from "@/pages/Orders/OrderList";
 import SellPage from "@/pages/Sells/SellPage";
+import SeatBookingPage from "@/pages/SeatBooking/SeatBookingPage";
 import StatisticalPage from "@/pages/Statisticals/StatisticalPage";
 
 export const AppRoutes = () => {
@@ -74,6 +75,7 @@ export const AppRoutes = () => {
         }
       >
         <Route path="/ticket" element={<SellPage />} />
+        <Route path="/seat-booking/:showTimeId" element={<SeatBookingPage />} />
         <Route path="/statisticals" element={<StatisticalPage />} />
       </Route>
 

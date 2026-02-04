@@ -1,14 +1,16 @@
-import { LogOut, Moon, Sun } from "lucide-react";
+import { LogOut, Moon, Sun, Menu } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useTheme } from "@/components/theme-provider";
+import { useSidebar } from "@/components/ui/sidebar";
 
 function Header() {
   const { theme, setTheme } = useTheme();
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const { toggleSidebar } = useSidebar();
 
   const handleLogout = () => {
     logout();
@@ -26,10 +28,18 @@ function Header() {
   };
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+    <header className="fixed top-0 left-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 supports-[backdrop-filter]:backdrop-blur">
       <div className="container flex h-16 items-center justify-between px-4">
         {/* Logo */}
         <div className="flex items-center gap-3">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={toggleSidebar}
+            className="rounded-full"
+          >
+            <Menu className="h-5 w-5" />
+          </Button>
           <img
             src="/logo.png"
             alt="Meta Cinema"
@@ -63,7 +73,10 @@ function Header() {
             </Button>
           </div>
           {user && (
-            <div className="flex items-center gap-3">
+            <div
+              className="flex items-center gap-3 cursor-pointer"
+              onClick={() => navigate("/profile")}
+            >
               <div className="hidden md:block text-right">
                 <p className="text-sm font-medium leading-none">{user.name}</p>
                 <p className="text-xs text-muted-foreground mt-1">
