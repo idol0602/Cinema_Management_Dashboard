@@ -131,4 +131,29 @@ export const orderService = {
       };
     }
   },
+
+  processOrderPayment: async (payload: {
+    order: any;
+    tickets: any[];
+    comboItemInTickets: any[];
+    menuItemInTickets: any[];
+    showTime: any;
+  }): Promise<serviceResponse> => {
+    try {
+      const response = await api.post('/orders/process', payload);
+      return {
+        data: response.data.data,
+        success: true,
+        error: response.data.error,
+      };
+    } catch (error) {
+      const apiError = handleApiError(error);
+      return {
+        data: null,
+        success: false,
+        error: apiError.message,
+      };
+    }
+  },
 }
+

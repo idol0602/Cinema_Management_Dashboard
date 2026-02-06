@@ -28,13 +28,13 @@ export interface OrderType {
 }
 
 export interface CreateOrderType {
-  discount_id?: string; // Reference to discounts table
+  discount_id?: string | null; // Reference to discounts table
   user_id: string; // Reference to users table
   movie_id: string; // Reference to movies table
   service_vat?: number;
   payment_status?: PaymentStatus;
   payment_method?: string;
-  trans_id?: string;
+  trans_id?: string | null;
   total_price: number;
   created_at?: string;
   requested_at?: string;

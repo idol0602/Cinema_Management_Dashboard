@@ -56,6 +56,9 @@ import type { ComboType } from "@/types/combo.type";
 import type { TicketPriceType } from "@/types/ticketPrice.type";
 import type { DiscountType } from "@/types/discount.type";
 import type { OrderType, CreateOrderType } from "@/types/order.type";
+import type { CreateTicketType } from "@/types/ticket.type";
+import type { CreateComboItemInTicketType } from "@/types/comboItemInTicket.type";
+import type { CreateMenuItemInTicketType } from "@/types/menuItemInTicket.type";
 import { ComboDetailDialog } from "@/components/combos/ComboDetailDialog";
 import { MenuItemDetailDialog } from "@/components/menuItems/MenuItemDetailDialog";
 import EventDetailDialog from "@/components/events/EventDetailDialog";
@@ -84,8 +87,7 @@ const SeatBookingPage = () => {
   const [loading, setLoading] = useState(true);
 
   // Order state
-  const [currentOrder, setCurrentOrder] = useState<OrderType | null>(null);
-  const [orderCreating, setOrderCreating] = useState(false);
+  const [orderCreating, setOrderCreating] = useState<OrderType | null>(null);
 
   // Ticket Prices
   const [prices, setPrices] = useState<Map<string, number>>(new Map());
@@ -94,6 +96,7 @@ const SeatBookingPage = () => {
   // Combos
   const [combos, setCombos] = useState<ComboType[]>([]);
   const [selectedCombos, setSelectedCombos] = useState<ComboType[]>([]);
+  const [comboDiscounts, setComboDiscounts] = useState<Map<string, number>>(new Map()); // comboId -> discount percent
   const [loadingCombos, setLoadingCombos] = useState(false);
   const [comboSearch, setComboSearch] = useState("");
 
@@ -138,34 +141,7 @@ const SeatBookingPage = () => {
   const [eventDetailDialogOpen, setEventDetailDialogOpen] = useState(false);
 
   // Confirmation dialog
-  const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
-
-  // Create Order on page load
-  const createPendingOrder = async (movieId: string) => {
-    if (!user?.id || currentOrder) return;
-
-    setOrderCreating(true);
-    try {
-      const orderData: CreateOrderType = {
-        user_id: user.id,
-        movie_id: movieId,
-        payment_status: "PENDING",
-        total_price: 0,
-      };
-
-      const response = await orderService.create(orderData);
-      if (response.success && response.data) {
-        setCurrentOrder(response.data as OrderType);
-        console.log("✅ Created pending order:", response.data);
-      } else {
-        console.error("❌ Failed to create order:", response.error);
-      }
-    } catch (error) {
-      console.error("❌ Error creating order:", error);
-    } finally {
-      setOrderCreating(false);
-    }
-  };
+  const [confirmDialogOpen, setConfirmDialogOpen] = useState(false)
 
   // Load Combos
   const loadCombos = async () => {
@@ -349,11 +325,6 @@ const SeatBookingPage = () => {
           const data = response.data as ShowTimeDetailType;
           setShowTimeDetail(data);
 
-          // Create pending order
-          if (data.movie?.id) {
-            createPendingOrder(data.movie.id);
-          }
-
           // Load additional data
           loadCombos();
           loadMenuItems();
@@ -452,14 +423,14 @@ const SeatBookingPage = () => {
     formatId: string,
     seatTypeId: string,
     dayType: string,
-  ): string | undefined => {
+  ): string => {
     const tp = ticketPrices.find(
       (t) =>
         t.format_id === formatId &&
         t.seat_type_id === seatTypeId &&
         t.day_type === dayType,
     );
-    return tp?.id;
+    return tp?.id || "";
   };
 
   // Start countdown timer
@@ -497,6 +468,31 @@ const SeatBookingPage = () => {
         seatIds,
         HOLD_TTL_SECONDS,
       );
+
+      const orderResponse = await orderService.create({
+        discount_id: selectedEvent?.discount?.id || null,
+        user_id: user?.id as string,
+        movie_id: showTimeDetail?.movie.id as string,
+        service_vat: 0,
+        payment_status: "PENDING",
+        payment_method: "",
+        trans_id: null,
+        total_price: 0,
+        created_at: new Date().toISOString(),
+        requested_at: new Date().toISOString(),
+      } as CreateOrderType);
+
+      console.log("📦 Order creation response:", orderResponse);
+      console.log("📦 Order data:", orderResponse.data);
+
+      if (orderResponse.success && orderResponse.data) {
+        const createdOrder = orderResponse.data as OrderType;
+        console.log("✅ Setting orderCreating:", createdOrder);
+        setOrderCreating(createdOrder);
+      } else {
+        console.error("❌ Order creation failed:", orderResponse.error);
+      }
+
       if (response.success) {
         setIsHolding(true);
         setHeldSeatIds(seatIds);
@@ -520,6 +516,22 @@ const SeatBookingPage = () => {
     try {
       const response =
         await showTimeSeatService.bulkCancelHoldSeats(heldSeatIds);
+      
+      // Update order status to CANCELED
+      if (orderCreating?.id) {
+        console.log("📝 Updating order to CANCELED:", orderCreating.id);
+        const res = await orderService.update(orderCreating.id, {
+          payment_status: "CANCELED",
+        });
+        console.log("Order cancel result:", res);
+        if (!res.success) {
+          console.error("❌ Failed to update order:", res.error);
+          toast.error("Không thể cập nhật trạng thái đơn hàng");
+        }
+      } else {
+        console.warn("⚠️ No orderCreating found when canceling hold");
+      }
+      
       if (response.success) {
         if (countdownIntervalRef.current)
           clearInterval(countdownIntervalRef.current);
@@ -527,6 +539,7 @@ const SeatBookingPage = () => {
         setHeldSeatIds([]);
         setHoldCountdown(0);
         setSelectedSeats([]);
+        setOrderCreating(null); // Reset order after cancel
         toast.success("Đã hủy giữ ghế");
       } else {
         toast.error(response.error || "Không thể hủy");
@@ -564,27 +577,48 @@ const SeatBookingPage = () => {
     return 0;
   };
 
-  // Handle combo toggle with movie validation
+  // Handle combo toggle with movie validation and discount extraction
   const handleComboToggle = async (combo: ComboType) => {
     if (selectedCombos.some((c) => c.id === combo.id)) {
       setSelectedCombos((prev) => prev.filter((c) => c.id !== combo.id));
+      // Remove combo discount when deselecting
+      setComboDiscounts((prev) => {
+        const newMap = new Map(prev);
+        newMap.delete(combo.id!);
+        return newMap;
+      });
       return;
     }
 
-    if (combo.is_event_combo) {
-      const details = await loadComboDetails(combo.id!);
-      if (details?.combo_movies?.length > 0) {
-        const comboMovieIds = details.combo_movies.map(
-          (cm: any) => cm.movie?.id,
+    // Load combo details to check for event discount
+    const details = await loadComboDetails(combo.id!);
+    
+    if (combo.is_event_combo && details?.combo_movies?.length > 0) {
+      const comboMovieIds = details.combo_movies.map(
+        (cm: any) => cm.movie?.id,
+      );
+      if (!comboMovieIds.includes(showTimeDetail?.movie?.id)) {
+        toast.error(
+          `Combo "${combo.name}" không áp dụng cho phim "${showTimeDetail?.movie?.title || "hiện tại"}"`,
         );
-        if (!comboMovieIds.includes(showTimeDetail?.movie?.id)) {
-          toast.error(
-            `Combo "${combo.name}" không áp dụng cho phim "${showTimeDetail?.movie?.title || "hiện tại"}"`,
-          );
-          return;
-        }
+        return;
       }
     }
+    
+    // Extract discount from combo's event if exists
+    if (details?.combos_events?.length > 0) {
+      const comboEvent = details.combos_events[0];
+      const eventDiscount = comboEvent?.event?.discount;
+      if (eventDiscount?.is_active && eventDiscount?.discount_percent > 0) {
+        setComboDiscounts((prev) => {
+          const newMap = new Map(prev);
+          newMap.set(combo.id!, eventDiscount.discount_percent);
+          return newMap;
+        });
+        toast.success(`Combo "${combo.name}" có giảm giá ${eventDiscount.discount_percent}%!`);
+      }
+    }
+    
     setSelectedCombos((prev) => [...prev, combo]);
   };
 
@@ -693,7 +727,7 @@ const SeatBookingPage = () => {
     }
   };
 
-  // Calculate totals with discount
+  // Calculate totals with discount (from event and combos)
   const calculatedTotals = useMemo(() => {
     const seatTotal = selectedSeats.reduce(
       (sum, s) =>
@@ -716,23 +750,37 @@ const SeatBookingPage = () => {
 
     const subtotal = seatTotal + comboTotal + menuTotal;
 
-    // Apply discount if event is selected and has discount
-    let discountPercent = 0;
-    let discountAmount = 0;
+    // Calculate total discount percent from event and combos
+    let totalDiscountPercent = 0;
+    
+    // Add event discount if selected
     if (selectedEvent?.discount && selectedEvent.discount.is_active) {
-      discountPercent = selectedEvent.discount.discount_percent || 0;
-      discountAmount = Math.round((subtotal * discountPercent) / 100);
+      totalDiscountPercent += selectedEvent.discount.discount_percent || 0;
     }
-
-    const total = subtotal - discountAmount;
+    
+    // Add combo discounts (sum all combo discount percentages)
+    comboDiscounts.forEach((percent) => {
+      totalDiscountPercent += percent;
+    });
+    
+    const discountAmount = Math.round((subtotal * totalDiscountPercent) / 100);
+    const afterDiscount = subtotal - discountAmount;
+    
+    // Calculate service fee (10% of amount after discount)
+    const SERVICE_FEE_PERCENT = 10;
+    const serviceVat = Math.round((afterDiscount * SERVICE_FEE_PERCENT) / 100);
+    
+    const total = afterDiscount + serviceVat;
 
     return {
       seatTotal,
       comboTotal,
       menuTotal,
       subtotal,
-      discountPercent,
+      discountPercent: totalDiscountPercent,
       discountAmount,
+      serviceVatPercent: SERVICE_FEE_PERCENT,
+      serviceVat,
       total,
     };
   }, [
@@ -740,60 +788,58 @@ const SeatBookingPage = () => {
     selectedCombos,
     selectedMenuItems,
     selectedEvent,
+    comboDiscounts,
     showTimeDetail,
     prices,
   ]);
 
   // Generate order data for logging
   const generateOrderData = () => {
-    const order = {
-      id: currentOrder?.id,
-      user_id: user?.id,
-      movie_id: showTimeDetail?.movie?.id,
-      discount_id: selectedEvent?.discount?.id || null,
+    const order : OrderType = {
+      id: orderCreating?.id as string,
+      user_id: user?.id as string,
+      movie_id: showTimeDetail?.movie?.id as string,
+      discount_id: selectedEvent?.discount?.id as string,
+      service_vat: calculatedTotals.serviceVat,
       total_price: calculatedTotals.total,
-      payment_status: "PENDING",
-      showtime_id: showTimeId,
     };
 
-    const tickets = selectedSeats.map((seat) => ({
+    const tickets : CreateTicketType[] = selectedSeats.map((seat) => ({
       ticket_price_id: getTicketPriceId(
         showTimeDetail?.room?.format?.id as string,
         seat.seat_type?.id as string,
         showTimeDetail?.day_type as string,
       ),
-      order_id: currentOrder?.id,
-      showtime_seat_id: seat.show_time_seat?.id,
-      seat_number: seat.seat_number,
-      seat_type: seat.seat_type?.name,
-      price: getPrice(
-        showTimeDetail?.room?.format?.id as string,
-        seat.seat_type?.id as string,
-        showTimeDetail?.day_type as string,
-      ),
+      order_id: orderCreating?.id as string,
+      showtime_seat_id: seat.show_time_seat?.id as string,
     }));
 
-    const comboItemInTickets = selectedCombos.map((combo) => ({
-      order_id: currentOrder?.id,
-      combo_id: combo.id,
-      combo_name: combo.name,
-      total_price: combo.total_price,
+    const comboItemInTickets : CreateComboItemInTicketType[] = selectedCombos.map((combo) => ({
+      order_id: orderCreating?.id as string,
+      combo_id: combo.id as string,
     }));
 
-    const menuItemInTickets = selectedMenuItems.map((m) => ({
-      order_id: currentOrder?.id,
-      item_id: m.item.id,
-      item_name: m.item.name,
-      quantity: m.quantity,
-      unit_price: m.item.price,
-      total_price: m.item.price * m.quantity,
+    const menuItemInTickets : CreateMenuItemInTicketType[] = selectedMenuItems.map((m) => ({
+      order_id: orderCreating?.id as string,
+      item_id: m.item.id as string,
+      quantity: m.quantity as number,
+      unit_price: m.item.price as number,
+      total_price: m.item.price * m.quantity as number,
     }));
 
-    return { order, tickets, comboItemInTickets, menuItemInTickets };
+    // Include showTime info for token expiration calculation
+    const showTime = {
+      id: showTimeDetail?.id,
+      start_time: showTimeDetail?.start_time,
+      end_time: showTimeDetail?.end_time,
+      day_type: showTimeDetail?.day_type,
+    };
+
+    return { order, tickets, comboItemInTickets, menuItemInTickets, showTime };
   };
 
   // Handle payment
-  const handlePayment = () => {
+  const handlePayment = async () => {
     const orderData = generateOrderData();
 
     console.log("=".repeat(60));
@@ -801,16 +847,12 @@ const SeatBookingPage = () => {
     console.log("=".repeat(60));
     console.log("\n🎫 ORDER:");
     console.log(JSON.stringify(orderData.order, null, 2));
-
     console.log("\n🎟️ TICKETS:");
     console.log(JSON.stringify(orderData.tickets, null, 2));
-
     console.log("\n🍿 COMBO ITEMS IN TICKET:");
     console.log(JSON.stringify(orderData.comboItemInTickets, null, 2));
-
     console.log("\n🍕 MENU ITEMS IN TICKET:");
     console.log(JSON.stringify(orderData.menuItemInTickets, null, 2));
-
     console.log("\n💰 TOTAL SUMMARY:");
     console.log({
       seatTotal: formatPrice(calculatedTotals.seatTotal),
@@ -819,12 +861,47 @@ const SeatBookingPage = () => {
       subtotal: formatPrice(calculatedTotals.subtotal),
       discountPercent: `${calculatedTotals.discountPercent}%`,
       discountAmount: formatPrice(calculatedTotals.discountAmount),
+      serviceVatPercent: `${calculatedTotals.serviceVatPercent}%`,
+      serviceVat: formatPrice(calculatedTotals.serviceVat),
       finalTotal: formatPrice(calculatedTotals.total),
     });
     console.log("=".repeat(60));
 
-    toast.success("Đặt vé thành công! Kiểm tra console để xem chi tiết.");
-    setConfirmDialogOpen(false);
+    try {
+      const response = await orderService.processOrderPayment(orderData);
+      
+      if (response.success && response.data) {
+        console.log("✅ Payment processed successfully:", response.data);
+        toast.success("Đặt vé thành công!");
+        
+        // Clear countdown
+        if (countdownIntervalRef.current) {
+          clearInterval(countdownIntervalRef.current);
+        }
+        
+        // Reset states
+        setIsHolding(false);
+        setHeldSeatIds([]);
+        setHoldCountdown(0);
+        setSelectedSeats([]);
+        setSelectedCombos([]);
+        setSelectedMenuItems([]);
+        setSelectedEvent(null);
+        setComboDiscounts(new Map());
+        setOrderCreating(null);
+        
+        setConfirmDialogOpen(false);
+        
+        // Optionally navigate to order details or home
+        // navigate(`/orders/${response.data.order.id}`);
+      } else {
+        console.error("❌ Payment failed:", response.error);
+        toast.error(response.error || "Có lỗi xảy ra khi xử lý thanh toán");
+      }
+    } catch (error) {
+      console.error("❌ Payment error:", error);
+      toast.error("Có lỗi xảy ra khi xử lý thanh toán");
+    }
   };
 
   const handleBack = async () => {
@@ -883,13 +960,13 @@ const SeatBookingPage = () => {
         </Button>
 
         <div className="flex items-center gap-4">
-          {currentOrder && (
+          {orderCreating && (
             <Badge
               variant="outline"
               className="bg-green-50 text-green-700 border-green-300"
             >
               <ShoppingCart className="h-3 w-3 mr-1" />
-              Order #{currentOrder.id?.slice(-8)}
+              Order #{orderCreating?.id?.slice(-8)}
             </Badge>
           )}
 
@@ -1033,6 +1110,13 @@ const SeatBookingPage = () => {
                     <span>-{formatPrice(calculatedTotals.discountAmount)}</span>
                   </div>
                 )}
+
+                <div className="flex justify-between text-sm text-amber-600">
+                  <span className="flex items-center gap-1">
+                    Phí dịch vụ ({calculatedTotals.serviceVatPercent}%):
+                  </span>
+                  <span>+{formatPrice(calculatedTotals.serviceVat)}</span>
+                </div>
 
                 <Separator />
 
@@ -1619,7 +1703,10 @@ const SeatBookingPage = () => {
                   <span>-{formatPrice(calculatedTotals.discountAmount)}</span>
                 </div>
               )}
-
+              <div className="flex justify-between text-sm text-orange-600">
+                <span>VAT (10%):</span>
+                <span>{formatPrice(calculatedTotals.serviceVat)}</span>
+              </div>
               <div className="flex justify-between items-center pt-2 border-t">
                 <span className="font-bold text-lg">Tổng tiền:</span>
                 <span className="text-2xl font-bold text-primary">
