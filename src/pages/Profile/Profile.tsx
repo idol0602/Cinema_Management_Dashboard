@@ -88,8 +88,8 @@ function Profile() {
         <div className="bg-card rounded-lg shadow-md p-8 mb-8 border border-border">
           {/* Avatar & Basic Info */}
           <div className="flex items-center gap-6 mb-8 pb-8 border-b border-border">
-            <div className="w-24 h-24 bg-gradient-to-br from-primary to-accent rounded-full flex items-center justify-center text-primary-foreground shadow-lg">
-              <User size={48} />
+            <div className="w-24 h-24 bg-gradient-to-br from-primary to-accent rounded-full flex items-center justify-center text-primary-foreground shadow-lg text-4xl font-bold uppercase">
+              {formData.name?.charAt(0) || "U"}
             </div>
             <div className="flex-1">
               <h2 className="text-2xl font-bold text-foreground">
