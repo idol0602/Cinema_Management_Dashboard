@@ -16,6 +16,7 @@ import {
   Tag,
 } from "lucide-react";
 import type { MenuItemType } from "@/types/menuItem.type";
+import { formatVietnamFullDateTime } from "@/utils/datetime";
 
 interface MenuItemDetailDialogProps {
   menuItem: MenuItemType | null;
@@ -30,16 +31,7 @@ export function MenuItemDetailDialog({
 }: MenuItemDetailDialogProps) {
   if (!menuItem) return null;
 
-  const formatDate = (dateString?: string) => {
-    if (!dateString) return "N/A";
-    return new Date(dateString).toLocaleDateString("vi-VN", {
-      day: "2-digit",
-      month: "2-digit",
-      year: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-  };
+  const formatDate = formatVietnamFullDateTime;
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat("vi-VN", {

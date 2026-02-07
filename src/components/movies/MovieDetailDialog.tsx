@@ -21,6 +21,7 @@ import {
 } from "lucide-react";
 import type { MovieType } from "@/types/movie.type";
 import type { MovieTypeType } from "@/types/movieType.type";
+import { formatDateToVietnamese } from "@/utils/datetime";
 
 interface MovieDetailDialogProps {
   movie: MovieType | null;
@@ -42,14 +43,7 @@ export function MovieDetailDialog({
     return type ? type.type : "Chưa xác định";
   };
 
-  const formatDate = (dateString?: string) => {
-    if (!dateString) return "N/A";
-    return new Date(dateString).toLocaleDateString("vi-VN", {
-      day: "2-digit",
-      month: "2-digit",
-      year: "numeric",
-    });
-  };
+  const formatDate = formatDateToVietnamese;
 
   const formatDuration = (minutes?: number) => {
     if (!minutes) return "N/A";

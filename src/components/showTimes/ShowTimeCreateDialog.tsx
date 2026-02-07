@@ -21,6 +21,7 @@ import type { RoomType } from "@/types/room.type";
 import type { ShowTimeType } from "@/types/showTime.type";
 import { showTimeService } from "@/services/showTime.service";
 import { showTimePaginateConfig } from "@/config/paginate/show_time.config";
+import { parseVietnamDateTime } from "@/utils/datetime";
 
 interface ShowTimeCreateDialogProps {
   open: boolean;
@@ -338,7 +339,7 @@ export function ShowTimeCreateDialog({
 
   const combineDateAndTimeToUTC = (
     dateStr: string, // "2026-01-15"
-    timeStr: string, // "10:20 SA" | "10:20 CH"
+    timeStr: string, // "10:20 SA" | "10:20 CH" (Vietnam time)
   ): string => {
     // Parse date
     const [year, month, day] = dateStr.split("-").map(Number);
@@ -347,7 +348,7 @@ export function ShowTimeCreateDialog({
       throw new Error("Invalid date format");
     }
 
-    // Parse time
+    // Parse time (Vietnam local time)
     const [timePart, period] = timeStr.trim().split(" ");
     const [hh, mm] = timePart.split(":").map(Number);
 
@@ -355,20 +356,42 @@ export function ShowTimeCreateDialog({
       throw new Error("Invalid time format");
     }
 
-    // Convert to 24h
+    // Convert to 24h format
     let hour24 = hh;
     if (period === "CH" && hh !== 12) hour24 += 12;
     if (period === "SA" && hh === 12) hour24 = 0;
 
-    // Create UTC date
-    const date = new Date(Date.UTC(year, month - 1, day, hour24, mm, 0));
+    // Vietnam time is UTC+7
+    // To get UTC, we subtract 7 hours from Vietnam time
+    // Use Date.UTC to create UTC time, then add UTC offset for Vietnam
+    let utcHour = hour24 - 7;
+    let utcDay = day;
+    let utcMonth = month;
+    let utcYear = year;
+
+    // Handle day rollback if hour goes negative
+    if (utcHour < 0) {
+      utcHour += 24;
+      utcDay -= 1;
+      // Handle month rollback
+      if (utcDay < 1) {
+        utcMonth -= 1;
+        if (utcMonth < 1) {
+          utcMonth = 12;
+          utcYear -= 1;
+        }
+        // Get last day of previous month
+        const lastDay = new Date(utcYear, utcMonth, 0).getDate();
+        utcDay = lastDay;
+      }
+    }
 
     // Format YYYY-MM-DD HH:mm:ss+00
-    const yyyy = date.getUTCFullYear();
-    const MM = String(date.getUTCMonth() + 1).padStart(2, "0");
-    const dd = String(date.getUTCDate()).padStart(2, "0");
-    const HH = String(date.getUTCHours()).padStart(2, "0");
-    const mm2 = String(date.getUTCMinutes()).padStart(2, "0");
+    const yyyy = utcYear;
+    const MM = String(utcMonth).padStart(2, "0");
+    const dd = String(utcDay).padStart(2, "0");
+    const HH = String(utcHour).padStart(2, "0");
+    const mm2 = String(mm).padStart(2, "0");
     const ss = "00";
 
     return `${yyyy}-${MM}-${dd} ${HH}:${mm2}:${ss}+00`;
@@ -432,22 +455,6 @@ export function ShowTimeCreateDialog({
     if (period === "SA" && hour === 12) hour = 0;
 
     return hour * 60 + minute;
-  };
-
-  const formatDate = (dateStr: string): string => {
-    const datePart = dateStr.split(" ")[0];
-    const [year, month, day] = datePart.split("-");
-    return `${day}/${month}/${year.slice(-2)}`;
-  };
-
-  const formatTime = (dateStr: string): string => {
-    const parts = dateStr.split(" ");
-    if (parts.length >= 2) {
-      const timePart = parts[1];
-      const [hour, minute] = timePart.split(":");
-      return `${hour}:${minute}`;
-    }
-    return "--:--";
   };
 
   return (
@@ -638,8 +645,8 @@ export function ShowTimeCreateDialog({
                     showTime.start_time,
                     showTime.end_time || "",
                   );
-                  const startTime = formatTime(showTime.start_time);
-                  const startDate = formatDate(showTime.start_time);
+                  const startTime = parseVietnamDateTime(showTime.start_time).time;
+                  const startDate = parseVietnamDateTime(showTime.start_time).date;
                   const isSelected = selectedIndices.has(index);
 
                   return (

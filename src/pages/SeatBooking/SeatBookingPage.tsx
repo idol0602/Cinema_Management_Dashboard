@@ -46,7 +46,7 @@ import { menuItemService } from "@/services/menuItem.service";
 import { eventService } from "@/services/event.service";
 import { showTimeSeatService } from "@/services/showTimeSeat.service";
 import { ticketPriceService } from "@/services/ticketPrice.service";
-import { orderService } from "@/services/order.service";
+import { orderService, validateBookingTime } from "@/services/order.service";
 import { discountService } from "@/services/discount.service";
 import { useAuth } from "@/hooks/useAuth";
 import type { ShowTimeDetailType, SeatDetail } from "@/types/showTime.type";
@@ -62,6 +62,9 @@ import type { CreateMenuItemInTicketType } from "@/types/menuItemInTicket.type";
 import { ComboDetailDialog } from "@/components/combos/ComboDetailDialog";
 import { MenuItemDetailDialog } from "@/components/menuItems/MenuItemDetailDialog";
 import EventDetailDialog from "@/components/events/EventDetailDialog";
+
+// Import datetime utility for timezone conversion
+import { formatVietnamTime } from "@/utils/datetime";
 
 // Import shared seat type colors
 import { getSeatTypeColor, seatStatusColors } from "@/config/seatTypeColors";
@@ -643,8 +646,8 @@ const SeatBookingPage = () => {
     setSelectedEvent((prev) => (prev?.id === event.id ? null : event));
   };
 
-  // Format helpers
-  const formatTime = (time: string) => (time ? time.substring(0, 5) : "");
+  // Format helpers - using datetime utility for timezone conversion
+  const formatTime = formatVietnamTime;
   const formatPrice = (price: number) =>
     new Intl.NumberFormat("vi-VN", {
       style: "currency",
@@ -840,6 +843,16 @@ const SeatBookingPage = () => {
 
   // Handle payment
   const handlePayment = async () => {
+    // Validate booking time before processing payment
+    if (showTimeDetail?.start_time) {
+      const timeValidation = validateBookingTime(showTimeDetail.start_time, 5);
+      if (!timeValidation.valid) {
+        toast.error(timeValidation.message);
+        setConfirmDialogOpen(false);
+        return;
+      }
+    }
+
     const orderData = generateOrderData();
 
     console.log("=".repeat(60));

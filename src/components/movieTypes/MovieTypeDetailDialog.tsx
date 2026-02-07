@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Tag, Calendar, Info } from "lucide-react";
 import type { MovieTypeType } from "@/types/movieType.type";
+import { formatVietnamFullDateTime } from "@/utils/datetime";
 
 interface MovieTypeDetailDialogProps {
   movieType: MovieTypeType | null;
@@ -23,16 +24,7 @@ export function MovieTypeDetailDialog({
 }: MovieTypeDetailDialogProps) {
   if (!movieType) return null;
 
-  const formatDate = (dateString?: string) => {
-    if (!dateString) return "N/A";
-    return new Date(dateString).toLocaleDateString("vi-VN", {
-      day: "2-digit",
-      month: "2-digit",
-      year: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-  };
+  const formatDate = formatVietnamFullDateTime;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>

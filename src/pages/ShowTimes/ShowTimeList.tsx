@@ -41,6 +41,7 @@ import type { PaginationMeta } from "@/types/pagination.type";
 import { showTimePaginateConfig } from "@/config/paginate/show_time.config";
 import { ShowTimeCreateDialog } from "@/components/showTimes/ShowTimeCreateDialog";
 import { ShowTimeDetailDialog } from "@/components/showTimes/ShowTimeDetailDialog";
+import { parseVietnamDateTime, formatDateToVietnamese } from "@/utils/datetime";
 
 const ShowTimeList = () => {
   const [showTimes, setShowTimes] = useState<ShowTimeType[]>([]);
@@ -204,48 +205,6 @@ const ShowTimeList = () => {
     }
   };
 
-  // Format date
-  const formatDate = (dateString?: string) => {
-    if (!dateString) return "N/A";
-    return new Date(dateString).toLocaleDateString("vi-VN");
-  };
-
-  // Parse ISO datetime to date and time
-  const parseDateTime = (dateTimeString?: string) => {
-    if (!dateTimeString) return { date: "N/A", time: "N/A" };
-
-    try {
-      let datePart = "";
-      let timePart = "";
-
-      if (dateTimeString.includes("T")) {
-        const dateTimeParts = dateTimeString.split("T");
-        datePart = dateTimeParts[0];
-        timePart = dateTimeParts[1]?.split("+")[0] || "";
-      } else if (dateTimeString.includes(" ")) {
-        // Space format: "2026-01-10 16:35:00+00"
-        const dateTimeParts = dateTimeString.split(" ");
-        datePart = dateTimeParts[0];
-        timePart = dateTimeParts[1]?.split("+")[0] || "";
-      }
-
-      if (datePart && timePart) {
-        const [year, month, day] = datePart.split("-");
-        const [hour, minute] = timePart.split(":");
-
-        if (year && month && day && hour && minute) {
-          return {
-            date: `${day}/${month}/${year.slice(-2)}`,
-            time: `${hour}:${minute}`,
-          };
-        }
-      }
-    } catch (error) {
-      console.error("Error parsing datetime:", dateTimeString, error);
-    }
-
-    return { date: "N/A", time: "N/A" };
-  };
 
   // Get badge color based on day type
   const getDayTypeBadge = (dayType?: string) => {
@@ -434,12 +393,12 @@ const ShowTimeList = () => {
                           </div>
                         </TableCell>
                         <TableCell>
-                          {parseDateTime(showTime.start_time).date}
+                          {parseVietnamDateTime(showTime.start_time).date}
                         </TableCell>
                         <TableCell>
                           <div className="flex items-center gap-1">
                             <Clock className="h-4 w-4 text-muted-foreground" />
-                            {parseDateTime(showTime.start_time).time}
+                            {parseVietnamDateTime(showTime.start_time).time}
                           </div>
                         </TableCell>
                         <TableCell>
@@ -448,7 +407,7 @@ const ShowTimeList = () => {
                         <TableCell>
                           <div className="flex items-center gap-1">
                             <Calendar className="h-4 w-4 text-muted-foreground" />
-                            {formatDate(showTime.movies.release_date)}
+                            {formatDateToVietnamese(showTime.movies.release_date)}
                           </div>
                         </TableCell>
                         <TableCell>

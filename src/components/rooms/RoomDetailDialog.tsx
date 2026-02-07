@@ -10,6 +10,7 @@ import { Separator } from "@/components/ui/separator";
 import { DoorOpen, Calendar, MapPin, Film, Info } from "lucide-react";
 import type { RoomType } from "@/types/room.type";
 import type { FormatType } from "@/types/format.type";
+import { formatVietnamFullDateTime } from "@/utils/datetime";
 
 interface RoomDetailDialogProps {
   room: RoomType | null;
@@ -26,16 +27,7 @@ export function RoomDetailDialog({
 }: RoomDetailDialogProps) {
   if (!room) return null;
 
-  const formatDate = (dateString?: string) => {
-    if (!dateString) return "N/A";
-    return new Date(dateString).toLocaleDateString("vi-VN", {
-      day: "2-digit",
-      month: "2-digit",
-      year: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-  };
+  const formatDate = formatVietnamFullDateTime;
 
   const getFormatName = (formatId: string) => {
     const format = formats.find((f) => f.id === formatId);

@@ -61,6 +61,7 @@ import { ComboDetailDialog } from "@/components/combos/ComboDetailDialog";
 import { MenuItemDetailDialog } from "@/components/menuItems/MenuItemDetailDialog";
 import EventDetailDialog from "@/components/events/EventDetailDialog";
 import { getSeatTypeColor } from "@/config/seatTypeColors";
+import { formatVietnamTime } from "@/utils/datetime";
 
 const SellPage = () => {
   const navigate = useNavigate();
@@ -302,25 +303,8 @@ const SellPage = () => {
     );
   }, [events, eventSearch]);
 
-  // Format helpers
-  const formatTime = (dateString: string) => {
-    if (!dateString) return "N/A";
-    try {
-      let timePart = "";
-      if (dateString.includes("T")) {
-        timePart = dateString.split("T")[1]?.split("+")[0] || "";
-      } else if (dateString.includes(" ")) {
-        timePart = dateString.split(" ")[1]?.split("+")[0] || "";
-      }
-      if (timePart) {
-        const [hour, minute] = timePart.split(":");
-        return `${hour}:${minute}`;
-      }
-    } catch (error) {
-      console.error("Error parsing time:", error);
-    }
-    return "N/A";
-  };
+  // Format helpers - using datetime utility for timezone conversion
+  const formatTime = formatVietnamTime;
 
   const formatDuration = (minutes?: number) => {
     if (!minutes) return "N/A";
@@ -704,7 +688,7 @@ const SellPage = () => {
                         );
                         const movieName =
                           comboDetail?.combo_movies?.[0]?.movie?.title ||
-                          combo.name;
+                          "";
                         handleFillMovieSearch(movieName);
                       }}
                     >

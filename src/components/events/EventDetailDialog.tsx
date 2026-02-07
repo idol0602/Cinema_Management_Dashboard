@@ -12,6 +12,7 @@ import { Info, Calendar, Image, Tag, Store } from "lucide-react";
 import type { EventType } from "@/types/event.type";
 import type { EventTypeType } from "@/types/eventType.type";
 import { eventTypeService } from "@/services/eventType.service";
+import { formatDateToVietnamese } from "@/utils/datetime";
 
 interface EventDetailDialogProps {
   event: EventType | null;
@@ -42,10 +43,7 @@ export default function EventDetailDialog({
 
   if (!event) return null;
 
-  const formatDate = (dateString?: string) => {
-    if (!dateString) return "N/A";
-    return new Date(dateString).toLocaleDateString("vi-VN");
-  };
+  const formatDate = formatDateToVietnamese;
 
   const getEventTypeName = (typeId?: string) => {
     if (!typeId) return "N/A";

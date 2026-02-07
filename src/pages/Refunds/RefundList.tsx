@@ -66,6 +66,7 @@ import { toast } from "sonner";
 import { orderService } from "@/services/order.service";
 import { momoService } from "@/services/payment/momo.service";
 import type { OrderType, PaymentStatus, OrderDetails } from "@/types/order.type";
+import { formatVietnamTime, formatVietnamFullDateTime, formatDateToVietnamese } from "@/utils/datetime";
 
 const RefundList = () => {
   const [orders, setOrders] = useState<OrderType[]>([]);
@@ -123,30 +124,11 @@ const RefundList = () => {
     }).format(amount);
   };
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString("vi-VN", {
-      year: "numeric",
-      month: "2-digit",
-      day: "2-digit",
-    });
-  };
+  const formatDate = formatDateToVietnamese;
 
-  const formatDateTime = (dateString: string) => {
-    return new Date(dateString).toLocaleString("vi-VN", {
-      year: "numeric",
-      month: "2-digit",
-      day: "2-digit",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-  };
+  const formatDateTime = formatVietnamFullDateTime;
 
-  const formatTime = (dateString: string) => {
-    return new Date(dateString).toLocaleTimeString("vi-VN", {
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-  };
+  const formatTime = formatVietnamTime;
 
   const handleViewDetails = async (orderId: string) => {
     setIsLoadingDetails(true);

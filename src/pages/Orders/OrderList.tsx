@@ -45,6 +45,7 @@ import {
 import type { OrderType, OrderDetails, PaymentStatus } from "@/types/order.type";
 import type { PaginationMeta } from "@/types/pagination.type";
 import { orderPaginationConfig } from "@/config/paginate/order.config";
+import { formatVietnamFullDateTime } from "@/utils/datetime";
 
 const OrderList = () => {
   const [orders, setOrders] = useState<OrderType[]>([]);
@@ -175,16 +176,10 @@ const OrderList = () => {
     }
   };
 
-  // Format date
+  // Format date - using datetime utility for timezone conversion
   const formatDate = (dateString?: string) => {
     if (!dateString) return "N/A";
-    return new Date(dateString).toLocaleDateString("vi-VN", {
-      year: "numeric",
-      month: "2-digit",
-      day: "2-digit",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
+    return formatVietnamFullDateTime(dateString);
   };
 
   // Format currency

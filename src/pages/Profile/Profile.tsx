@@ -96,7 +96,7 @@ function Profile() {
                 {formData.name || "Người dùng"}
               </h2>
               <p className="text-muted-foreground mt-1">
-                {getRoleLabel(formData.role || "CUSTOMER")}
+                {formData.role || "Khách hàng"}
               </p>
               <p className="text-sm text-muted-foreground/70 mt-2">
                 Tham gia từ ngày {formatDate(formData.created_at as string)}
@@ -188,7 +188,7 @@ function Profile() {
                   Chức vụ
                 </label>
                 <div className="inline-block px-3 py-1 bg-primary/10 text-primary rounded-full text-sm font-medium">
-                  {getRoleLabel(formData.role || "CUSTOMER")}
+                  {formData.role || "Khách hàng"}
                 </div>
               </div>
               <div>

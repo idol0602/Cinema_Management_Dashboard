@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Info, Calendar, Percent } from "lucide-react";
 import type { DiscountType } from "@/types/discount.type";
+import { formatDateToVietnamese } from "@/utils/datetime";
 
 interface DiscountDetailDialogProps {
   discount: DiscountType | null;
@@ -23,10 +24,7 @@ export default function DiscountDetailDialog({
 }: DiscountDetailDialogProps) {
   if (!discount) return null;
 
-  const formatDate = (dateString?: string) => {
-    if (!dateString) return "N/A";
-    return new Date(dateString).toLocaleDateString("vi-VN");
-  };
+  const formatDate = formatDateToVietnamese;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>

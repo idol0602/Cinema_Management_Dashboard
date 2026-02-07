@@ -9,6 +9,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import type { ShowTimeType } from "@/types/showTime.type";
+import { parseVietnamDateTime, formatDateToVietnamese } from "@/utils/datetime";
 
 interface ShowTimeDetailDialogProps {
   showTime: ShowTimeType | null;
@@ -22,47 +23,6 @@ export function ShowTimeDetailDialog({
   onOpenChange,
 }: ShowTimeDetailDialogProps) {
   if (!showTime) return null;
-
-  const parseDateTime = (dateTimeString?: string) => {
-    if (!dateTimeString) return { date: "N/A", time: "N/A" };
-
-    try {
-      let datePart = "";
-      let timePart = "";
-
-      if (dateTimeString.includes("T")) {
-        const dateTimeParts = dateTimeString.split("T");
-        datePart = dateTimeParts[0];
-        timePart = dateTimeParts[1]?.split("+")[0] || "";
-      } else if (dateTimeString.includes(" ")) {
-        // Space format: "2026-01-10 16:35:00+00"
-        const dateTimeParts = dateTimeString.split(" ");
-        datePart = dateTimeParts[0];
-        timePart = dateTimeParts[1]?.split("+")[0] || "";
-      }
-
-      if (datePart && timePart) {
-        const [year, month, day] = datePart.split("-");
-        const [hour, minute] = timePart.split(":");
-
-        if (year && month && day && hour && minute) {
-          return {
-            date: `${day}/${month}/${year.slice(-2)}`,
-            time: `${hour}:${minute}`,
-          };
-        }
-      }
-    } catch (error) {
-      console.error("Error parsing datetime:", dateTimeString, error);
-    }
-
-    return { date: "N/A", time: "N/A" };
-  };
-
-  const formatDate = (dateString?: string) => {
-    if (!dateString) return "N/A";
-    return new Date(dateString).toLocaleDateString("vi-VN");
-  };
 
   const formatDuration = (minutes?: number) => {
     if (!minutes) return "N/A";
@@ -142,7 +102,7 @@ export function ShowTimeDetailDialog({
                 Ngày Chiếu
               </h3>
               <p className="text-base font-semibold">
-                {parseDateTime(showTime.start_time).date}
+                {parseVietnamDateTime(showTime.start_time).date}
               </p>
             </div>
             <div>
@@ -150,7 +110,7 @@ export function ShowTimeDetailDialog({
                 Giờ Chiếu
               </h3>
               <p className="text-base font-semibold">
-                {parseDateTime(showTime.start_time).time}
+                {parseVietnamDateTime(showTime.start_time).time}
               </p>
             </div>
             <div>
@@ -164,7 +124,7 @@ export function ShowTimeDetailDialog({
                 Ngày Phát Hành
               </h3>
               <p className="text-sm">
-                {formatDate(showTime.movies.release_date)}
+                {formatDateToVietnamese(showTime.movies.release_date)}
               </p>
             </div>
             <div>

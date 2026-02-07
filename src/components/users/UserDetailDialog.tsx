@@ -17,6 +17,7 @@ import {
   UserIcon,
 } from "lucide-react";
 import type { User } from "@/types/user.type";
+import { formatVietnamFullDateTime } from "@/utils/datetime";
 
 interface UserDetailDialogProps {
   user: User | null;
@@ -31,16 +32,7 @@ export function UserDetailDialog({
 }: UserDetailDialogProps) {
   if (!user) return null;
 
-  const formatDate = (dateString?: string) => {
-    if (!dateString) return "N/A";
-    return new Date(dateString).toLocaleDateString("vi-VN", {
-      day: "2-digit",
-      month: "2-digit",
-      year: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-  };
+  const formatDate = formatVietnamFullDateTime;
 
   const getRoleLabel = (role: string) => {
     switch (role) {
