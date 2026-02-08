@@ -69,6 +69,9 @@ import { formatVietnamTime } from "@/utils/datetime";
 // Import shared seat type colors
 import { getSeatTypeColor, seatStatusColors } from "@/config/seatTypeColors";
 
+// Import InvoiceDialog
+import InvoiceDialog from "@/components/invoices/InvoiceDialog";
+
 interface TimeRemainData {
   userId: string;
   heldAt: string;
@@ -145,6 +148,13 @@ const SeatBookingPage = () => {
 
   // Confirmation dialog
   const [confirmDialogOpen, setConfirmDialogOpen] = useState(false)
+
+  // Invoice dialog
+  const [invoiceDialogOpen, setInvoiceDialogOpen] = useState(false)
+  const [invoiceData, setInvoiceData] = useState<any>(null)
+
+  // Cached combo details for selected combos (for confirmation dialog display)
+  const [selectedComboDetails, setSelectedComboDetails] = useState<Map<string, any>>(new Map())
 
   // Load Combos
   const loadCombos = async () => {
@@ -622,6 +632,15 @@ const SeatBookingPage = () => {
       }
     }
     
+    // Cache combo details for invoice display
+    if (details) {
+      setSelectedComboDetails((prev) => {
+        const newMap = new Map(prev);
+        newMap.set(combo.id!, details);
+        return newMap;
+      });
+    }
+    
     setSelectedCombos((prev) => [...prev, combo]);
   };
 
@@ -892,24 +911,61 @@ const SeatBookingPage = () => {
           clearInterval(countdownIntervalRef.current);
         }
         
-        // Reset states
-        setIsHolding(false);
-        setHeldSeatIds([]);
-        setHoldCountdown(0);
-        setSelectedSeats([]);
-        setSelectedCombos([]);
-        setSelectedMenuItems([]);
-        setSelectedEvent(null);
-        setComboDiscounts(new Map());
-        setOrderCreating(null);
+        // Store invoice data for display
+        setInvoiceData(response.data);
         
+        // Close confirmation and open invoice
         setConfirmDialogOpen(false);
+        setInvoiceDialogOpen(true);
         
-        // Optionally navigate to order details or home
-        // navigate(`/orders/${response.data.order.id}`);
+        // Don't reset states yet - wait until invoice dialog is closed
       } else {
         console.error("❌ Payment failed:", response.error);
-        toast.error(response.error || "Có lỗi xảy ra khi xử lý thanh toán");
+        
+        // Parse INSUFFICIENT_STOCK errors to show product names
+        if (response.error && typeof response.error === 'object' && response.error.code === 'INSUFFICIENT_STOCK') {
+          const details = response.error.details;
+          if (details) {
+            const menuItemErrors = details.menuItems?.filter((item: any) => !item.success) || [];
+            const comboErrors = details.combos?.filter((combo: any) => !combo.success) || [];
+            
+            let errorMessages: string[] = [];
+            
+            menuItemErrors.forEach((item: any) => {
+              if (item.error && item.error.available !== undefined) {
+                errorMessages.push(`${item.error.message || `Sản phẩm ${item.item_id}`}: Yêu cầu ${item.error.requested || item.quantity}, còn ${item.error.available}`);
+              }
+            });
+            
+            comboErrors.forEach((combo: any) => {
+              errorMessages.push(`Combo ${combo.combo_id} không đủ nguyên liệu`);
+            });
+            
+            if (errorMessages.length > 0) {
+              toast.error(
+                <div>
+                  <p className="font-bold mb-2">Không đủ số lượng:</p>
+                  <ul className="list-disc pl-4 space-y-1">
+                    {errorMessages.map((msg, i) => (
+                      <li key={i} className="text-sm">{msg}</li>
+                    ))}
+                  </ul>
+                </div>,
+                { duration: 8000 }
+              );
+            } else {
+              toast.error(response.error.message || "Không đủ số lượng trong kho");
+            }
+          } else {
+            toast.error(response.error.message || "Không đủ số lượng trong kho");
+          }
+        } else if (typeof response.error === 'string') {
+          toast.error(response.error);
+        } else if (response.error?.message) {
+          toast.error(response.error.message);
+        } else {
+          toast.error("Có lỗi xảy ra khi xử lý thanh toán");
+        }
       }
     } catch (error) {
       console.error("❌ Payment error:", error);
@@ -1656,51 +1712,118 @@ const SeatBookingPage = () => {
                   {showTimeDetail.room?.name} •{" "}
                   {formatTime(showTimeDetail.start_time)}
                 </p>
-                <Badge className="mt-1">
-                  {showTimeDetail.day_type === "WEEKEND"
-                    ? "Cuối tuần"
-                    : "Ngày thường"}
-                </Badge>
+                <div className="flex gap-2 mt-1">
+                  <Badge>{showTimeDetail.room?.format?.name || "2D"}</Badge>
+                  <Badge variant="outline">
+                    {showTimeDetail.day_type === "WEEKEND"
+                      ? "Cuối tuần"
+                      : "Ngày thường"}
+                  </Badge>
+                </div>
               </div>
             </div>
 
             <Separator />
 
+            {/* Seat Details with Types */}
             <div className="space-y-2">
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Ghế:</span>
-                <span className="font-medium">
-                  {selectedSeats.map((s) => s.seat_number).join(", ")}
-                </span>
+              <p className="font-semibold text-sm flex items-center gap-2">
+                <Ticket className="h-4 w-4" />
+                Ghế đã chọn ({selectedSeats.length}):
+              </p>
+              <div className="space-y-1 max-h-32 overflow-y-auto">
+                {selectedSeats.map((seat) => {
+                  const seatType = seat.seat_type?.name || seat.seat_type?.type || "Standard";
+                  const price = getPrice(
+                    showTimeDetail.room?.format?.id as string,
+                    seat.seat_type?.id as string,
+                    showTimeDetail.day_type as string
+                  );
+                  return (
+                    <div key={seat.id} className="flex justify-between items-center text-sm bg-muted/30 px-2 py-1 rounded">
+                      <div className="flex items-center gap-2">
+                        <Badge variant="outline" className="text-xs">
+                          {seat.seat_number}
+                        </Badge>
+                        <span className="text-muted-foreground text-xs">
+                          {seatType}
+                        </span>
+                      </div>
+                      <span className="font-medium text-xs">
+                        {formatPrice(price)}
+                      </span>
+                    </div>
+                  );
+                })}
               </div>
-
-              {selectedCombos.length > 0 && (
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Combo:</span>
-                  <span className="font-medium">
-                    {selectedCombos.map((c) => c.name).join(", ")}
-                  </span>
-                </div>
-              )}
-
-              {selectedMenuItems.length > 0 && (
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Món lẻ:</span>
-                  <span className="font-medium">
-                    {selectedMenuItems
-                      .map((m) => `${m.item.name} x${m.quantity}`)
-                      .join(", ")}
-                  </span>
-                </div>
-              )}
-
-              {selectedEvent && (
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Sự kiện:</span>
-                  <span className="font-medium">{selectedEvent.name}</span>
-                </div>
-              )}
             </div>
+
+            {/* Combos with Items */}
+            {selectedCombos.length > 0 && (
+              <div className="space-y-2">
+                <p className="font-semibold text-sm flex items-center gap-2">
+                  <UtensilsCrossed className="h-4 w-4" />
+                  Combo ({selectedCombos.length}):
+                </p>
+                <div className="space-y-2">
+                  {selectedCombos.map((combo) => {
+                    const details = selectedComboDetails.get(combo.id!);
+                    return (
+                      <div key={combo.id} className="bg-muted/30 px-2 py-1 rounded">
+                        <div className="flex justify-between items-center">
+                          <span className="font-medium text-sm">{combo.name}</span>
+                          <span className="text-sm font-medium">
+                            {formatPrice(combo.total_price || 0)}
+                          </span>
+                        </div>
+                        {details?.combo_items && details.combo_items.length > 0 && (
+                          <p className="text-xs text-muted-foreground mt-1">
+                            Bao gồm: {details.combo_items.map((item: any) => 
+                              `${item.menu_item?.name || 'Unknown'} x${item.quantity || 1}`
+                            ).join(", ")}
+                          </p>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* Menu Items */}
+            {selectedMenuItems.length > 0 && (
+              <div className="space-y-2">
+                <p className="font-semibold text-sm flex items-center gap-2">
+                  <Gift className="h-4 w-4" />
+                  Món lẻ ({selectedMenuItems.length}):
+                </p>
+                <div className="space-y-1">
+                  {selectedMenuItems.map((m) => (
+                    <div key={m.item.id} className="flex justify-between text-sm">
+                      <span>{m.item.name} x{m.quantity}</span>
+                      <span className="font-medium">
+                        {formatPrice(m.item.price * m.quantity)}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Event */}
+            {selectedEvent && (
+              <div className="flex items-center justify-between bg-purple-50 dark:bg-purple-950/30 p-2 rounded-lg">
+                <div className="flex items-center gap-2">
+                  <Calendar className="h-4 w-4 text-purple-600" />
+                  <span className="text-sm">Sự kiện: {selectedEvent.name}</span>
+                </div>
+                {selectedEvent.discount && selectedEvent.discount.is_active && (
+                  <Badge className="bg-green-500">
+                    -{selectedEvent.discount.discount_percent}%
+                  </Badge>
+                )}
+              </div>
+            )}
 
             <Separator />
 
@@ -1745,6 +1868,83 @@ const SeatBookingPage = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Invoice Dialog */}
+      <InvoiceDialog
+        open={invoiceDialogOpen}
+        onOpenChange={(open) => {
+          setInvoiceDialogOpen(open);
+          if (!open) {
+            // Reset all states when closing invoice dialog
+            setIsHolding(false);
+            setHeldSeatIds([]);
+            setHoldCountdown(0);
+            setSelectedSeats([]);
+            setSelectedCombos([]);
+            setSelectedMenuItems([]);
+            setSelectedEvent(null);
+            setComboDiscounts(new Map());
+            setOrderCreating(null);
+            setInvoiceData(null);
+            setSelectedComboDetails(new Map());
+            
+            // Refresh showtime data to get updated seat statuses
+            if (showTimeId) {
+              showTimeService.getShowTimeDetails(showTimeId).then(res => {
+                if (res.success && res.data) {
+                  setShowTimeDetail(res.data as ShowTimeDetailType);
+                }
+              });
+            }
+          }
+        }}
+        invoiceData={invoiceData}
+        movieInfo={{
+          title: showTimeDetail?.movie?.title || "Không xác định",
+          thumbnail: showTimeDetail?.movie?.thumbnail || showTimeDetail?.movie?.image,
+          duration: showTimeDetail?.movie?.duration,
+        }}
+        showTimeInfo={{
+          start_time: showTimeDetail?.start_time || "",
+          room_name: showTimeDetail?.room?.name || "N/A",
+          room_format: showTimeDetail?.room?.format?.name || "2D",
+          day_type: showTimeDetail?.day_type || "WEEKDAY",
+        }}
+        seatDetails={selectedSeats.map((seat) => ({
+          seat_number: seat.seat_number,
+          seat_type: seat.seat_type?.name || seat.seat_type?.type || "Standard",
+          price: getPrice(
+            showTimeDetail?.room?.format?.id as string,
+            seat.seat_type?.id as string,
+            showTimeDetail?.day_type as string
+          ),
+        }))}
+        comboDetails={selectedCombos.map((combo) => {
+          const details = selectedComboDetails.get(combo.id!);
+          return {
+            name: combo.name,
+            price: combo.total_price || 0,
+            items: details?.combo_items?.map((item: any) => ({
+              name: item.menu_item?.name || "Unknown",
+              quantity: item.quantity || 1,
+            })) || [],
+          };
+        })}
+        menuItemDetails={selectedMenuItems.map((m) => ({
+          name: m.item.name,
+          quantity: m.quantity,
+          unit_price: m.item.price,
+          total_price: m.item.price * m.quantity,
+        }))}
+        totals={{
+          subtotal: calculatedTotals.subtotal,
+          discountPercent: calculatedTotals.discountPercent,
+          discountAmount: calculatedTotals.discountAmount,
+          serviceVat: calculatedTotals.serviceVat,
+          total: calculatedTotals.total,
+        }}
+        eventName={selectedEvent?.name}
+      />
     </div>
   );
 };

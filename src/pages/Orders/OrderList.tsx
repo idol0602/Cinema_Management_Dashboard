@@ -41,11 +41,17 @@ import {
   UtensilsCrossed,
   Package,
   Percent,
+  Printer,
+  MapPin,
+  Clock,
+  Sparkles,
+  Receipt,
 } from "lucide-react";
 import type { OrderType, OrderDetails, PaymentStatus } from "@/types/order.type";
 import type { PaginationMeta } from "@/types/pagination.type";
 import { orderPaginationConfig } from "@/config/paginate/order.config";
-import { formatVietnamFullDateTime } from "@/utils/datetime";
+import { formatVietnamFullDateTime, formatVietnamTime } from "@/utils/datetime";
+import InvoiceDialog from "@/components/invoices/InvoiceDialog";
 
 const OrderList = () => {
   const [orders, setOrders] = useState<OrderType[]>([]);
@@ -67,6 +73,9 @@ const OrderList = () => {
   const [detailDialogOpen, setDetailDialogOpen] = useState(false);
   const [selectedOrderDetails, setSelectedOrderDetails] = useState<OrderDetails | null>(null);
   const [detailLoading, setDetailLoading] = useState(false);
+
+  // Invoice dialog states
+  const [invoiceDialogOpen, setInvoiceDialogOpen] = useState(false);
 
   const paymentStatusOptions = [
     { value: "PENDING", label: "Chờ thanh toán" },
@@ -161,6 +170,7 @@ const OrderList = () => {
     
     try {
       const response = await orderService.getOrderDetails(order.id);
+      console.log(response);
       if (response.success && response.data) {
         setSelectedOrderDetails(response.data as OrderDetails);
       } else {
@@ -385,6 +395,15 @@ const OrderList = () => {
                             >
                               <Eye className="h-4 w-4" />
                             </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleView(order)}
+                              title="In vé"
+                              className="text-blue-500 hover:text-blue-700"
+                            >
+                              <Printer className="h-4 w-4" />
+                            </Button>
                           </div>
                         </TableCell>
                       </TableRow>
@@ -465,9 +484,20 @@ const OrderList = () => {
       <Dialog open={detailDialogOpen} onOpenChange={setDetailDialogOpen}>
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <ShoppingCart className="h-5 w-5" />
-              Chi Tiết Đơn Hàng
+            <DialogTitle className="flex items-center justify-between">
+              <span className="flex items-center gap-2">
+                <ShoppingCart className="h-5 w-5" />
+                Chi Tiết Đơn Hàng
+              </span>
+              {selectedOrderDetails && (
+                <Button
+                  onClick={() => setInvoiceDialogOpen(true)}
+                  className="bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600"
+                >
+                  <Printer className="h-4 w-4 mr-2" />
+                  In Vé
+                </Button>
+              )}
             </DialogTitle>
           </DialogHeader>
 
@@ -480,10 +510,10 @@ const OrderList = () => {
           ) : selectedOrderDetails ? (
             <div className="space-y-6">
               {/* Order Info */}
-              <div className="grid grid-cols-2 gap-4 p-4 bg-muted/50 rounded-lg">
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-4 p-4 bg-muted/50 rounded-lg">
                 <div>
                   <p className="text-sm text-muted-foreground">Mã đơn hàng</p>
-                  <p className="font-mono font-semibold">{selectedOrderDetails.order.id}</p>
+                  <p className="font-mono font-semibold text-sm break-all">{selectedOrderDetails.order.id}</p>
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Trạng thái</p>
@@ -491,7 +521,7 @@ const OrderList = () => {
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Phương thức thanh toán</p>
-                  <p className="font-semibold">{selectedOrderDetails.order.payment_method}</p>
+                  <p className="font-semibold">{selectedOrderDetails.order.payment_method || "Tại quầy"}</p>
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Tổng tiền</p>
@@ -500,11 +530,17 @@ const OrderList = () => {
                   </p>
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Ngày tạo</p>
+                  <p className="text-sm text-muted-foreground">Thuế VAT dịch vụ (10%)</p>
+                  <p className="font-semibold text-orange-500">
+                    {formatCurrency(selectedOrderDetails.order.service_vat)}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Ngày đặt</p>
                   <p className="font-semibold">{formatDate(selectedOrderDetails.order.created_at)}</p>
                 </div>
                 {selectedOrderDetails.order.trans_id && (
-                  <div>
+                  <div className="col-span-full">
                     <p className="text-sm text-muted-foreground">Mã giao dịch</p>
                     <p className="font-mono font-semibold">{selectedOrderDetails.order.trans_id}</p>
                   </div>
@@ -517,14 +553,14 @@ const OrderList = () => {
                   <User className="h-4 w-4" />
                   Thông Tin Khách Hàng
                 </h3>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                   <div>
                     <p className="text-sm text-muted-foreground">Họ tên</p>
                     <p className="font-semibold">{selectedOrderDetails.user.name}</p>
                   </div>
                   <div>
                     <p className="text-sm text-muted-foreground">Email</p>
-                    <p className="font-semibold">{selectedOrderDetails.user.email}</p>
+                    <p className="font-semibold text-sm break-all">{selectedOrderDetails.user.email}</p>
                   </div>
                   <div>
                     <p className="text-sm text-muted-foreground">Số điện thoại</p>
@@ -544,23 +580,59 @@ const OrderList = () => {
                     <img
                       src={selectedOrderDetails.movie.thumbnail}
                       alt={selectedOrderDetails.movie.title}
-                      className="w-24 h-32 object-cover rounded"
+                      className="w-24 h-32 object-cover rounded shadow-md"
                     />
                   )}
-                  <div className="flex-1">
+                  <div className="flex-1 space-y-1">
                     <p className="font-semibold text-lg">{selectedOrderDetails.movie.title}</p>
                     <p className="text-sm text-muted-foreground">
-                      Đạo diễn: {selectedOrderDetails.movie.director}
+                      <span className="font-medium">Đạo diễn:</span> {selectedOrderDetails.movie.director}
                     </p>
                     <p className="text-sm text-muted-foreground">
-                      Thể loại: {selectedOrderDetails.movie.movie_type?.type}
+                      <span className="font-medium">Thể loại:</span> {selectedOrderDetails.movie.movie_type?.type}
                     </p>
                     <p className="text-sm text-muted-foreground">
-                      Thời lượng: {selectedOrderDetails.movie.duration} phút
+                      <span className="font-medium">Thời lượng:</span> {selectedOrderDetails.movie.duration} phút
                     </p>
+                    <p className="text-sm text-muted-foreground">
+                      <span className="font-medium">Quốc gia:</span> {selectedOrderDetails.movie.country}
+                    </p>
+                    <div className="flex items-center gap-1">
+                      <span className="text-sm text-muted-foreground font-medium">Đánh giá:</span>
+                      <Badge variant="secondary">{selectedOrderDetails.movie.rating?.toFixed(1)}/10</Badge>
+                    </div>
                   </div>
                 </div>
               </div>
+
+              {/* Event Info */}
+              {selectedOrderDetails.event && (
+                <div className="border rounded-lg p-4 bg-gradient-to-r from-purple-500/10 to-pink-500/10">
+                  <h3 className="font-semibold flex items-center gap-2 mb-3">
+                    <Sparkles className="h-4 w-4 text-purple-500" />
+                    Sự Kiện Áp Dụng
+                  </h3>
+                  <div className="flex gap-4">
+                    {selectedOrderDetails.event.image && (
+                      <img
+                        src={selectedOrderDetails.event.image}
+                        alt={selectedOrderDetails.event.name}
+                        className="w-20 h-20 object-cover rounded"
+                      />
+                    )}
+                    <div className="flex-1">
+                      <p className="font-semibold text-purple-600">{selectedOrderDetails.event.name}</p>
+                      <p className="text-sm text-muted-foreground">{selectedOrderDetails.event.description}</p>
+                      <div className="flex gap-2 mt-2">
+                        <Badge variant="outline">{selectedOrderDetails.event.event_type?.name}</Badge>
+                        <Badge variant="secondary">
+                          {formatDate(selectedOrderDetails.event.start_date)} - {formatDate(selectedOrderDetails.event.end_date)}
+                        </Badge>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
 
               {/* Tickets */}
               {selectedOrderDetails.tickets && selectedOrderDetails.tickets.length > 0 && (
@@ -569,26 +641,47 @@ const OrderList = () => {
                     <Ticket className="h-4 w-4" />
                     Vé ({selectedOrderDetails.tickets.length} vé)
                   </h3>
-                  <div className="space-y-2">
-                    {selectedOrderDetails.tickets.map((ticket) => (
+                  <div className="space-y-3">
+                    {selectedOrderDetails.tickets.map((ticket, index) => (
                       <div
                         key={ticket.id}
-                        className="flex justify-between items-center p-3 bg-muted/50 rounded"
+                        className="flex flex-col md:flex-row justify-between items-start md:items-center p-4 bg-muted/50 rounded-lg gap-4"
                       >
-                        <div>
-                          <p className="font-semibold">
-                            Ghế {ticket.showtime_seat.seat.seat_number} -{" "}
-                            {ticket.showtime_seat.seat.seat_type.name}
-                          </p>
-                          <p className="text-sm text-muted-foreground">
-                            Phòng: {ticket.showtime.room.name} ({ticket.showtime.room.format.name})
-                          </p>
-                          <p className="text-sm text-muted-foreground">
-                            Suất chiếu: {formatDate(ticket.showtime.start_time)}
-                          </p>
+                        <div className="flex items-start gap-4">
+                          {/* QR Code */}
+                          {ticket.qr_code && (
+                            <div className="w-16 h-16 bg-white flex items-center justify-center rounded border shrink-0">
+                              <img
+                                src={ticket.qr_code}
+                                alt="QR Code"
+                                className="w-14 h-14 object-contain"
+                              />
+                            </div>
+                          )}
+                          <div>
+                            <div className="flex items-center gap-2 mb-1">
+                              <Badge className="text-sm px-3 py-1">
+                                Ghế {ticket.showtime_seat.seat.seat_number}
+                              </Badge>
+                              <Badge variant="outline">
+                                {ticket.showtime_seat.seat.seat_type.name}
+                              </Badge>
+                            </div>
+                            <p className="text-sm text-muted-foreground flex items-center gap-1">
+                              <MapPin className="h-3 w-3" />
+                              Phòng: {ticket.showtime.room.name} ({ticket.showtime.room.format.name})
+                            </p>
+                            <p className="text-sm text-muted-foreground flex items-center gap-1">
+                              <Clock className="h-3 w-3" />
+                              Suất chiếu: {formatVietnamTime(ticket.showtime.start_time)}
+                            </p>
+                            <p className="text-xs text-muted-foreground mt-1">
+                              Mã vé: {ticket.id?.slice(-12) || "N/A"}
+                            </p>
+                          </div>
                         </div>
                         <div className="text-right">
-                          <p className="font-semibold">
+                          <p className="font-semibold text-primary text-lg">
                             {formatCurrency(ticket.ticket_price.price)}
                           </p>
                           <Badge variant={ticket.checked_in ? "default" : "outline"}>
@@ -606,7 +699,7 @@ const OrderList = () => {
                 <div className="border rounded-lg p-4">
                   <h3 className="font-semibold flex items-center gap-2 mb-3">
                     <UtensilsCrossed className="h-4 w-4" />
-                    Đồ Ăn/Uống
+                    Đồ Ăn/Uống ({selectedOrderDetails.menu_items.length} món)
                   </h3>
                   <div className="space-y-2">
                     {selectedOrderDetails.menu_items.map((menuItem) => (
@@ -625,11 +718,11 @@ const OrderList = () => {
                           <div>
                             <p className="font-semibold">{menuItem.item.name}</p>
                             <p className="text-sm text-muted-foreground">
-                              Số lượng: {menuItem.quantity} x {formatCurrency(menuItem.unit_price)}
+                              {menuItem.quantity} x {formatCurrency(menuItem.unit_price)}
                             </p>
                           </div>
                         </div>
-                        <p className="font-semibold">
+                        <p className="font-semibold text-primary">
                           {formatCurrency(menuItem.total_price)}
                         </p>
                       </div>
@@ -643,7 +736,7 @@ const OrderList = () => {
                 <div className="border rounded-lg p-4">
                   <h3 className="font-semibold flex items-center gap-2 mb-3">
                     <Package className="h-4 w-4" />
-                    Combo
+                    Combo ({selectedOrderDetails.combos.length})
                   </h3>
                   <div className="space-y-2">
                     {selectedOrderDetails.combos.map((comboItem) => (
@@ -653,12 +746,12 @@ const OrderList = () => {
                       >
                         <div className="flex justify-between items-center mb-2">
                           <p className="font-semibold">{comboItem.combo.name}</p>
-                          <p className="font-semibold">
+                          <p className="font-semibold text-primary">
                             {formatCurrency(comboItem.combo.total_price)}
                           </p>
                         </div>
                         <p className="text-sm text-muted-foreground">
-                          {comboItem.combo.items?.map((item) => 
+                          Bao gồm: {comboItem.combo.items?.map((item) => 
                             `${item.menu_item.name} x${item.quantity}`
                           ).join(", ")}
                         </p>
@@ -670,24 +763,80 @@ const OrderList = () => {
 
               {/* Discount */}
               {selectedOrderDetails.discount && (
-                <div className="border rounded-lg p-4">
+                <div className="border rounded-lg p-4 bg-gradient-to-r from-green-500/10 to-emerald-500/10">
                   <h3 className="font-semibold flex items-center gap-2 mb-3">
-                    <Percent className="h-4 w-4" />
-                    Giảm Giá
+                    <Percent className="h-4 w-4 text-green-500" />
+                    Mã Giảm Giá
                   </h3>
                   <div className="flex justify-between items-center">
                     <div>
-                      <p className="font-semibold">{selectedOrderDetails.discount.name}</p>
+                      <p className="font-semibold text-green-600">{selectedOrderDetails.discount.name}</p>
                       <p className="text-sm text-muted-foreground">
                         {selectedOrderDetails.discount.description}
                       </p>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Có hiệu lực: {formatDate(selectedOrderDetails.discount.valid_from)} - {formatDate(selectedOrderDetails.discount.valid_to)}
+                      </p>
                     </div>
-                    <Badge className="bg-green-500">
+                    <Badge className="bg-green-500 text-lg px-4 py-2">
                       -{selectedOrderDetails.discount.discount_percent}%
                     </Badge>
                   </div>
                 </div>
               )}
+
+              {/* Order Summary */}
+              <div className="border rounded-lg p-4 bg-gradient-to-r from-primary/5 to-primary/10">
+                <h3 className="font-semibold flex items-center gap-2 mb-3">
+                  <Receipt className="h-4 w-4" />
+                  Tổng Kết Đơn Hàng
+                </h3>
+                <div className="space-y-2">
+                  <div className="flex justify-between text-sm">
+                    <span>Tiền vé ({selectedOrderDetails.tickets?.length || 0} vé):</span>
+                    <span>{formatCurrency(
+                      selectedOrderDetails.tickets?.reduce((sum, t) => sum + (t.ticket_price?.price || 0), 0) || 0
+                    )}</span>
+                  </div>
+                  {selectedOrderDetails.menu_items && selectedOrderDetails.menu_items.length > 0 && (
+                    <div className="flex justify-between text-sm">
+                      <span>Đồ ăn/uống:</span>
+                      <span>{formatCurrency(
+                        selectedOrderDetails.menu_items.reduce((sum, m) => sum + (m.total_price || 0), 0)
+                      )}</span>
+                    </div>
+                  )}
+                  {selectedOrderDetails.combos && selectedOrderDetails.combos.length > 0 && (
+                    <div className="flex justify-between text-sm">
+                      <span>Combo:</span>
+                      <span>{formatCurrency(
+                        selectedOrderDetails.combos.reduce((sum, c) => sum + (c.combo?.total_price || 0), 0)
+                      )}</span>
+                    </div>
+                  )}
+                  {selectedOrderDetails.discount && (
+                    <div className="flex justify-between text-sm text-green-600">
+                      <span>Giảm giá ({selectedOrderDetails.discount.discount_percent}%):</span>
+                      <span>-{formatCurrency(
+                        (selectedOrderDetails.order.total_price - selectedOrderDetails.order.service_vat) * 
+                        (selectedOrderDetails.discount.discount_percent / (100 - selectedOrderDetails.discount.discount_percent))
+                      )}</span>
+                    </div>
+                  )}
+                  <div className="flex justify-between text-sm text-orange-600">
+                    <span>Phí dịch vụ (10% VAT):</span>
+                    <span>+{formatCurrency(selectedOrderDetails.order.service_vat)}</span>
+                  </div>
+                  <div className="border-t pt-2 mt-2">
+                    <div className="flex justify-between items-center">
+                      <span className="font-bold text-lg">Tổng thanh toán:</span>
+                      <span className="text-2xl font-bold text-primary">
+                        {formatCurrency(selectedOrderDetails.order.total_price)}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
           ) : (
             <div className="text-center py-8 text-muted-foreground">
@@ -696,6 +845,71 @@ const OrderList = () => {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Invoice Dialog */}
+      {selectedOrderDetails && (
+        <InvoiceDialog
+          open={invoiceDialogOpen}
+          onOpenChange={setInvoiceDialogOpen}
+          invoiceData={{
+            order: {
+              id: selectedOrderDetails.order.id,
+              total_price: selectedOrderDetails.order.total_price,
+              service_vat: selectedOrderDetails.order.service_vat,
+              created_at: selectedOrderDetails.order.created_at,
+            },
+            tickets: selectedOrderDetails.tickets?.map((ticket) => ({
+              ...ticket,
+              qr_code: ticket.qr_code || "",
+            })) || [],
+          }}
+          movieInfo={{
+            title: selectedOrderDetails.movie.title,
+            thumbnail: selectedOrderDetails.movie.thumbnail,
+            duration: selectedOrderDetails.movie.duration,
+          }}
+          showTimeInfo={{
+            start_time: selectedOrderDetails.tickets?.[0]?.showtime?.start_time || "",
+            room_name: selectedOrderDetails.tickets?.[0]?.showtime?.room?.name || "",
+            room_format: selectedOrderDetails.tickets?.[0]?.showtime?.room?.format?.name || "",
+            day_type: selectedOrderDetails.tickets?.[0]?.showtime?.day_type || "WEEKDAY",
+          }}
+          seatDetails={selectedOrderDetails.tickets?.map((ticket) => ({
+            seat_number: ticket.showtime_seat?.seat?.seat_number || "",
+            seat_type: ticket.showtime_seat?.seat?.seat_type?.name || "Standard",
+            price: ticket.ticket_price?.price || 0,
+          })) || []}
+          comboDetails={selectedOrderDetails.combos?.map((comboItem) => ({
+            name: comboItem.combo.name,
+            price: comboItem.combo.total_price,
+            items: comboItem.combo.items?.map((item) => ({
+              name: item.menu_item.name,
+              quantity: item.quantity,
+            })) || [],
+          })) || []}
+          menuItemDetails={selectedOrderDetails.menu_items?.map((menuItem) => ({
+            name: menuItem.item.name,
+            quantity: menuItem.quantity,
+            unit_price: menuItem.unit_price,
+            total_price: menuItem.total_price,
+          })) || []}
+          totals={{
+            subtotal: (() => {
+              const ticketTotal = selectedOrderDetails.tickets?.reduce((sum, t) => sum + (t.ticket_price?.price || 0), 0) || 0;
+              const menuTotal = selectedOrderDetails.menu_items?.reduce((sum, m) => sum + (m.total_price || 0), 0) || 0;
+              const comboTotal = selectedOrderDetails.combos?.reduce((sum, c) => sum + (c.combo?.total_price || 0), 0) || 0;
+              return ticketTotal + menuTotal + comboTotal;
+            })(),
+            discountPercent: selectedOrderDetails.discount?.discount_percent || 0,
+            discountAmount: selectedOrderDetails.discount ? 
+              (selectedOrderDetails.order.total_price - selectedOrderDetails.order.service_vat) * 
+              (selectedOrderDetails.discount.discount_percent / (100 - selectedOrderDetails.discount.discount_percent)) : 0,
+            serviceVat: selectedOrderDetails.order.service_vat,
+            total: selectedOrderDetails.order.total_price,
+          }}
+          eventName={selectedOrderDetails.event?.name}
+        />
+      )}
     </div>
   );
 };
