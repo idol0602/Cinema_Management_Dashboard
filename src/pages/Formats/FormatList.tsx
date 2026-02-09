@@ -27,11 +27,11 @@ import {
   Plus,
   Search,
   Edit,
-  Trash2,
   Monitor,
   ChevronLeft,
   ChevronRight,
 } from "lucide-react";
+import { AlertDialogDestructive } from "@/components/ui/delete-dialog";
 import type { FormatType, UpdateFormatType } from "@/types/format.type";
 import type { PaginationMeta } from "@/types/pagination.type";
 import { formatPaginateConfig } from "@/config/paginate/format.config";
@@ -172,12 +172,6 @@ const FormatList = () => {
   };
 
   const handleDelete = async (format: FormatType) => {
-    if (
-      !confirm(`Bạn có chắc chắn muốn xóa định dạng "${format.name}" không?`)
-    ) {
-      return;
-    }
-
     try {
       const response = await formatService.remove(format.id as string);
       if (response.success) {
@@ -313,15 +307,10 @@ const FormatList = () => {
                               <Edit className="h-4 w-4" />
                             </Button>
                             {format.is_active !== false && (
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => handleDelete(format)}
-                                title="Xóa"
-                                className="text-destructive hover:text-destructive"
-                              >
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
+                              <AlertDialogDestructive
+                                callback={handleDelete}
+                                payload={format}
+                              />
                             )}
                           </div>
                         </TableCell>

@@ -29,10 +29,10 @@ import {
   ChevronLeft,
   ChevronRight,
   Pencil,
-  Trash2,
   Eye,
   Film,
 } from "lucide-react";
+import { AlertDialogDestructive } from "@/components/ui/delete-dialog";
 import { Combobox } from "@/components/ui/combobox";
 import { MovieTypeCreateDialog } from "@/components/movieTypes/MovieTypeCreateDialig";
 import { MovieTypeEditDialog } from "@/components/movieTypes/MovieTypeEditDialog";
@@ -69,7 +69,7 @@ const MovieTypeList = () => {
       movieTypePaginateConfig.defaultSortBy[0][1],
     search = undefined,
     searchBy = undefined,
-    filter = {}
+    filter = {},
   ) => {
     setLoading(true);
     try {
@@ -123,14 +123,11 @@ const MovieTypeList = () => {
       sortBy,
       searchQuery || undefined,
       searchColumn || undefined,
-      Object.keys(filter).length > 0 ? filter : undefined
+      Object.keys(filter).length > 0 ? filter : undefined,
     );
   };
 
   const handleDelete = async (movieType: movieTypeType) => {
-    if (!confirm(`Bạn có chắc muốn xóa thể loại phim "${movieType.type}"?`)) {
-      return;
-    }
     try {
       const response = await movieTypeService.remove(movieType.id as string);
       if (response.success) {
@@ -178,7 +175,7 @@ const MovieTypeList = () => {
     try {
       const response = await movieTypeService.update(
         selectedMovieType?.id as string,
-        data
+        data,
       );
       if (response.success) {
         toast.success("Cập nhật thể loại phim thành công");
@@ -331,13 +328,10 @@ const MovieTypeList = () => {
                             >
                               <Pencil className="h-4 w-4" />
                             </Button>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => handleDelete(movieType)}
-                            >
-                              <Trash2 className="h-4 w-4 text-destructive" />
-                            </Button>
+                            <AlertDialogDestructive
+                              callback={handleDelete}
+                              payload={movieType}
+                            />
                           </div>
                         </TableCell>
                       </TableRow>
@@ -352,7 +346,7 @@ const MovieTypeList = () => {
                   Hiển thị {(meta.currentPage - 1) * meta.itemsPerPage + 1} -{" "}
                   {Math.min(
                     meta.currentPage * meta.itemsPerPage,
-                    meta.totalItems
+                    meta.totalItems,
                   )}{" "}
                   của {meta.totalItems} thể loại
                 </div>
@@ -374,7 +368,7 @@ const MovieTypeList = () => {
                         (page) =>
                           page === 1 ||
                           page === meta.totalPages ||
-                          Math.abs(page - currentPage) <= 1
+                          Math.abs(page - currentPage) <= 1,
                       )
                       .map((page, index, array) => (
                         <div key={page} className="flex items-center">
@@ -399,7 +393,7 @@ const MovieTypeList = () => {
                     size="sm"
                     onClick={() =>
                       setCurrentPage((prev) =>
-                        Math.min(meta.totalPages, prev + 1)
+                        Math.min(meta.totalPages, prev + 1),
                       )
                     }
                     disabled={currentPage === meta.totalPages}

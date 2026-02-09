@@ -27,11 +27,11 @@ import {
   Plus,
   Search,
   Edit,
-  Trash2,
   Armchair,
   ChevronLeft,
   ChevronRight,
 } from "lucide-react";
+import { AlertDialogDestructive } from "@/components/ui/delete-dialog";
 import type {
   SeatTypeDetailType,
   UpdateSeatTypeDetailType,
@@ -176,12 +176,6 @@ const SeatTypeList = () => {
   };
 
   const handleDelete = async (seatType: SeatTypeDetailType) => {
-    if (
-      !confirm(`Bạn có chắc chắn muốn xóa loại ghế "${seatType.name}" không?`)
-    ) {
-      return;
-    }
-
     try {
       const response = await seatTypeService.remove(seatType.id as string);
       if (response.success) {
@@ -317,15 +311,10 @@ const SeatTypeList = () => {
                               <Edit className="h-4 w-4" />
                             </Button>
                             {seatType.is_active !== false && (
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => handleDelete(seatType)}
-                                title="Xóa"
-                                className="text-destructive hover:text-destructive"
-                              >
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
+                              <AlertDialogDestructive
+                                callback={handleDelete}
+                                payload={seatType}
+                              />
                             )}
                           </div>
                         </TableCell>

@@ -18,6 +18,7 @@ import type { ChatMessage } from "@/types/chat.type";
 import { DynamicBarChart } from "../../components/charts/DynamicBarChart";
 import { DynamicLineChart } from "../../components/charts/DynamicLineChart";
 import { DynamicPieChart } from "../../components/charts/DynamicPieChart";
+import { AlertDialogDestructive } from "../../components/ui/delete-dialog";
 
 // Sample data for movie revenue
 const movieRevenueData = [

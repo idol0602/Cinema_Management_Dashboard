@@ -29,11 +29,11 @@ import {
   ChevronLeft,
   ChevronRight,
   Pencil,
-  Trash2,
   Eye,
   ImageIcon,
   PlayCircle,
 } from "lucide-react";
+import { AlertDialogDestructive } from "@/components/ui/delete-dialog";
 import { Combobox } from "@/components/ui/combobox";
 import { SlideCreateDialog } from "@/components/slides/SlideCreateDialog";
 import { SlideEditDialog } from "@/components/slides/SlideEditDialog";
@@ -69,7 +69,7 @@ const SlideList = () => {
       slidePaginateConfig.defaultSortBy[0][1],
     search = undefined,
     searchBy = undefined,
-    filter: Record<string, any> | undefined = undefined
+    filter: Record<string, any> | undefined = undefined,
   ) => {
     setLoading(true);
     try {
@@ -124,7 +124,7 @@ const SlideList = () => {
       sortBy,
       searchQuery || undefined,
       searchColumn || undefined,
-      Object.keys(filter).length > 0 ? filter : undefined
+      Object.keys(filter).length > 0 ? filter : undefined,
     );
   };
 
@@ -155,7 +155,7 @@ const SlideList = () => {
     try {
       const response = await slideService.update(
         selectedSlide.id as string,
-        data
+        data,
       );
       if (response.success) {
         toast.success("Cập nhật slide banner thành công!");
@@ -170,10 +170,6 @@ const SlideList = () => {
   };
 
   const handleDelete = async (slide: SlideType) => {
-    if (!confirm(`Bạn có chắc chắn muốn xóa slide "${slide.title}" không?`)) {
-      return;
-    }
-
     try {
       const response = await slideService.delete(slide.id as string);
       if (response.success) {
@@ -367,13 +363,10 @@ const SlideList = () => {
                             >
                               <Pencil className="h-4 w-4" />
                             </Button>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => handleDelete(slide)}
-                            >
-                              <Trash2 className="h-4 w-4 text-destructive" />
-                            </Button>
+                            <AlertDialogDestructive
+                              callback={handleDelete}
+                              payload={slide}
+                            />
                           </div>
                         </TableCell>
                       </TableRow>
@@ -388,7 +381,7 @@ const SlideList = () => {
                   Hiển thị {(meta.currentPage - 1) * meta.itemsPerPage + 1} -{" "}
                   {Math.min(
                     meta.currentPage * meta.itemsPerPage,
-                    meta.totalItems
+                    meta.totalItems,
                   )}{" "}
                   của {meta.totalItems} slide
                 </div>
@@ -410,7 +403,7 @@ const SlideList = () => {
                         (page) =>
                           page === 1 ||
                           page === meta.totalPages ||
-                          Math.abs(page - currentPage) <= 1
+                          Math.abs(page - currentPage) <= 1,
                       )
                       .map((page, index, array) => (
                         <div key={page} className="flex items-center">
@@ -435,7 +428,7 @@ const SlideList = () => {
                     size="sm"
                     onClick={() =>
                       setCurrentPage((prev) =>
-                        Math.min(meta.totalPages, prev + 1)
+                        Math.min(meta.totalPages, prev + 1),
                       )
                     }
                     disabled={currentPage === meta.totalPages}

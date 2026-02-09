@@ -26,7 +26,6 @@ import { Combobox } from "@/components/ui/combobox";
 import {
   Plus,
   Search,
-  Trash2,
   Film,
   Eye,
   ChevronLeft,
@@ -34,6 +33,7 @@ import {
   Calendar,
   Clock,
 } from "lucide-react";
+import { AlertDialogDestructive } from "@/components/ui/delete-dialog";
 import type { ShowTimeType } from "@/types/showTime.type";
 import type { RoomType } from "@/types/room.type";
 import type { MovieType } from "@/types/movie.type";
@@ -55,10 +55,10 @@ const ShowTimeList = () => {
   const [orderColumn, setOrderColumn] = useState("");
   const [searchColumn, setSearchColumn] = useState("movies.title");
   const [startDate, setStartDate] = useState(
-    new Date().toISOString().split("T")[0]
+    new Date().toISOString().split("T")[0],
   );
   const [endDate, setEndDate] = useState(
-    new Date().toISOString().split("T")[0]
+    new Date().toISOString().split("T")[0],
   );
   const [meta, setMeta] = useState<PaginationMeta>({
     itemsPerPage: showTimePaginateConfig.defaultLimit,
@@ -70,7 +70,7 @@ const ShowTimeList = () => {
   // Dialog states
   const [detailDialogOpen, setDetailDialogOpen] = useState(false);
   const [selectedShowTime, setSelectedShowTime] = useState<ShowTimeType | null>(
-    null
+    null,
   );
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
 
@@ -105,7 +105,7 @@ const ShowTimeList = () => {
     searchBy = undefined,
     filter = {
       is_active: true,
-    }
+    },
   ) => {
     setLoading(true);
     try {
@@ -172,7 +172,7 @@ const ShowTimeList = () => {
       sortBy,
       searchQuery || undefined,
       searchColumn || undefined,
-      Object.keys(filter).length > 0 ? filter : undefined
+      Object.keys(filter).length > 0 ? filter : undefined,
     );
   };
 
@@ -188,9 +188,6 @@ const ShowTimeList = () => {
   };
 
   const handleDelete = async (showTime: ShowTimeType) => {
-    if (!confirm(`Bạn có chắc chắn muốn xóa lịch chiếu này không?`)) {
-      return;
-    }
     try {
       const response = await showTimeService.delete(showTime.id as string);
       if (response.success) {
@@ -204,7 +201,6 @@ const ShowTimeList = () => {
       console.error(error);
     }
   };
-
 
   // Get badge color based on day type
   const getDayTypeBadge = (dayType?: string) => {
@@ -407,7 +403,9 @@ const ShowTimeList = () => {
                         <TableCell>
                           <div className="flex items-center gap-1">
                             <Calendar className="h-4 w-4 text-muted-foreground" />
-                            {formatDateToVietnamese(showTime.movies.release_date)}
+                            {formatDateToVietnamese(
+                              showTime.movies.release_date,
+                            )}
                           </div>
                         </TableCell>
                         <TableCell>
@@ -440,17 +438,10 @@ const ShowTimeList = () => {
                             {showTime.is_active === false ? (
                               <></>
                             ) : (
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => {
-                                  handleDelete(showTime);
-                                }}
-                                title="Xóa"
-                                className="text-destructive hover:text-destructive"
-                              >
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
+                              <AlertDialogDestructive
+                                callback={handleDelete}
+                                payload={showTime}
+                              />
                             )}
                           </div>
                         </TableCell>
@@ -466,7 +457,7 @@ const ShowTimeList = () => {
                   Hiển thị {(meta.currentPage - 1) * meta.itemsPerPage + 1} -{" "}
                   {Math.min(
                     meta.currentPage * meta.itemsPerPage,
-                    meta.totalItems
+                    meta.totalItems,
                   )}{" "}
                   của {meta.totalItems} suất chiếu
                 </div>
@@ -488,7 +479,7 @@ const ShowTimeList = () => {
                         (page) =>
                           page === 1 ||
                           page === meta.totalPages ||
-                          Math.abs(page - currentPage) <= 1
+                          Math.abs(page - currentPage) <= 1,
                       )
                       .map((page, index, array) => (
                         <div key={page} className="flex items-center">
@@ -513,7 +504,7 @@ const ShowTimeList = () => {
                     size="sm"
                     onClick={() =>
                       setCurrentPage((prev) =>
-                        Math.min(meta.totalPages, prev + 1)
+                        Math.min(meta.totalPages, prev + 1),
                       )
                     }
                     disabled={currentPage === meta.totalPages}

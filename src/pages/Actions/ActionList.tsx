@@ -27,11 +27,11 @@ import {
   Plus,
   Search,
   Edit,
-  Trash2,
   Zap,
   ChevronLeft,
   ChevronRight,
 } from "lucide-react";
+import { AlertDialogDestructive } from "@/components/ui/delete-dialog";
 import type { ActionType, UpdateActionType } from "@/types/action.type";
 import type { PaginationMeta } from "@/types/pagination.type";
 import { actionPaginateConfig } from "@/config/paginate/action.config";
@@ -176,12 +176,6 @@ const ActionList = () => {
   };
 
   const handleDelete = async (action: ActionType) => {
-    if (
-      !confirm(`Bạn có chắc chắn muốn xóa hành động "${action.name}" không?`)
-    ) {
-      return;
-    }
-
     try {
       const response = await actionService.remove(action.id as string);
       if (response.success) {
@@ -343,15 +337,10 @@ const ActionList = () => {
                               <Edit className="h-4 w-4" />
                             </Button>
                             {action.is_active !== false && (
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => handleDelete(action)}
-                                title="Xóa"
-                                className="text-destructive hover:text-destructive"
-                              >
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
+                              <AlertDialogDestructive
+                                callback={handleDelete}
+                                payload={action}
+                              />
                             )}
                           </div>
                         </TableCell>

@@ -31,12 +31,12 @@ import {
   Plus,
   Search,
   Edit,
-  Trash2,
   Armchair,
   Upload,
   ChevronLeft,
   ChevronRight,
 } from "lucide-react";
+import { AlertDialogDestructive } from "@/components/ui/delete-dialog";
 import type { SeatType } from "@/types/seat.type";
 import type { SeatTypeType } from "@/types/seatType.type";
 import type { RoomType } from "@/types/room.type";
@@ -323,20 +323,18 @@ const SeatList = () => {
     }
   };
 
-  const handleDelete = async (seatId: string, seatNumber: string) => {
-    if (window.confirm(`Bạn có chắc chắn muốn xóa ghế ${seatNumber} không?`)) {
-      try {
-        const response = await seatService.delete(seatId);
-        if (response.success) {
-          toast.success("Xóa ghế thành công!");
-          handleSearch();
-        } else {
-          toast.error("Không thể xóa ghế");
-        }
-      } catch (error) {
-        toast.error("Có lỗi xảy ra");
-        console.error(error);
+  const handleDelete = async (seat: SeatType) => {
+    try {
+      const response = await seatService.delete(seat.id as string);
+      if (response.success) {
+        toast.success("Xóa ghế thành công!");
+        handleSearch();
+      } else {
+        toast.error("Không thể xóa ghế");
       }
+    } catch (error) {
+      toast.error("Có lỗi xảy ra");
+      console.error(error);
     }
   };
 
@@ -535,19 +533,10 @@ const SeatList = () => {
                                 >
                                   <Edit className="h-4 w-4" />
                                 </Button>
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  title="Xóa"
-                                  onClick={() =>
-                                    handleDelete(
-                                      seat.id as string,
-                                      seat.seat_number,
-                                    )
-                                  }
-                                >
-                                  <Trash2 className="h-4 w-4 text-red-500" />
-                                </Button>
+                                <AlertDialogDestructive
+                                  callback={handleDelete}
+                                  payload={seat}
+                                />
                               </div>
                             </TableCell>
                           </TableRow>

@@ -27,11 +27,11 @@ import {
   Plus,
   Search,
   Edit,
-  Trash2,
   Calendar,
   ChevronLeft,
   ChevronRight,
 } from "lucide-react";
+import { AlertDialogDestructive } from "@/components/ui/delete-dialog";
 import type {
   EventTypeType,
   UpdateEventTypeType,
@@ -176,14 +176,6 @@ const EventTypeList = () => {
   };
 
   const handleDelete = async (eventType: EventTypeType) => {
-    if (
-      !confirm(
-        `Bạn có chắc chắn muốn xóa loại sự kiện "${eventType.name}" không?`,
-      )
-    ) {
-      return;
-    }
-
     try {
       const response = await eventTypeService.delete(eventType.id as string);
       if (response.success) {
@@ -321,15 +313,10 @@ const EventTypeList = () => {
                               <Edit className="h-4 w-4" />
                             </Button>
                             {eventType.is_active !== false && (
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => handleDelete(eventType)}
-                                title="Xóa"
-                                className="text-destructive hover:text-destructive"
-                              >
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
+                              <AlertDialogDestructive
+                                callback={handleDelete}
+                                payload={eventType}
+                              />
                             )}
                           </div>
                         </TableCell>

@@ -30,12 +30,12 @@ import {
   Edit,
   Search,
   DollarSign,
-  Trash2,
   ChevronLeft,
   ChevronRight,
   Plus,
   Eye,
 } from "lucide-react";
+import { AlertDialogDestructive } from "@/components/ui/delete-dialog";
 import type { TicketPriceType } from "@/types/ticketPrice.type";
 import type { PaginationMeta } from "@/types/pagination.type";
 import type { FormatType } from "@/types/format.type";
@@ -180,14 +180,6 @@ const TicketPriceList = () => {
   };
 
   const handleDelete = async (ticketPrice: TicketPriceType) => {
-    if (
-      !confirm(
-        `Bạn có chắc chắn muốn xóa giá vé này (${ticketPrice.format_id} - ${ticketPrice.seat_type_id}) không?`,
-      )
-    ) {
-      return;
-    }
-
     try {
       const response = await ticketPriceService.delete(
         ticketPrice.id as string,
@@ -436,15 +428,10 @@ const TicketPriceList = () => {
                             {tp.is_active === false ? (
                               <></>
                             ) : (
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => handleDelete(tp)}
-                                title="Xóa"
-                                className="text-destructive hover:text-destructive"
-                              >
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
+                              <AlertDialogDestructive
+                                callback={handleDelete}
+                                payload={tp}
+                              />
                             )}
                           </div>
                         </TableCell>

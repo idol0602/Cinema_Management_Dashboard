@@ -30,11 +30,11 @@ import {
   ChevronLeft,
   ChevronRight,
   Pencil,
-  Trash2,
   Eye,
   Percent,
   Calendar,
 } from "lucide-react";
+import { AlertDialogDestructive } from "@/components/ui/delete-dialog";
 import { Combobox } from "@/components/ui/combobox";
 import DiscountCreateDialog from "@/components/discounts/DiscountCreateDialog";
 import DiscountEditDialog from "@/components/discounts/DiscountEditDialog";
@@ -64,7 +64,7 @@ const DiscountList = () => {
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [detailDialogOpen, setDetailDialogOpen] = useState(false);
   const [selectedDiscount, setSelectedDiscount] = useState<DiscountType | null>(
-    null
+    null,
   );
 
   const fetchEvents = async () => {
@@ -88,7 +88,7 @@ const DiscountList = () => {
       discountPaginateConfig.defaultSortBy[1],
     search = undefined,
     searchBy = undefined,
-    filter = {}
+    filter = {},
   ) => {
     setLoading(true);
     try {
@@ -146,7 +146,7 @@ const DiscountList = () => {
       sortBy,
       searchQuery || undefined,
       searchColumn || undefined,
-      Object.keys(filter).length > 0 ? filter : undefined
+      Object.keys(filter).length > 0 ? filter : undefined,
     );
   };
 
@@ -185,7 +185,7 @@ const DiscountList = () => {
     try {
       const response = await discountService.update(
         selectedDiscount.id as string,
-        data
+        data,
       );
       if (response.success) {
         toast.success("Cập nhật giảm giá thành công!");
@@ -200,12 +200,6 @@ const DiscountList = () => {
   };
 
   const handleDelete = async (discount: DiscountType) => {
-    if (
-      !confirm(`Bạn có chắc chắn muốn xóa giảm giá "${discount.name}" không?`)
-    ) {
-      return;
-    }
-
     try {
       const response = await discountService.delete(discount.id as string);
       if (response.success) {
@@ -393,13 +387,10 @@ const DiscountList = () => {
                             >
                               <Pencil className="h-4 w-4" />
                             </Button>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => handleDelete(discount)}
-                            >
-                              <Trash2 className="h-4 w-4 text-destructive" />
-                            </Button>
+                            <AlertDialogDestructive
+                              callback={handleDelete}
+                              payload={discount}
+                            />
                           </div>
                         </TableCell>
                       </TableRow>
@@ -414,7 +405,7 @@ const DiscountList = () => {
                   Hiển thị {(meta.currentPage - 1) * meta.itemsPerPage + 1} -{" "}
                   {Math.min(
                     meta.currentPage * meta.itemsPerPage,
-                    meta.totalItems
+                    meta.totalItems,
                   )}{" "}
                   của {meta.totalItems} giảm giá
                 </div>
@@ -436,7 +427,7 @@ const DiscountList = () => {
                         (page) =>
                           page === 1 ||
                           page === meta.totalPages ||
-                          Math.abs(page - currentPage) <= 1
+                          Math.abs(page - currentPage) <= 1,
                       )
                       .map((page, index, array) => (
                         <div key={page} className="flex items-center">
@@ -461,7 +452,7 @@ const DiscountList = () => {
                     size="sm"
                     onClick={() =>
                       setCurrentPage((prev) =>
-                        Math.min(meta.totalPages, prev + 1)
+                        Math.min(meta.totalPages, prev + 1),
                       )
                     }
                     disabled={currentPage === meta.totalPages}

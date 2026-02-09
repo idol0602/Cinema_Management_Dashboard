@@ -30,7 +30,6 @@ import {
   Plus,
   Search,
   Edit,
-  Trash2,
   Film,
   Upload,
   Eye,
@@ -41,14 +40,15 @@ import {
   Clock,
   Star,
 } from "lucide-react";
-import type { movieType } from "@/types/movie.type";
-import type { movieTypeType } from "@/types/movieType.type";
+import type { MovieType } from "@/types/movie.type";
+import type { MovieTypeType } from "@/types/movieType.type";
 import type { PaginationMeta } from "@/types/pagination.type";
 import { moviePaginateConfig } from "@/config/paginate/movie.config";
+import { AlertDialogDestructive } from "@/components/ui/delete-dialog";
 
 const MovieList = () => {
-  const [movies, setMovies] = useState<movieType[]>([]);
-  const [movieTypes, setMovieTypes] = useState<movieTypeType[]>([]);
+  const [movies, setMovies] = useState<MovieType[]>([]);
+  const [movieTypes, setMovieTypes] = useState<MovieTypeType[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
@@ -68,12 +68,12 @@ const MovieList = () => {
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [detailDialogOpen, setDetailDialogOpen] = useState(false);
-  const [selectedMovie, setSelectedMovie] = useState<movieType | null>(null);
+  const [selectedMovie, setSelectedMovie] = useState<MovieType | null>(null);
 
   const fetchMovieTypes = async () => {
     try {
       const response = await movieTypeService.findAll();
-      setMovieTypes(response.data as movieTypeType[]);
+      setMovieTypes(response.data as MovieTypeType[]);
     } catch (error) {
       console.error("Error fetching movie types:", error);
     }
@@ -91,7 +91,7 @@ const MovieList = () => {
       moviePaginateConfig.defaultSortBy[1],
     search = undefined,
     searchBy = undefined,
-    filter = {}
+    filter = {},
   ) => {
     setLoading(true);
     try {
@@ -105,7 +105,7 @@ const MovieList = () => {
       });
 
       if (response.success && response.data) {
-        setMovies(response.data as movieType[]);
+        setMovies(response.data as MovieType[]);
         if (response.meta) {
           setMeta(response.meta);
         }
@@ -149,7 +149,7 @@ const MovieList = () => {
       sortBy,
       searchQuery || undefined,
       searchColumn || undefined,
-      Object.keys(filter).length > 0 ? filter : undefined
+      Object.keys(filter).length > 0 ? filter : undefined,
     );
   };
 
@@ -162,7 +162,7 @@ const MovieList = () => {
   };
 
   // Handle create movie
-  const handleCreateSubmit = async (data: movieType) => {
+  const handleCreateSubmit = async (data: MovieType) => {
     try {
       const response = await movieService.create(data);
       if (response.success) {
@@ -177,18 +177,18 @@ const MovieList = () => {
     }
   };
 
-  const handleEdit = (movie: movieType) => {
+  const handleEdit = (movie: MovieType) => {
     setSelectedMovie(movie);
     setEditDialogOpen(true);
   };
 
-  const handleEditSubmit = async (data: movieType) => {
+  const handleEditSubmit = async (data: MovieType) => {
     if (!selectedMovie) return;
 
     try {
       const response = await movieService.update(
         selectedMovie.id as string,
-        data
+        data,
       );
       if (response.success) {
         toast.success("Cập nhật phim thành công!");
@@ -202,11 +202,7 @@ const MovieList = () => {
     }
   };
 
-  const handleDelete = async (movie: movieType) => {
-    if (!confirm(`Bạn có chắc chắn muốn xóa phim "${movie.title}" không?`)) {
-      return;
-    }
-
+  const handleDelete = async (movie: MovieType) => {
     try {
       const response = await movieService.delete(movie.id as string);
       if (response.success) {
@@ -221,7 +217,7 @@ const MovieList = () => {
     }
   };
 
-  const handleView = (movie: movieType) => {
+  const handleView = (movie: MovieType) => {
     setSelectedMovie(movie);
     setDetailDialogOpen(true);
   };
@@ -237,7 +233,7 @@ const MovieList = () => {
       const response = await movieService.importFromExcel(file);
       if (response.success) {
         toast.success(
-          `Import thành công! ${response.data.imported} phim đã được nhập, ${response.data.skipped} phim bị bỏ qua.`
+          `Import thành công! ${response.data.imported} phim đã được nhập, ${response.data.skipped} phim bị bỏ qua.`,
         );
         handleSearch(); // Refresh list
       } else {
@@ -509,15 +505,10 @@ const MovieList = () => {
                             {movie.is_active === false ? (
                               <></>
                             ) : (
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => handleDelete(movie)}
-                                title="Xóa"
-                                className="text-destructive hover:text-destructive"
-                              >
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
+                              <AlertDialogDestructive
+                                callback={handleDelete}
+                                payload={movie}
+                              />
                             )}
                           </div>
                         </TableCell>
@@ -533,7 +524,7 @@ const MovieList = () => {
                   Hiển thị {(meta.currentPage - 1) * meta.itemsPerPage + 1} -{" "}
                   {Math.min(
                     meta.currentPage * meta.itemsPerPage,
-                    meta.totalItems
+                    meta.totalItems,
                   )}{" "}
                   của {meta.totalItems} phim
                 </div>
@@ -555,7 +546,7 @@ const MovieList = () => {
                         (page) =>
                           page === 1 ||
                           page === meta.totalPages ||
-                          Math.abs(page - currentPage) <= 1
+                          Math.abs(page - currentPage) <= 1,
                       )
                       .map((page, index, array) => (
                         <div key={page} className="flex items-center">
@@ -580,7 +571,7 @@ const MovieList = () => {
                     size="sm"
                     onClick={() =>
                       setCurrentPage((prev) =>
-                        Math.min(meta.totalPages, prev + 1)
+                        Math.min(meta.totalPages, prev + 1),
                       )
                     }
                     disabled={currentPage === meta.totalPages}

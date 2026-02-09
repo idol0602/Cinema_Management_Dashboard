@@ -31,11 +31,11 @@ import {
   ChevronLeft,
   ChevronRight,
   Pencil,
-  Trash2,
   Eye,
   PartyPopper,
   Calendar,
 } from "lucide-react";
+import { AlertDialogDestructive } from "@/components/ui/delete-dialog";
 import { Combobox } from "@/components/ui/combobox";
 import EventCreateDialog from "@/components/events/EventCreateDialog";
 import EventEditDialog from "@/components/events/EventEditDialog";
@@ -75,7 +75,7 @@ const EventList = () => {
       eventPaginateConfig.defaultSortBy[1],
     search: string | undefined = undefined,
     searchBy: string | undefined = undefined,
-    filter: Record<string, any> = {}
+    filter: Record<string, any> = {},
   ) => {
     setLoading(true);
     try {
@@ -154,7 +154,7 @@ const EventList = () => {
       sortBy,
       searchQuery || undefined,
       searchColumn || undefined,
-      Object.keys(filter).length > 0 ? filter : undefined
+      Object.keys(filter).length > 0 ? filter : undefined,
     );
   };
 
@@ -193,7 +193,7 @@ const EventList = () => {
     try {
       const response = await eventService.update(
         selectedEvent.id as string,
-        data
+        data,
       );
       if (response.success) {
         toast.success("Cập nhật sự kiện thành công!");
@@ -208,10 +208,6 @@ const EventList = () => {
   };
 
   const handleDelete = async (event: EventType) => {
-    if (!confirm(`Bạn có chắc chắn muốn xóa sự kiện "${event.name}" không?`)) {
-      return;
-    }
-
     try {
       const response = await eventService.delete(event.id as string);
       if (response.success) {
@@ -393,7 +389,7 @@ const EventList = () => {
                         <TableCell>
                           <div className="text-sm text-muted-foreground">
                             {eventTypes.find(
-                              (et) => et.id === event.event_type_id
+                              (et) => et.id === event.event_type_id,
                             )?.name || "N/A"}
                           </div>
                         </TableCell>
@@ -410,9 +406,7 @@ const EventList = () => {
                         </TableCell>
                         <TableCell className="text-center">
                           <Badge
-                            variant={
-                              event.is_in_combo ? "default" : "outline"
-                            }
+                            variant={event.is_in_combo ? "default" : "outline"}
                             className={event.is_in_combo ? "bg-purple-500" : ""}
                           >
                             {event.is_in_combo ? "Có" : "Không"}
@@ -442,13 +436,10 @@ const EventList = () => {
                             >
                               <Pencil className="h-4 w-4" />
                             </Button>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => handleDelete(event)}
-                            >
-                              <Trash2 className="h-4 w-4 text-destructive" />
-                            </Button>
+                            <AlertDialogDestructive
+                              callback={handleDelete}
+                              payload={event}
+                            />
                           </div>
                         </TableCell>
                       </TableRow>
@@ -463,7 +454,7 @@ const EventList = () => {
                   Hiển thị {(meta.currentPage - 1) * meta.itemsPerPage + 1} -{" "}
                   {Math.min(
                     meta.currentPage * meta.itemsPerPage,
-                    meta.totalItems
+                    meta.totalItems,
                   )}{" "}
                   của {meta.totalItems} sự kiện
                 </div>
@@ -485,7 +476,7 @@ const EventList = () => {
                         (page) =>
                           page === 1 ||
                           page === meta.totalPages ||
-                          Math.abs(page - currentPage) <= 1
+                          Math.abs(page - currentPage) <= 1,
                       )
                       .map((page, index, array) => (
                         <div key={page} className="flex items-center">
@@ -510,7 +501,7 @@ const EventList = () => {
                     size="sm"
                     onClick={() =>
                       setCurrentPage((prev) =>
-                        Math.min(meta.totalPages, prev + 1)
+                        Math.min(meta.totalPages, prev + 1),
                       )
                     }
                     disabled={currentPage === meta.totalPages}

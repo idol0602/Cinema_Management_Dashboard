@@ -29,11 +29,11 @@ import {
   ChevronLeft,
   ChevronRight,
   Pencil,
-  Trash2,
   Eye,
   Users,
   User as UserIcon,
 } from "lucide-react";
+import { AlertDialogDestructive } from "@/components/ui/delete-dialog";
 import { Combobox } from "@/components/ui/combobox";
 import { UserCreateDialog } from "@/components/users/UserCreateDialog";
 import { UserEditDialog } from "@/components/users/UserEditDialog";
@@ -88,7 +88,7 @@ const UserList = () => {
       userPaginateConfig.defaultSortBy[0][1],
     search = undefined,
     searchBy = undefined,
-    filter: Record<string, any> | undefined = undefined
+    filter: Record<string, any> | undefined = undefined,
   ) => {
     setLoading(true);
     try {
@@ -146,7 +146,7 @@ const UserList = () => {
       sortBy,
       searchQuery || undefined,
       searchColumn || undefined,
-      Object.keys(filter).length > 0 ? filter : undefined
+      Object.keys(filter).length > 0 ? filter : undefined,
     );
   };
 
@@ -177,7 +177,7 @@ const UserList = () => {
     try {
       const response = await userService.update(
         selectedUser.id as string,
-        data
+        data,
       );
       if (response.success) {
         toast.success("Cập nhật người dùng thành công!");
@@ -192,12 +192,6 @@ const UserList = () => {
   };
 
   const handleDelete = async (user: User) => {
-    if (
-      !confirm(`Bạn có chắc chắn muốn xóa người dùng "${user.name}" không?`)
-    ) {
-      return;
-    }
-
     try {
       const response = await userService.delete(user.id as string);
       if (response.success) {
@@ -245,8 +239,8 @@ const UserList = () => {
         {role === "ADMIN"
           ? "Quản trị"
           : role === "STAFF"
-          ? "Nhân viên"
-          : "Khách hàng"}
+            ? "Nhân viên"
+            : "Khách hàng"}
       </Badge>
     );
   };
@@ -393,13 +387,10 @@ const UserList = () => {
                             >
                               <Pencil className="h-4 w-4" />
                             </Button>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => handleDelete(user)}
-                            >
-                              <Trash2 className="h-4 w-4 text-destructive" />
-                            </Button>
+                            <AlertDialogDestructive
+                              callback={handleDelete}
+                              payload={user}
+                            />
                           </div>
                         </TableCell>
                       </TableRow>
@@ -414,7 +405,7 @@ const UserList = () => {
                   Hiển thị {(meta.currentPage - 1) * meta.itemsPerPage + 1} -{" "}
                   {Math.min(
                     meta.currentPage * meta.itemsPerPage,
-                    meta.totalItems
+                    meta.totalItems,
                   )}{" "}
                   của {meta.totalItems} người dùng
                 </div>
@@ -436,7 +427,7 @@ const UserList = () => {
                         (page) =>
                           page === 1 ||
                           page === meta.totalPages ||
-                          Math.abs(page - currentPage) <= 1
+                          Math.abs(page - currentPage) <= 1,
                       )
                       .map((page, index, array) => (
                         <div key={page} className="flex items-center">
@@ -461,7 +452,7 @@ const UserList = () => {
                     size="sm"
                     onClick={() =>
                       setCurrentPage((prev) =>
-                        Math.min(meta.totalPages, prev + 1)
+                        Math.min(meta.totalPages, prev + 1),
                       )
                     }
                     disabled={currentPage === meta.totalPages}

@@ -106,7 +106,7 @@ const navItems = [
       {
         name: "Menu Items",
         path: "/menu-items",
-        label: "Menu Items",
+        label: "Vật phẩm bán",
         allow: ["ADMIN", "STAFF"],
       },
       {

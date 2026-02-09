@@ -32,11 +32,11 @@ import {
   ChevronLeft,
   ChevronRight,
   Pencil,
-  Trash2,
   Eye,
   DoorOpen,
   Armchair,
 } from "lucide-react";
+import { AlertDialogDestructive } from "@/components/ui/delete-dialog";
 import { Combobox } from "@/components/ui/combobox";
 import { RoomCreateDialog } from "@/components/rooms/RoomCreateDialog";
 import { RoomEditDialog } from "@/components/rooms/RoomEditDialog";
@@ -194,10 +194,6 @@ const RoomList = () => {
   };
 
   const handleDelete = async (room: RoomType) => {
-    if (!confirm(`Bạn có chắc chắn muốn xóa phòng "${room.name}" không?`)) {
-      return;
-    }
-
     try {
       const response = await roomService.delete(room.id as string);
       if (response.success) {
@@ -378,14 +374,10 @@ const RoomList = () => {
                             >
                               <Pencil className="h-4 w-4" />
                             </Button>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => handleDelete(room)}
-                              title="Xóa"
-                            >
-                              <Trash2 className="h-4 w-4 text-destructive" />
-                            </Button>
+                            <AlertDialogDestructive
+                              callback={handleDelete}
+                              payload={room}
+                            />
                           </div>
                         </TableCell>
                       </TableRow>

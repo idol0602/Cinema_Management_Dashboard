@@ -27,11 +27,11 @@ import {
   Plus,
   Search,
   Edit,
-  Trash2,
   Shield,
   ChevronLeft,
   ChevronRight,
 } from "lucide-react";
+import { AlertDialogDestructive } from "@/components/ui/delete-dialog";
 import type { RoleType, UpdateRoleType } from "@/types/role.type";
 import type { PaginationMeta } from "@/types/pagination.type";
 import { rolePaginateConfig } from "@/config/paginate/role.config";
@@ -172,10 +172,6 @@ const RoleList = () => {
   };
 
   const handleDelete = async (role: RoleType) => {
-    if (!confirm(`Bạn có chắc chắn muốn xóa vai trò "${role.name}" không?`)) {
-      return;
-    }
-
     try {
       const response = await roleService.delete(role.id as string);
       if (response.success) {
@@ -311,15 +307,10 @@ const RoleList = () => {
                               <Edit className="h-4 w-4" />
                             </Button>
                             {role.is_active !== false && (
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => handleDelete(role)}
-                                title="Xóa"
-                                className="text-destructive hover:text-destructive"
-                              >
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
+                              <AlertDialogDestructive
+                                callback={handleDelete}
+                                payload={role}
+                              />
                             )}
                           </div>
                         </TableCell>

@@ -29,10 +29,10 @@ import {
   ChevronLeft,
   ChevronRight,
   Pencil,
-  Trash2,
   Eye,
   UtensilsCrossed,
 } from "lucide-react";
+import { AlertDialogDestructive } from "@/components/ui/delete-dialog";
 import { Combobox } from "@/components/ui/combobox";
 import { MenuItemCreateDialog } from "@/components/menuItems/MenuItemCreateDialog";
 import { MenuItemEditDialog } from "@/components/menuItems/MenuItemEditDialog";
@@ -60,7 +60,7 @@ const MenuItemList = () => {
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [detailDialogOpen, setDetailDialogOpen] = useState(false);
   const [selectedMenuItem, setSelectedMenuItem] = useState<MenuItemType | null>(
-    null
+    null,
   );
 
   const findAndPaginate = async (
@@ -71,7 +71,7 @@ const MenuItemList = () => {
       menuItemPaginateConfig.defaultSortBy[0][1],
     search = undefined,
     searchBy = undefined,
-    filter: Record<string, any> | undefined = undefined
+    filter: Record<string, any> | undefined = undefined,
   ) => {
     setLoading(true);
     try {
@@ -129,7 +129,7 @@ const MenuItemList = () => {
       sortBy,
       searchQuery || undefined,
       searchColumn || undefined,
-      Object.keys(filter).length > 0 ? filter : undefined
+      Object.keys(filter).length > 0 ? filter : undefined,
     );
   };
 
@@ -160,7 +160,7 @@ const MenuItemList = () => {
     try {
       const response = await menuItemService.update(
         selectedMenuItem.id as string,
-        data
+        data,
       );
       if (response.success) {
         toast.success("Cập nhật món ăn thành công!");
@@ -175,10 +175,6 @@ const MenuItemList = () => {
   };
 
   const handleDelete = async (item: MenuItemType) => {
-    if (!confirm(`Bạn có chắc chắn muốn xóa món "${item.name}" không?`)) {
-      return;
-    }
-
     console.log(item);
 
     try {
@@ -382,13 +378,10 @@ const MenuItemList = () => {
                             >
                               <Pencil className="h-4 w-4" />
                             </Button>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => handleDelete(item)}
-                            >
-                              <Trash2 className="h-4 w-4 text-destructive" />
-                            </Button>
+                            <AlertDialogDestructive
+                              callback={handleDelete}
+                              payload={item}
+                            />
                           </div>
                         </TableCell>
                       </TableRow>
@@ -403,7 +396,7 @@ const MenuItemList = () => {
                   Hiển thị {(meta.currentPage - 1) * meta.itemsPerPage + 1} -{" "}
                   {Math.min(
                     meta.currentPage * meta.itemsPerPage,
-                    meta.totalItems
+                    meta.totalItems,
                   )}{" "}
                   của {meta.totalItems} món
                 </div>
@@ -425,7 +418,7 @@ const MenuItemList = () => {
                         (page) =>
                           page === 1 ||
                           page === meta.totalPages ||
-                          Math.abs(page - currentPage) <= 1
+                          Math.abs(page - currentPage) <= 1,
                       )
                       .map((page, index, array) => (
                         <div key={page} className="flex items-center">
@@ -450,7 +443,7 @@ const MenuItemList = () => {
                     size="sm"
                     onClick={() =>
                       setCurrentPage((prev) =>
-                        Math.min(meta.totalPages, prev + 1)
+                        Math.min(meta.totalPages, prev + 1),
                       )
                     }
                     disabled={currentPage === meta.totalPages}

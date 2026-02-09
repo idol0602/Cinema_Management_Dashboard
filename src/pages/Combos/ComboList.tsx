@@ -34,7 +34,6 @@ import {
   Plus,
   Search,
   Edit,
-  Trash2,
   ShoppingCart,
   Eye,
   ChevronLeft,
@@ -42,6 +41,7 @@ import {
   Calendar,
   DollarSign,
 } from "lucide-react";
+import { AlertDialogDestructive } from "@/components/ui/delete-dialog";
 import type { CreateComboType, UpdateComboType } from "@/types/combo.type";
 import type { ComboMovieType } from "@/types/comboMovie.type";
 import type { ComboEventType } from "@/types/comboEvent.type";
@@ -295,10 +295,6 @@ const ComboList = () => {
   };
 
   const handleDelete = async (combo: ComboType) => {
-    if (!confirm(`Bạn có chắc chắn muốn xóa combo "${combo.name}" không?`)) {
-      return;
-    }
-
     try {
       const response = await comboService.delete(combo.id);
       if (response.success) {
@@ -482,7 +478,9 @@ const ComboList = () => {
                             />
                           ) : (
                             <div className="w-16 h-16 bg-muted rounded-md mx-auto flex items-center justify-center">
-                              <span className="text-xs text-muted-foreground">No Image</span>
+                              <span className="text-xs text-muted-foreground">
+                                No Image
+                              </span>
                             </div>
                           )}
                         </TableCell>
@@ -535,15 +533,10 @@ const ComboList = () => {
                             {combo.is_active === false ? (
                               <></>
                             ) : (
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => handleDelete(combo)}
-                                title="Xóa"
-                                className="text-destructive hover:text-destructive"
-                              >
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
+                              <AlertDialogDestructive
+                                callback={handleDelete}
+                                payload={combo}
+                              />
                             )}
                           </div>
                         </TableCell>
