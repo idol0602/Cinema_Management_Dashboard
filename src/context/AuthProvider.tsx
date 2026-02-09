@@ -75,6 +75,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     try {
       if (user?.id) {
         await userService.sendOffline(user.id);
+        await authService.logout(user.id, token as string);
       }
     } catch (error) {
       console.error("Error sending offline signal:", error);
@@ -102,7 +103,6 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       }
 
       const { user, token } = data;
-      console.log("token", token);
       setUser(user as User);
       setToken(token);
       setIsAuthenticated(true);

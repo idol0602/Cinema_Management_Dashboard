@@ -31,15 +31,18 @@ import { Switch } from "@/components/ui/switch";
 import { Plus, Users, Loader2 } from "lucide-react";
 import type { CreateUserType } from "@/types/user.type";
 import { createUserSchema } from "../../schemas/user.schema.ts";
+import type { RoleType } from "@/types/role.type";
 
 interface UserCreateDialogProps {
   open: boolean;
+  roles: RoleType[];
   onOpenChange: (open: boolean) => void;
   onSubmit?: (data: CreateUserType) => void;
 }
 
 export function UserCreateDialog({
   open,
+  roles,
   onOpenChange,
   onSubmit,
 }: UserCreateDialogProps) {
@@ -189,9 +192,11 @@ export function UserCreateDialog({
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="CUSTOMER">Khách hàng</SelectItem>
-                        <SelectItem value="STAFF">Nhân viên</SelectItem>
-                        <SelectItem value="ADMIN">Quản trị</SelectItem>
+                        {roles.map((role: RoleType) => (
+                          <SelectItem key={role.id} value={role.id as string}>
+                            {role.name}
+                          </SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
                     <FormMessage />

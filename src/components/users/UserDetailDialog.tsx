@@ -18,34 +18,24 @@ import {
 } from "lucide-react";
 import type { User } from "@/types/user.type";
 import { formatVietnamFullDateTime } from "@/utils/datetime";
+import type { RoleType } from "@/types/role.type";
 
 interface UserDetailDialogProps {
   user: User | null;
+  roles: RoleType[];
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
 
 export function UserDetailDialog({
   user,
+  roles,
   open,
   onOpenChange,
 }: UserDetailDialogProps) {
   if (!user) return null;
 
   const formatDate = formatVietnamFullDateTime;
-
-  const getRoleLabel = (role: string) => {
-    switch (role) {
-      case "ADMIN":
-        return "Quản trị";
-      case "STAFF":
-        return "Nhân viên";
-      case "CUSTOMER":
-        return "Khách hàng";
-      default:
-        return role;
-    }
-  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -114,13 +104,10 @@ export function UserDetailDialog({
                     Vai Trò
                   </p>
                   <Badge
-                    variant={user.role === "ADMIN" ? "default" : "outline"}
+                    variant={"outline"}
                     className="mt-1"
                   >
-                    {user.role === "ADMIN" && (
-                      <Shield className="h-3 w-3 mr-1" />
-                    )}
-                    {getRoleLabel(user.role)}
+                    {roles.find((role: RoleType) => role.id === user.role)?.name}
                   </Badge>
                 </div>
               </div>

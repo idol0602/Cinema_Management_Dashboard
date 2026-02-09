@@ -31,9 +31,11 @@ import { Switch } from "@/components/ui/switch";
 import { Save, Users, Loader2 } from "lucide-react";
 import type { User, UpdateUserType } from "@/types/user.type";
 import { updateUserSchema } from "../../schemas/user.schema.ts";
+import type { RoleType } from "@/types/role.type";
 
 interface UserEditDialogProps {
   user: User | null;
+  roles: RoleType[];
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSubmit?: (data: UpdateUserType) => void;
@@ -42,6 +44,7 @@ interface UserEditDialogProps {
 export function UserEditDialog({
   user,
   open,
+  roles,
   onOpenChange,
   onSubmit,
 }: UserEditDialogProps) {
@@ -179,9 +182,11 @@ export function UserEditDialog({
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="CUSTOMER">Khách hàng</SelectItem>
-                        <SelectItem value="STAFF">Nhân viên</SelectItem>
-                        <SelectItem value="ADMIN">Quản trị</SelectItem>
+                        {roles.map((role: RoleType) => (
+                          <SelectItem key={role.id} value={role.id as string}>
+                            {role.name}
+                          </SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
                     <FormMessage />

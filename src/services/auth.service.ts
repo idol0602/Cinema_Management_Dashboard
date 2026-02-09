@@ -88,5 +88,23 @@ export const authService = {
                 error: apiError.message
             };
         }
+    },
+    logout: async(userId: string, token: string): Promise<{success: boolean, message: string, error: string | null}> => {
+        try {
+            const response = await api.post("/auth/logout", { userId, token });
+            return {
+                success: response.data.success,
+                message: response.data.message,
+                error: null
+            };
+        } catch (error) {
+            const apiError = handleApiError(error);
+            return {
+                success: false,
+                message: "",
+                error: apiError.message
+            };
+        }
     }
+    
 }

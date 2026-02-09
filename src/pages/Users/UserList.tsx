@@ -38,9 +38,12 @@ import { Combobox } from "@/components/ui/combobox";
 import { UserCreateDialog } from "@/components/users/UserCreateDialog";
 import { UserEditDialog } from "@/components/users/UserEditDialog";
 import { UserDetailDialog } from "@/components/users/UserDetailDialog";
+import { roleService } from "@/services/role.service";
+import type { RoleType } from "@/types/role.type";
 
 const UserList = () => {
   const [users, setUsers] = useState<User[]>([]);
+  const [roles, setRoles] = useState<RoleType[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
@@ -61,6 +64,21 @@ const UserList = () => {
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [detailDialogOpen, setDetailDialogOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
+
+  useEffect(() => {
+    const fetchRoles = async () => {
+      try {
+        const response = await roleService.getAll();
+        if (response.success && response.data) {
+          setRoles(response.data as RoleType[]);
+        }
+      } catch (error) {
+        toast.error("Có lỗi xảy ra khi tải danh sách vai trò");
+        console.error(error);
+      }
+    };
+    fetchRoles();
+  }, []);
 
   const findAndPaginate = async (
     page = 1,
@@ -267,7 +285,10 @@ const UserList = () => {
               />
             </div>
             <Combobox
-              datas={userPaginateConfig.filterableColumns.role}
+              datas={roles.map((role) => ({
+                value: role.id as string,
+                label: role.name,
+              }))}
               placeholder="Vai trò"
               onChange={setRoleColumn}
               value={roleColumn}
@@ -323,7 +344,6 @@ const UserList = () => {
                       <TableHead>Email</TableHead>
                       <TableHead>Số Điện Thoại</TableHead>
                       <TableHead>Vai Trò</TableHead>
-                      <TableHead>Điểm</TableHead>
                       <TableHead>Ngày Tạo</TableHead>
                       <TableHead className="text-center">Trạng Thái</TableHead>
                       <TableHead className="text-center">Thao Tác</TableHead>
@@ -346,11 +366,8 @@ const UserList = () => {
                         <TableCell className="font-mono">
                           {user.phone || "N/A"}
                         </TableCell>
-                        <TableCell>{getRoleBadge(user.role)}</TableCell>
                         <TableCell>
-                          <Badge variant="outline" className="font-mono">
-                            {user.points} pts
-                          </Badge>
+                          {roles.find((role) => role.id === user.role)?.name}
                         </TableCell>
                         <TableCell>{formatDate(user.created_at)}</TableCell>
                         <TableCell className="text-center">
@@ -461,17 +478,20 @@ const UserList = () => {
 
       {/* Dialogs */}
       <UserCreateDialog
+        roles={roles}
         open={createDialogOpen}
         onOpenChange={setCreateDialogOpen}
         onSubmit={handleCreate}
       />
       <UserEditDialog
+        roles={roles}
         user={selectedUser}
         open={editDialogOpen}
         onOpenChange={setEditDialogOpen}
         onSubmit={handleUpdate}
       />
       <UserDetailDialog
+        roles={roles}
         user={selectedUser}
         open={detailDialogOpen}
         onOpenChange={setDetailDialogOpen}
@@ -491,7 +511,6 @@ const TableSkeleton = () => {
             <TableHead>Email</TableHead>
             <TableHead>Số Điện Thoại</TableHead>
             <TableHead>Vai Trò</TableHead>
-            <TableHead>Điểm</TableHead>
             <TableHead>Ngày Tạo</TableHead>
             <TableHead className="text-center">Trạng Thái</TableHead>
             <TableHead className="text-center">Thao Tác</TableHead>
