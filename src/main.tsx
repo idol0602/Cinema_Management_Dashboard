@@ -12,5 +12,5 @@ createRoot(document.getElementById("root")!).render(
         <AppContent />
       </AuthProvider>
     </ThemeProvider>
-  </BrowserRouter>
+  </BrowserRouter>,
 );

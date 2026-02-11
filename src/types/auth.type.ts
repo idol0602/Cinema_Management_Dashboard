@@ -13,15 +13,13 @@ export interface authResponse{
             role: string
             is_active: boolean
             created_at: string
-        }, 
-        token : string 
+        }
     },
     error: string | null,
 }
 
 export interface AuthContextType {
     user: User | null;
-    token: string | null;
     isAuthenticated: boolean,
     isLoading: boolean;
     login: (email: string, password: string) => Promise<void>;

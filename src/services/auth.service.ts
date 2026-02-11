@@ -19,11 +19,9 @@ export const authService = {
                         email: "",
                         phone: "",
                         role: "",
-                        points: 0,
                         is_active: false,
                         created_at: ""
-                    },
-                    token: ""
+                    }
                 },
                 error: apiError.message
             };
@@ -79,19 +77,17 @@ export const authService = {
                         email: "",
                         phone: "",
                         role: "",
-                        points: 0,
                         is_active: false,
                         created_at: ""
-                    },
-                    token: ""
+                    }
                 },
                 error: apiError.message
             };
         }
     },
-    logout: async(userId: string, token: string): Promise<{success: boolean, message: string, error: string | null}> => {
+    logout: async(): Promise<{success: boolean, message: string, error: string | null}> => {
         try {
-            const response = await api.post("/auth/logout", { userId, token });
+            const response = await api.post("/auth/logout");
             return {
                 success: response.data.success,
                 message: response.data.message,

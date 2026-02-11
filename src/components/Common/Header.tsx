@@ -5,8 +5,12 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useTheme } from "@/components/theme-provider";
 import { useSidebar } from "@/components/ui/sidebar";
+import { roleService } from "@/services/role.service";
+import { useState, useEffect } from "react";
+import type { RoleType } from "@/types/role.type";
 
 function Header() {
+  const [roles, setRoles] = useState<RoleType[]>([]);
   const { theme, setTheme } = useTheme();
   const { user, logout } = useAuth();
   const navigate = useNavigate();
@@ -16,6 +20,23 @@ function Header() {
     logout();
     navigate("/login");
   };
+
+  const getRoleName = (roleId: string) => {
+    const role = roles.find((r) => r.id === roleId);
+    return role ? role.name : "Unknown";
+  };
+
+  useEffect(() => {
+    const fetchRoles = async () => {
+      try {
+        const rolesData = await roleService.getAll();
+        setRoles(rolesData.data as RoleType[]);
+      } catch (error) {
+        console.error("Failed to fetch roles:", error);
+      }
+    };
+    fetchRoles();
+  }, [user]);
 
   const getInitials = (name?: string) => {
     if (!name) return "U";
@@ -80,7 +101,7 @@ function Header() {
               <div className="hidden md:block text-right">
                 <p className="text-sm font-medium leading-none">{user.name}</p>
                 <p className="text-xs text-muted-foreground mt-1">
-                  {user.role}
+                  {getRoleName(user.role)}
                 </p>
               </div>
               <Avatar>

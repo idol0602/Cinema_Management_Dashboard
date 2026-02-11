@@ -19,6 +19,7 @@ import { DynamicBarChart } from "../../components/charts/DynamicBarChart";
 import { DynamicLineChart } from "../../components/charts/DynamicLineChart";
 import { DynamicPieChart } from "../../components/charts/DynamicPieChart";
 import { AlertDialogDestructive } from "../../components/ui/delete-dialog";
+import { useAuth } from "@/hooks/useAuth";
 
 // Sample data for movie revenue
 const movieRevenueData = [
@@ -77,11 +78,13 @@ function SQLAgent() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const { user } = useAuth();
 
   useEffect(() => {
-    const ssid = localStorage.getItem("token");
-    setSessionId(ssid as string);
-  }, []);
+    if (user?.id) {
+      setSessionId(user.id);
+    }
+  }, [user]);
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];

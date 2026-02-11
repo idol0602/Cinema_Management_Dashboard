@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { User, Mail, Phone, Edit, Eye, EyeOff, X, Check } from "lucide-react";
+import { Mail, Phone, Edit, Eye, EyeOff, X, Check } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import type { User as UserType } from "@/types/user.type";
 import { roleService } from "../../services/role.service";
@@ -27,11 +27,6 @@ function Profile() {
     return date.toLocaleDateString("vi-VN");
   };
 
-  const getRoleLabel = (roleId: string) => {
-    const roleName = roles.find((r) => r.id === roleId)?.name || "Khách hàng";
-    return roleName;
-  };
-
   const handleChangeForm = (field: keyof UserType, value: string) => {
     setFormData({ ...formData, [field]: value });
   };
@@ -45,9 +40,30 @@ function Profile() {
     }
   };
 
+  const getRoleName = (roleId: string) => {
+    const role = roles.find((r) => r.id === roleId);
+    return role ? role.name : "Unknown";
+  };
+
   useEffect(() => {
     fetchRoles();
   }, []);
+
+  // Sync formData when user changes (e.g., after page refresh)
+  useEffect(() => {
+    if (user) {
+      setFormData({
+        id: user.id || "",
+        name: user.name || "",
+        email: user.email || "",
+        phone: user.phone || "",
+        password: "hidden password",
+        role: user.role || "CUSTOMER",
+        is_active: user.is_active ?? true,
+        created_at: user.created_at || "",
+      });
+    }
+  }, [user]);
 
   const handleSaveChanges = async () => {
     setLoading(true);
@@ -96,7 +112,7 @@ function Profile() {
                 {formData.name || "Người dùng"}
               </h2>
               <p className="text-muted-foreground mt-1">
-                {formData.role || "Khách hàng"}
+                {getRoleName(formData.role || "CUSTOMER")}
               </p>
               <p className="text-sm text-muted-foreground/70 mt-2">
                 Tham gia từ ngày {formatDate(formData.created_at as string)}
@@ -188,7 +204,7 @@ function Profile() {
                   Chức vụ
                 </label>
                 <div className="inline-block px-3 py-1 bg-primary/10 text-primary rounded-full text-sm font-medium">
-                  {formData.role || "Khách hàng"}
+                  {getRoleName(formData.role || "CUSTOMER")}
                 </div>
               </div>
               <div>

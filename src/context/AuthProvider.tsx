@@ -3,7 +3,6 @@ import { useNavigate } from "react-router-dom";
 import type { User } from "@/types/user.type.ts";
 import { authService } from "@/services/auth.service.ts";
 import { AuthContext } from "./AuthContext.tsx";
-import { isTokenExpired } from "@/utils/token.ts";
 import { toast } from "sonner";
 import { userService } from "@/services/user.service.ts";
 
@@ -14,36 +13,24 @@ interface AuthProviderProps {
 export const AuthProvider = ({ children }: AuthProviderProps) => {
   const navigate = useNavigate();
   const [user, setUser] = useState<User | null>(null);
-  const [token, setToken] = useState<string | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
-  const [isLoading, setLoading] = useState<boolean>(true); // Đổi thành true
+  const [isLoading, setLoading] = useState<boolean>(true);
 
   useEffect(() => {
     const initAuth = () => {
-      const savedToken = localStorage.getItem("token");
       const savedUser = localStorage.getItem("user");
 
-      if (savedToken && savedUser) {
-        // Kiểm tra token đã hết hạn chưa
-        if (isTokenExpired(savedToken)) {
-          localStorage.removeItem("token");
-          localStorage.removeItem("user");
-          setLoading(false);
-          return;
-        }
-
+      if (savedUser) {
         try {
           setUser(JSON.parse(savedUser));
-          setToken(savedToken);
           setIsAuthenticated(true);
         } catch (error) {
           localStorage.removeItem("user");
-          localStorage.removeItem("token");
           throw error;
         }
       }
 
-      setLoading(false); // Đặt loading = false sau khi kiểm tra xong
+      setLoading(false);
     };
     initAuth();
   }, []);
@@ -56,12 +43,10 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         toast.error(error);
         throw new Error(error);
       }
-      const { user, token } = data;
+      const { user } = data;
       setUser(user as User);
-      setToken(token);
       setIsAuthenticated(true);
       localStorage.setItem("user", JSON.stringify(user));
-      localStorage.setItem("token", token);
       toast.success("Đăng nhập thành công!");
     } catch (error) {
       toast.error("Đăng nhập thất bại!");
@@ -75,16 +60,14 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     try {
       if (user?.id) {
         await userService.sendOffline(user.id);
-        await authService.logout(user.id, token as string);
+        await authService.logout();
       }
     } catch (error) {
-      console.error("Error sending offline signal:", error);
+      console.error("Error during logout:", error);
     }
     setUser(null);
-    setToken(null);
     setIsAuthenticated(false);
     localStorage.removeItem("user");
-    localStorage.removeItem("token");
     toast.success("Đăng xuất thành công!");
     navigate("/login");
   }, [user, navigate]);
@@ -102,12 +85,10 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         throw new Error(error);
       }
 
-      const { user, token } = data;
+      const { user } = data;
       setUser(user as User);
-      setToken(token);
       setIsAuthenticated(true);
       localStorage.setItem("user", JSON.stringify(user));
-      localStorage.setItem("token", token);
       toast.success("Cập nhật thông tin thành công!");
     } catch (error) {
       toast.error("Cập nhật thông tin thất bại!");
@@ -119,7 +100,6 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
   const value = {
     user,
-    token,
     isAuthenticated,
     isLoading,
     login,
