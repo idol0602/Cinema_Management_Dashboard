@@ -26,6 +26,7 @@ import {
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Combobox } from "@/components/ui/combobox";
+import { MultiCombobox } from "@/components/ui/multi-combobox";
 import {
   Plus,
   Search,
@@ -40,7 +41,11 @@ import {
   Clock,
   Star,
 } from "lucide-react";
-import type { MovieType } from "@/types/movie.type";
+import type {
+  createMovieWithTypes,
+  MovieType,
+  updateMovieWithTypes,
+} from "@/types/movie.type";
 import type { MovieTypeType } from "@/types/movieType.type";
 import type { PaginationMeta } from "@/types/pagination.type";
 import { moviePaginateConfig } from "@/config/paginate/movie.config";
@@ -55,7 +60,7 @@ const MovieList = () => {
   const [statusColumn, setStatusColumn] = useState("");
   const [searchColumn, setSearchColumn] = useState("");
   const [sortColumn, setSortColumn] = useState("");
-  const [movieTypeColumn, setMovieTypeColumn] = useState("");
+  const [movieTypeColumns, setMovieTypeColumns] = useState<string[]>([]);
   const [orderColumn, setOrderColumn] = useState("");
   const [meta, setMeta] = useState<PaginationMeta>({
     itemsPerPage: moviePaginateConfig.defaultLimit,
@@ -139,9 +144,12 @@ const MovieList = () => {
     if (statusColumn) {
       filter.is_active = statusColumn === "true";
     }
-    if (movieTypeColumn) {
-      filter.movie_type_id = movieTypeColumn;
+    if (movieTypeColumns.length > 0) {
+      filter["movie_movie_types.movie_type_id"] =
+        movieTypeColumns.length === 1 ? movieTypeColumns[0] : movieTypeColumns;
     }
+
+    console.log(JSON.stringify(filter));
 
     findAndPaginate(
       currentPage,
@@ -162,7 +170,7 @@ const MovieList = () => {
   };
 
   // Handle create movie
-  const handleCreateSubmit = async (data: MovieType) => {
+  const handleCreateSubmit = async (data: createMovieWithTypes) => {
     try {
       const response = await movieService.create(data);
       if (response.success) {
@@ -182,7 +190,7 @@ const MovieList = () => {
     setEditDialogOpen(true);
   };
 
-  const handleEditSubmit = async (data: MovieType) => {
+  const handleEditSubmit = async (data: updateMovieWithTypes) => {
     if (!selectedMovie) return;
 
     try {
@@ -222,10 +230,16 @@ const MovieList = () => {
     setDetailDialogOpen(true);
   };
 
-  // Get movie type name by id
-  const getMovieTypeName = (typeId: string) => {
-    const type = movieTypes.find((t) => t.id === typeId);
-    return type ? type.type : "Chưa xác định";
+  // Get movie type names from movie_movie_types
+  const getMovieTypeNames = (movie: MovieType) => {
+    const mmTypes = (movie as any).movie_movie_types;
+    if (!mmTypes || !Array.isArray(mmTypes) || mmTypes.length === 0) {
+      return ["Chưa xác định"];
+    }
+    return mmTypes.map((mmt: any) => {
+      const type = movieTypes.find((t) => t.id === mmt.movie_type_id);
+      return type ? type.type : "Chưa xác định";
+    });
   };
 
   const handleImport = async (file: File) => {
@@ -258,6 +272,8 @@ const MovieList = () => {
     const mins = minutes % 60;
     return `${hours}h ${mins}m`;
   };
+
+  console.log(movies);
 
   return (
     <div className="container mx-auto py-6 space-y-6">
@@ -304,29 +320,56 @@ const MovieList = () => {
                 className="pl-10"
               />
             </div>
-            <Combobox
+            <MultiCombobox
               datas={movieTypes.map((item) => ({
                 value: item.id + "",
                 label: item.type,
               }))}
               placeholder="Thể loại"
-              onChange={setMovieTypeColumn}
-              value={movieTypeColumn}
-            ></Combobox>
+              onChange={setMovieTypeColumns}
+              values={movieTypeColumns}
+            />
             <Combobox
-              datas={moviePaginateConfig.filterableColumns.is_active}
+              datas={[
+                { value: "true", label: "Hoạt động" },
+                { value: "false", label: "Ngừng" },
+              ]}
               placeholder="Trạng thái"
               onChange={setStatusColumn}
               value={statusColumn}
             ></Combobox>
             <Combobox
-              datas={moviePaginateConfig.searchableColumns}
+              datas={moviePaginateConfig.searchableColumns.map((col) => ({
+                value: col,
+                label:
+                  col === "title"
+                    ? "Tên phim"
+                    : col === "description"
+                      ? "Mô tả"
+                      : col === "director"
+                        ? "Đạo diễn"
+                        : col,
+              }))}
               placeholder="Tìm theo"
               onChange={setSearchColumn}
               value={searchColumn}
             ></Combobox>
             <Combobox
-              datas={moviePaginateConfig.sortableColumns}
+              datas={moviePaginateConfig.sortableColumns.map((col) => ({
+                value: col,
+                label:
+                  col === "title"
+                    ? "Tiêu đề"
+                    : col === "release_date"
+                      ? "Ngày phát hành"
+                      : col === "rating"
+                        ? "Đánh giá"
+                        : col === "duration"
+                          ? "Thời lượng"
+                          : col === "created_at"
+                            ? "Ngày tạo"
+                            : col,
+              }))}
               placeholder="Sắp xếp theo"
               onChange={setSortColumn}
               value={sortColumn}
@@ -369,6 +412,7 @@ const MovieList = () => {
                         Thông Tin Phim
                       </TableHead>
                       <TableHead>Đạo Diễn</TableHead>
+                      <TableHead>Quốc Gia</TableHead>
                       <TableHead>Thể Loại</TableHead>
                       <TableHead>
                         <Calendar className="h-4 w-4 inline mr-1" />
@@ -427,9 +471,17 @@ const MovieList = () => {
                           <div className="font-medium">{movie.country}</div>
                         </TableCell>
                         <TableCell>
-                          <Badge variant="secondary" className="font-medium">
-                            {getMovieTypeName(movie.movie_type_id)}
-                          </Badge>
+                          <div className="flex flex-wrap gap-1">
+                            {getMovieTypeNames(movie).map((typeName, i) => (
+                              <Badge
+                                key={i}
+                                variant="secondary"
+                                className="font-medium"
+                              >
+                                {typeName}
+                              </Badge>
+                            ))}
+                          </div>
                         </TableCell>
                         <TableCell>
                           <div className="flex items-center gap-1">

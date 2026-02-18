@@ -85,10 +85,10 @@ export interface OrderDetails {
     trailer: string;
     image: string;
     thumbnail: string;
-    movie_type: {
+    movie_types: Array<{
       id: string;
       type: string;
-    };
+    }>;
   };
   tickets: Array<{
     id: string;

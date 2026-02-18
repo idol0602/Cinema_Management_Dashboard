@@ -2,6 +2,10 @@ import api, { handleApiError } from "./api.ts";
 import type {loginType, authResponse} from "@/types/auth.type.ts"
 import type { User } from "@/types/user.type.ts";
 
+const domain = import.meta.env.VITE_FRONTEND_URL
+
+console.log("domain", domain)
+
 export const authService = {
     login: async(payload : loginType) : Promise<authResponse> => {
         try {
@@ -29,7 +33,7 @@ export const authService = {
     },
     forgotPassword: async(email: string): Promise<{success: boolean, message: string, error: string | null}> => {
         try {
-            const response = await api.post("/auth/forgot-password", { email });
+            const response = await api.post("/auth/forgot-password", { email,domain});
             return {
                 success: response.data.success,
                 message: response.data.message,

@@ -27,7 +27,7 @@ export function ForgotPasswordPage() {
     },
   });
 
-  async function onSubmit(data) {
+  async function onSubmit(data: { email: string }) {
     setIsLoading(true);
     try {
       const response = await authService.forgotPassword(data.email);

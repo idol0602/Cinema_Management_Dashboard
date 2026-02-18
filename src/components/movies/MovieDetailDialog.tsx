@@ -38,9 +38,15 @@ export function MovieDetailDialog({
 }: MovieDetailDialogProps) {
   if (!movie) return null;
 
-  const getMovieTypeName = (typeId: string) => {
-    const type = movieTypes.find((t) => t.id === typeId);
-    return type ? type.type : "Chưa xác định";
+  const getMovieTypeNames = () => {
+    const mmTypes = (movie as any).movie_movie_types;
+    if (!mmTypes || !Array.isArray(mmTypes) || mmTypes.length === 0) {
+      return ["Chưa xác định"];
+    }
+    return mmTypes.map((mmt: any) => {
+      const type = movieTypes.find((t) => t.id === mmt.movie_type_id);
+      return type ? type.type : "Chưa xác định";
+    });
   };
 
   const formatDate = formatDateToVietnamese;
@@ -123,9 +129,13 @@ export function MovieDetailDialog({
                   <p className="text-sm font-medium text-muted-foreground">
                     Thể Loại
                   </p>
-                  <Badge variant="secondary" className="mt-1">
-                    {getMovieTypeName(movie.movie_type_id)}
-                  </Badge>
+                  <div className="flex flex-wrap gap-1 mt-1">
+                    {getMovieTypeNames().map((name, i) => (
+                      <Badge key={i} variant="secondary">
+                        {name}
+                      </Badge>
+                    ))}
+                  </div>
                 </div>
               </div>
             </div>

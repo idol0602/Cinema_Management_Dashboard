@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { updateMovieSchema } from "@/schemas/movie.schema";
+import { MultiCombobox } from "@/components/ui/multi-combobox";
 import {
   Dialog,
   DialogContent,
@@ -19,20 +20,14 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { DatePickerInput } from "@/components/ui/date-picker-input";
 import { Save, Film, Upload, X, Loader2 } from "lucide-react";
-import type { MovieType, UpdateMovieType } from "@/types/movie.type";
+import type { MovieType, updateMovieWithTypes } from "@/types/movie.type";
 import type { MovieTypeType } from "@/types/movieType.type";
 
 interface MovieEditDialogProps {
@@ -40,7 +35,7 @@ interface MovieEditDialogProps {
   movieTypes: MovieTypeType[];
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSubmit?: (data: UpdateMovieType) => void;
+  onSubmit?: (data: updateMovieWithTypes) => void;
 }
 
 export function MovieEditDialog({
@@ -53,6 +48,7 @@ export function MovieEditDialog({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [imagePreview, setImagePreview] = useState<string>("");
   const [thumbnailPreview, setThumbnailPreview] = useState<string>("");
+  const [selectedMovieTypes, setSelectedMovieTypes] = useState<string[]>([]);
 
   const form = useForm({
     resolver: zodResolver(updateMovieSchema),
@@ -67,7 +63,6 @@ export function MovieEditDialog({
       image: "",
       thumbnail: "",
       trailer: "",
-      movie_type_id: "",
       is_active: true,
     },
   });
@@ -88,20 +83,29 @@ export function MovieEditDialog({
         image: movie.image,
         thumbnail: movie.thumbnail,
         trailer: movie.trailer,
-        movie_type_id: movie.movie_type_id,
         is_active: movie.is_active,
       });
+      // Load movie types from movie_movie_types
+      const mmTypes = (movie as any).movie_movie_types;
+      if (mmTypes && Array.isArray(mmTypes)) {
+        setSelectedMovieTypes(mmTypes.map((mmt: any) => mmt.movie_type_id));
+      } else {
+        setSelectedMovieTypes([]);
+      }
       setImagePreview(movie.image || "");
       setThumbnailPreview(movie.thumbnail || "");
     }
   }, [movie, open, form]);
 
-  const handleSubmit = async (data: UpdateMovieType) => {
+  const handleSubmit = async (data: updateMovieWithTypes) => {
     setIsSubmitting(true);
     try {
-      // TODO: Implement API call
-      console.log("Update form data:", data);
-      onSubmit?.(data);
+      const payload = {
+        movie: data,
+        movieTypes: selectedMovieTypes,
+      };
+      console.log("Update form data:", payload);
+      onSubmit?.(payload);
 
       // Close dialog
       onOpenChange(false);
@@ -205,31 +209,22 @@ export function MovieEditDialog({
                 )}
               />
 
-              {/* Movie Type */}
-              <FormField
-                control={form.control}
-                name="movie_type_id"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Thể Loại</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Chọn thể loại" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {movieTypes.map((type) => (
-                          <SelectItem key={type.id} value={type.id + ""}>
-                            {type.type}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              {/* Movie Types */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium leading-none">
+                  Thể Loại
+                </label>
+                <MultiCombobox
+                  datas={movieTypes.map((type) => ({
+                    value: type.id + "",
+                    label: type.type,
+                  }))}
+                  values={selectedMovieTypes}
+                  onChange={setSelectedMovieTypes}
+                  placeholder="Chọn thể loại"
+                  className="w-full"
+                />
+              </div>
 
               {/* Release Date */}
               <FormField

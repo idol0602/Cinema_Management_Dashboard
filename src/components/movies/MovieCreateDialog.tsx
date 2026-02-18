@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { createMovieSchema } from "../../schemas/movie.schema";
+import { MultiCombobox } from "@/components/ui/multi-combobox";
 import {
   Dialog,
   DialogContent,
@@ -19,27 +20,21 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { DatePickerInput } from "@/components/ui/date-picker-input";
 import { Plus, Film, Upload, X, Loader2 } from "lucide-react";
-import type { CreateMovieType } from "@/types/movie.type";
+import type { CreateMovieType, createMovieWithTypes } from "@/types/movie.type";
 import type { MovieTypeType } from "@/types/movieType.type";
 
 interface MovieCreateDialogProps {
   movieTypes: MovieTypeType[];
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSubmit?: (data: CreateMovieType) => void;
+  onSubmit?: (data: createMovieWithTypes) => void;
 }
 
 export function MovieCreateDialog({
@@ -51,6 +46,7 @@ export function MovieCreateDialog({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [imagePreview, setImagePreview] = useState<string>("");
   const [thumbnailPreview, setThumbnailPreview] = useState<string>("");
+  const [selectedMovieTypes, setSelectedMovieTypes] = useState<string[]>([]);
 
   const form = useForm({
     resolver: zodResolver(createMovieSchema),
@@ -65,7 +61,6 @@ export function MovieCreateDialog({
       image: "",
       thumbnail: "",
       trailer: "",
-      movie_type_id: "",
       is_active: true,
     },
   });
@@ -73,13 +68,17 @@ export function MovieCreateDialog({
   const handleSubmit = async (data: CreateMovieType) => {
     setIsSubmitting(true);
     try {
-      // TODO: Implement API call
-      console.log("Form data:", data);
-      onSubmit?.(data);
+      const payload = {
+        movie: data,
+        movieTypes: selectedMovieTypes,
+      };
+      console.log("Form data:", payload);
+      onSubmit?.(payload);
 
       // Close dialog and reset form
       onOpenChange(false);
       form.reset();
+      setSelectedMovieTypes([]);
       setImagePreview("");
       setThumbnailPreview("");
     } catch (error) {
@@ -181,34 +180,27 @@ export function MovieCreateDialog({
                 )}
               />
 
-              {/* Movie Type */}
-              <FormField
-                control={form.control}
-                name="movie_type_id"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Thể Loại *</FormLabel>
-                    <Select
-                      onValueChange={field.onChange}
-                      defaultValue={field.value}
-                    >
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Chọn thể loại" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {movieTypes.map((type) => (
-                          <SelectItem key={type.id} value={type.id + ""}>
-                            {type.type}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
+              {/* Movie Types */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium leading-none">
+                  Thể Loại *
+                </label>
+                <MultiCombobox
+                  datas={movieTypes.map((type) => ({
+                    value: type.id + "",
+                    label: type.type,
+                  }))}
+                  values={selectedMovieTypes}
+                  onChange={setSelectedMovieTypes}
+                  placeholder="Chọn thể loại"
+                  className="w-full"
+                />
+                {selectedMovieTypes.length === 0 && (
+                  <p className="text-sm font-medium text-destructive">
+                    Vui lòng chọn ít nhất 1 thể loại
+                  </p>
                 )}
-              />
+              </div>
 
               {/* Release Date */}
               <FormField

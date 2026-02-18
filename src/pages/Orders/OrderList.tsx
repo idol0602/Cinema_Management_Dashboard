@@ -170,7 +170,6 @@ const OrderList = () => {
     
     try {
       const response = await orderService.getOrderDetails(order.id);
-      console.log(response);
       if (response.success && response.data) {
         setSelectedOrderDetails(response.data as OrderDetails);
       } else {
@@ -589,7 +588,11 @@ const OrderList = () => {
                       <span className="font-medium">Đạo diễn:</span> {selectedOrderDetails.movie.director}
                     </p>
                     <p className="text-sm text-muted-foreground">
-                      <span className="font-medium">Thể loại:</span> {selectedOrderDetails.movie.movie_type?.type}
+                      <span className="font-medium">Thể loại:</span> {selectedOrderDetails.movie.movie_types.map((type) => {
+                        return (
+                          <Badge variant="secondary" key={type.id} className="mr-2">{type.type}</Badge>
+                        )
+                      })}
                     </p>
                     <p className="text-sm text-muted-foreground">
                       <span className="font-medium">Thời lượng:</span> {selectedOrderDetails.movie.duration} phút

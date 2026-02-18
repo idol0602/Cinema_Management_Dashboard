@@ -15,7 +15,7 @@ function Profile() {
     name: user?.name || "",
     email: user?.email || "",
     phone: user?.phone || "",
-    password: "hidden password",
+    password: "",
     role: user?.role || "CUSTOMER",
     is_active: user?.is_active || true,
     created_at: user?.created_at || "",
@@ -57,7 +57,7 @@ function Profile() {
         name: user.name || "",
         email: user.email || "",
         phone: user.phone || "",
-        password: "hidden password",
+        password: "",
         role: user.role || "CUSTOMER",
         is_active: user.is_active ?? true,
         created_at: user.created_at || "",
@@ -83,7 +83,7 @@ function Profile() {
       name: user?.name || "",
       email: user?.email || "",
       phone: user?.phone || "",
-      password: "hidden password",
+      password: "",
       role: user?.role || "CUSTOMER",
       is_active: user?.is_active || true,
       created_at: user?.created_at || "",
@@ -220,7 +220,7 @@ function Profile() {
                         handleChangeForm("password", e.target.value)
                       }
                       className="w-full px-4 py-2 pr-10 border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition bg-background text-foreground"
-                      placeholder="Nhập mật khẩu"
+                      placeholder="Nếu không đổi mật khẩu, hãy để trống"
                     />
                     <button
                       type="button"

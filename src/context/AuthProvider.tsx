@@ -59,7 +59,6 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const logout = useCallback(async () => {
     try {
       if (user?.id) {
-        await userService.sendOffline(user.id);
         await authService.logout();
       }
     } catch (error) {

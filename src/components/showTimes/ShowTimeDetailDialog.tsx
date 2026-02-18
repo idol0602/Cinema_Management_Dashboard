@@ -24,6 +24,8 @@ export function ShowTimeDetailDialog({
 }: ShowTimeDetailDialogProps) {
   if (!showTime) return null;
 
+  console.log(showTime);
+
   const formatDuration = (minutes?: number) => {
     if (!minutes) return "N/A";
     const hours = Math.floor(minutes / 60);
