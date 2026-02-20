@@ -140,6 +140,6 @@ export const seatStatusColors = {
     class: "bg-gray-500 border-2 border-gray-700 text-white cursor-not-allowed",
   },
   FIXING: {
-    class: "bg-gray-200 border-2 border-gray-400 opacity-60 cursor-not-allowed relative",
+    class: "bg-red-600 border-2 border-gray-400 opacity-60 cursor-not-allowed relative",
   },
 };

@@ -149,8 +149,6 @@ const MovieList = () => {
         movieTypeColumns.length === 1 ? movieTypeColumns[0] : movieTypeColumns;
     }
 
-    console.log(JSON.stringify(filter));
-
     findAndPaginate(
       currentPage,
       moviePaginateConfig.defaultLimit,
