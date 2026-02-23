@@ -9,6 +9,7 @@ const api: AxiosInstance = axios.create({
   timeout: 50000,
   headers: {
     'Content-Type': 'application/json',
+    'ngrok-skip-browser-warning': 'true',
   },
   withCredentials: true, // Enable sending cookies with requests
   paramsSerializer: (params) =>
