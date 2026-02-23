@@ -178,4 +178,27 @@ export const statisticalService = {
       };
     }
   },
+
+  // Xuất báo cáo Excel
+  exportExcel: async (month: number, year: number): Promise<void> => {
+    try {
+      const response = await api.get(
+        `/statistics/export-excel?month=${month}&year=${year}`,
+        { responseType: "blob" }
+      );
+      const blob = new Blob([response.data], {
+        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `Thong_Ke_Thang_${month}_${year}.xlsx`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      throw handleApiError(error);
+    }
+  },
 };

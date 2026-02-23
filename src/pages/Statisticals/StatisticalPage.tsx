@@ -29,6 +29,8 @@ import {
   Package,
   Coffee,
   Loader2,
+  Download,
+  FileSpreadsheet,
 } from "lucide-react";
 import { DynamicBarChart } from "@/components/charts/DynamicBarChart";
 import { DynamicLineChart } from "@/components/charts/DynamicLineChart";
@@ -71,12 +73,13 @@ const menuItemSchema = {
 const StatisticalPage = () => {
   const currentDate = new Date();
   const [selectedMonth, setSelectedMonth] = useState(
-    (currentDate.getMonth() + 1).toString()
+    (currentDate.getMonth() + 1).toString(),
   );
   const [selectedYear, setSelectedYear] = useState(
-    currentDate.getFullYear().toString()
+    currentDate.getFullYear().toString(),
   );
   const [loading, setLoading] = useState(false);
+  const [exporting, setExporting] = useState(false);
 
   // Data states
   const [monthlyRevenue, setMonthlyRevenue] = useState<MonthlyRevenue[]>([]);
@@ -144,6 +147,23 @@ const StatisticalPage = () => {
     fetchStatistics();
   }, [selectedMonth, selectedYear]);
 
+  // Export Excel handler
+  const handleExportExcel = async () => {
+    setExporting(true);
+    try {
+      await statisticalService.exportExcel(
+        parseInt(selectedMonth),
+        parseInt(selectedYear),
+      );
+      toast.success("Xuất báo cáo Excel thành công!");
+    } catch (error) {
+      console.error("Export error:", error);
+      toast.error("Không thể xuất báo cáo Excel");
+    } finally {
+      setExporting(false);
+    }
+  };
+
   // Format helpers
   const formatCurrency = (value: number) => {
     if (value >= 1000000000) {
@@ -168,13 +188,15 @@ const StatisticalPage = () => {
   }));
 
   const chartComboData = topCombos.map((item) => ({
-    name: item.name.length > 15 ? item.name.substring(0, 15) + "..." : item.name,
+    name:
+      item.name.length > 15 ? item.name.substring(0, 15) + "..." : item.name,
     sold: item.sold,
     revenue: item.revenue,
   }));
 
   const chartMenuItemData = topMenuItems.map((item) => ({
-    name: item.name.length > 12 ? item.name.substring(0, 12) + "..." : item.name,
+    name:
+      item.name.length > 12 ? item.name.substring(0, 12) + "..." : item.name,
     sold: item.sold,
     revenue: item.revenue,
   }));
@@ -283,6 +305,20 @@ const StatisticalPage = () => {
             )}
             {loading ? "Đang tải..." : "Làm mới"}
           </Button>
+
+          <Button
+            variant="default"
+            onClick={handleExportExcel}
+            disabled={exporting || loading}
+            className="bg-emerald-600 hover:bg-emerald-700 text-white"
+          >
+            {exporting ? (
+              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+            ) : (
+              <FileSpreadsheet className="h-4 w-4 mr-2" />
+            )}
+            {exporting ? "Đang xuất..." : "Xuất Excel"}
+          </Button>
         </div>
       </div>
 
@@ -338,12 +374,11 @@ const StatisticalPage = () => {
                 Doanh Thu Theo Tháng - Năm {selectedYear}
               </CardTitle>
               <CardDescription className="mt-1">
-                Biểu đồ doanh thu 12 tháng trong năm (chỉ phụ thuộc vào năm được chọn)
+                Biểu đồ doanh thu 12 tháng trong năm (chỉ phụ thuộc vào năm được
+                chọn)
               </CardDescription>
             </div>
-            <Badge variant="secondary">
-              12 tháng
-            </Badge>
+            <Badge variant="secondary">12 tháng</Badge>
           </div>
         </CardHeader>
         <CardContent>
@@ -403,7 +438,8 @@ const StatisticalPage = () => {
               Combo Bán Chạy
             </CardTitle>
             <CardDescription>
-              Top combo được mua nhiều nhất trong tháng {selectedMonth}/{selectedYear}
+              Top combo được mua nhiều nhất trong tháng {selectedMonth}/
+              {selectedYear}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -434,7 +470,8 @@ const StatisticalPage = () => {
               Sản Phẩm Bán Chạy
             </CardTitle>
             <CardDescription>
-              Top menu item được mua nhiều nhất trong tháng {selectedMonth}/{selectedYear}
+              Top menu item được mua nhiều nhất trong tháng {selectedMonth}/
+              {selectedYear}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -466,7 +503,8 @@ const StatisticalPage = () => {
             Top Phim Doanh Thu Cao Nhất
           </CardTitle>
           <CardDescription>
-            Phim có hiệu suất tốt nhất trong tháng {selectedMonth}/{selectedYear}
+            Phim có hiệu suất tốt nhất trong tháng {selectedMonth}/
+            {selectedYear}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -509,18 +547,16 @@ const StatisticalPage = () => {
                             index === 0
                               ? "bg-amber-500 hover:bg-amber-600"
                               : index === 1
-                              ? "bg-slate-400 hover:bg-slate-500"
-                              : index === 2
-                              ? "bg-amber-700 hover:bg-amber-800"
-                              : ""
+                                ? "bg-slate-400 hover:bg-slate-500"
+                                : index === 2
+                                  ? "bg-amber-700 hover:bg-amber-800"
+                                  : ""
                           }
                         >
                           {index + 1}
                         </Badge>
                       </td>
-                      <td className="py-4 px-4 font-medium">
-                        {movie.title}
-                      </td>
+                      <td className="py-4 px-4 font-medium">{movie.title}</td>
                       <td className="py-4 px-4 text-right text-emerald-600 dark:text-emerald-400 font-semibold">
                         {formatCurrency(movie.revenue)} VNĐ
                       </td>
