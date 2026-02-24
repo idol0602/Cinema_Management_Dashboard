@@ -5,6 +5,7 @@ import { authService } from "@/services/auth.service.ts";
 import { AuthContext } from "./AuthContext.tsx";
 import { toast } from "sonner";
 import { userService } from "@/services/user.service.ts";
+import { socketService } from "@/lib/socket.ts";
 
 interface AuthProviderProps {
   children: ReactNode;
@@ -24,6 +25,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         try {
           setUser(JSON.parse(savedUser));
           setIsAuthenticated(true);
+          socketService.connect();
         } catch (error) {
           localStorage.removeItem("user");
           throw error;
@@ -47,6 +49,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       setUser(user as User);
       setIsAuthenticated(true);
       localStorage.setItem("user", JSON.stringify(user));
+      socketService.connect();
       toast.success("Đăng nhập thành công!");
     } catch (error) {
       toast.error("Đăng nhập thất bại!");
@@ -67,6 +70,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     setUser(null);
     setIsAuthenticated(false);
     localStorage.removeItem("user");
+    socketService.disconnect();
     toast.success("Đăng xuất thành công!");
     navigate("/login");
   }, [user, navigate]);
