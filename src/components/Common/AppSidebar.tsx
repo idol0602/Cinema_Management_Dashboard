@@ -9,6 +9,7 @@ import {
   Ticket,
   Settings,
   ChevronRight,
+  MessageCircle,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
@@ -218,6 +219,13 @@ const navItems = [
         allow: ["ADMIN"],
       },
     ],
+  },
+  {
+    name: "Chat",
+    path: "/chat",
+    icon: MessageCircle,
+    label: "Chat hỗ trợ",
+    allow: ["ADMIN", "STAFF"],
   },
   {
     name: "Profile",

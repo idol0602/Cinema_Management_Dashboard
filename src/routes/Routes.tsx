@@ -32,6 +32,7 @@ import OrderList from "@/pages/Orders/OrderList";
 import SellPage from "@/pages/Sells/SellPage";
 import SeatBookingPage from "@/pages/SeatBooking/SeatBookingPage";
 import StatisticalPage from "@/pages/Statisticals/StatisticalPage";
+import ChatWithStaff from "@/pages/ChatWithStaff/ChatWithStaff";
 
 export const AppRoutes = () => {
   return (
@@ -109,6 +110,7 @@ export const AppRoutes = () => {
         <Route path="/dashboard" element={<Home />} />
         <Route path="/orders" element={<OrderList />} />
         <Route path="/profile" element={<Profile />} />
+        <Route path="/chat" element={<ChatWithStaff />} />
       </Route>
 
       {/* Redirects */}
