@@ -29,8 +29,6 @@ import ActionList from "@/pages/Actions/ActionList";
 import AuthorizeList from "@/pages/Authorizes/AuthorizeList";
 import RefundList from "@/pages/Refunds/RefundList";
 import OrderList from "@/pages/Orders/OrderList";
-import SellPage from "@/pages/Sells/SellPage";
-import SeatBookingPage from "@/pages/SeatBooking/SeatBookingPage";
 import StatisticalPage from "@/pages/Statisticals/StatisticalPage";
 import ChatWithStaff from "@/pages/ChatWithStaff/ChatWithStaff";
 
@@ -75,8 +73,6 @@ export const AppRoutes = () => {
           </ProtectedRoute>
         }
       >
-        <Route path="/ticket" element={<SellPage />} />
-        <Route path="/seat-booking/:showTimeId" element={<SeatBookingPage />} />
         <Route path="/statisticals" element={<StatisticalPage />} />
       </Route>
 

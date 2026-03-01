@@ -6,9 +6,14 @@ import {
   Users,
   Clock,
   CheckCheck,
-  X,
   MessageCircle,
   Phone,
+  Trash2,
+  Undo2,
+  Ban,
+  Download,
+  X,
+  Search,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -70,14 +75,15 @@ export default function ChatWithStaff() {
   const [isLoadingMessages, setIsLoadingMessages] = useState(false);
   const [isSending, setIsSending] = useState(false);
   const [unreadCounts, setUnreadCounts] = useState<Record<string, number>>({});
-  const [firstMessages, setFirstMessages] = useState<Record<string, string>>(
-    {},
-  );
+  const [lastMessages, setLastMessages] = useState<Record<string, string>>({});
   const [isLoadingConversations, setIsLoadingConversations] = useState(true);
+  const [previewImage, setPreviewImage] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const activeConversationRef = useRef<string | null>(null);
 
   // ---------- Scroll ----------
   const scrollToBottom = useCallback(() => {
@@ -88,6 +94,11 @@ export default function ChatWithStaff() {
     scrollToBottom();
   }, [messages, scrollToBottom]);
 
+  // ---------- Track active conversation for closures ----------
+  useEffect(() => {
+    activeConversationRef.current = activeConversation?.id ?? null;
+  }, [activeConversation]);
+
   // ---------- Load initial conversations on mount ----------
   useEffect(() => {
     if (!socketService.isConnected()) return;
@@ -95,7 +106,7 @@ export default function ChatWithStaff() {
 
     const loadInitial = async () => {
       try {
-        // Load waiting conversations (with messages)
+        // Load waiting conversations
         const waitingRes = await socketService.getWaitingConversations();
         // Load my active conversations
         const mineRes = await socketService.getMyConversations();
@@ -103,25 +114,21 @@ export default function ChatWithStaff() {
         const allConvs: Conversation[] = [];
 
         if (waitingRes.data) {
-          // Extract first messages from waiting conversations
-          const fmMap: Record<string, string> = {};
+          allConvs.push(...waitingRes.data);
+
+          // Load first message for each waiting conversation
+          const msgMap: Record<string, string> = {};
           for (const conv of waitingRes.data) {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            const msgs = (conv as any).messages as
-              | { content: string; created_at: string }[]
-              | undefined;
-            if (msgs && msgs.length > 0) {
-              // Sort by created_at asc, take first
-              const sorted = [...msgs].sort(
-                (a, b) =>
-                  new Date(a.created_at).getTime() -
-                  new Date(b.created_at).getTime(),
-              );
-              fmMap[conv.id] = sorted[0].content;
+            try {
+              const msgRes = await socketService.getMessages(conv.id, 1, 0);
+              if (msgRes.data && msgRes.data.length > 0) {
+                msgMap[conv.id] = msgRes.data[0].content || "[Hình ảnh]";
+              }
+            } catch {
+              // ignore
             }
           }
-          setFirstMessages((prev) => ({ ...prev, ...fmMap }));
-          allConvs.push(...waitingRes.data);
+          setLastMessages((prev) => ({ ...prev, ...msgMap }));
         }
 
         if (mineRes.data) {
@@ -153,30 +160,24 @@ export default function ChatWithStaff() {
   useEffect(() => {
     if (!socketService.isConnected()) return;
 
-    // Listen for new waiting conversations (emitted to "staff" room)
+    // Cuộc hội thoại mới (WAITING) – tất cả staff/admin nhìn thấy
     const offNew = socketService.onNewConversation((conv) => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const firstMsg = (conv as any).firstMessage as Message | undefined;
-      if (firstMsg) {
-        setFirstMessages((prev) => ({ ...prev, [conv.id]: firstMsg.content }));
-      }
-
       setConversations((prev) => {
         if (prev.find((c) => c.id === conv.id)) return prev;
         return [conv, ...prev];
       });
     });
 
-    // Listen for assigned conversations (emitted to "staff" room + conversation room)
+    // Cuộc hội thoại đã được assign
     const offAssigned = socketService.onConversationAssigned((conv) => {
       if (conv.staff_id === user?.id) {
-        // This staff accepted — move from waiting to active
+        // Staff này đã nhận → chuyển từ WAITING sang ACTIVE
         setConversations((prev) =>
           prev.map((c) => (c.id === conv.id ? conv : c)),
         );
         setActiveConversation((prev) => (prev?.id === conv.id ? conv : prev));
       } else {
-        // Another staff accepted — remove from our list entirely
+        // Staff khác đã nhận → xóa khỏi danh sách
         setConversations((prev) => prev.filter((c) => c.id !== conv.id));
         setActiveConversation((prev) => {
           if (prev?.id === conv.id) {
@@ -188,27 +189,41 @@ export default function ChatWithStaff() {
       }
     });
 
-    // Listen for closed conversations
-    const offClosed = socketService.onConversationClosed(() => {
-      // When conversation is closed while we're in it
-      setActiveConversation((prev) => {
-        if (prev) {
-          setConversations((cs) => cs.filter((c) => c.id !== prev.id));
-        }
-        return null;
-      });
-      setMessages([]);
-    });
+    // Cuộc hội thoại đã đóng
+    const offClosed = socketService.onConversationClosed(
+      ({ conversationId }) => {
+        setConversations((prev) => prev.filter((c) => c.id !== conversationId));
+        setActiveConversation((prev) => {
+          if (prev?.id === conversationId) {
+            setMessages([]);
+            return null;
+          }
+          return prev;
+        });
+      },
+    );
 
-    // Listen for new messages
+    // Tin nhắn mới
     const offMessage = socketService.onNewMessage((msg) => {
-      setMessages((prev) => {
-        if (prev.find((m) => m.id === msg.id)) return prev;
-        return [...prev, msg];
-      });
+      // Thêm vào messages CHỈ nếu đang xem conversation này
+      if (msg.conversation_id === activeConversationRef.current) {
+        setMessages((prev) => {
+          if (prev.find((m) => m.id === msg.id)) return prev;
+          return [...prev, msg];
+        });
+      }
 
-      // Update unread if message is not from active conversation or from someone else
-      if (msg.sender_id !== user?.id) {
+      // Update last message preview cho waiting conversations
+      setLastMessages((prev) => ({
+        ...prev,
+        [msg.conversation_id]: msg.content || "[Hình ảnh]",
+      }));
+
+      // Cập nhật unread nếu tin nhắn từ người khác VÀ không đang xem conversation đó
+      if (
+        msg.sender_id !== user?.id &&
+        msg.conversation_id !== activeConversationRef.current
+      ) {
         setUnreadCounts((prev) => ({
           ...prev,
           [msg.conversation_id]: (prev[msg.conversation_id] || 0) + 1,
@@ -216,7 +231,7 @@ export default function ChatWithStaff() {
       }
     });
 
-    // Listen for read updates
+    // Đã đọc update
     const offRead = socketService.onMessageReadUpdate(
       ({ conversationId, userId: readUserId }) => {
         if (readUserId !== user?.id) {
@@ -231,12 +246,18 @@ export default function ChatWithStaff() {
       },
     );
 
+    // Tin nhắn bị thu hồi
+    const offRecalled = socketService.onMessageRecalled((msg) => {
+      setMessages((prev) => prev.map((m) => (m.id === msg.id ? msg : m)));
+    });
+
     return () => {
       offNew();
       offAssigned();
       offClosed();
       offMessage();
       offRead();
+      offRecalled();
     };
   }, [user?.id]);
 
@@ -246,7 +267,7 @@ export default function ChatWithStaff() {
     setIsLoadingMessages(true);
     setMessages([]);
 
-    // Join the conversation room
+    // Join conversation room
     socketService.joinConversation(conv.id);
 
     try {
@@ -291,7 +312,7 @@ export default function ChatWithStaff() {
     [selectConversation],
   );
 
-  // ---------- Close conversation ----------
+  // ---------- Close (delete) conversation ----------
   const handleClose = useCallback(
     async (convId: string) => {
       try {
@@ -359,6 +380,18 @@ export default function ChatWithStaff() {
     [activeConversation],
   );
 
+  // ---------- Recall message ----------
+  const handleRecall = useCallback(async (messageId: string) => {
+    try {
+      const res = await socketService.recallMessage(messageId);
+      if (res.error) {
+        console.error("Recall failed:", res.error);
+      }
+    } catch (err) {
+      console.error("Recall failed:", err);
+    }
+  }, []);
+
   // ---------- Key press ----------
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && !e.shiftKey) {
@@ -389,330 +422,444 @@ export default function ChatWithStaff() {
     (c) => c.status === ConversationStatus.ACTIVE && c.staff_id === user?.id,
   );
 
+  console.log("conversations", conversations);
+
+  // ---------- Filter by search ----------
+  const normalizeSearch = (str: string) => str.toLowerCase().trim();
+  const filteredWaiting = searchQuery
+    ? waitingConversations.filter((c) => {
+        const q = normalizeSearch(searchQuery);
+        return (
+          normalizeSearch(c.customer?.name || "").includes(q) ||
+          normalizeSearch(c.customer?.email || "").includes(q) ||
+          normalizeSearch(c.customer?.phone || "").includes(q)
+        );
+      })
+    : waitingConversations;
+  const filteredActive = searchQuery
+    ? activeConversations.filter((c) => {
+        const q = normalizeSearch(searchQuery);
+        return (
+          normalizeSearch(c.customer?.name || "").includes(q) ||
+          normalizeSearch(c.customer?.email || "").includes(q) ||
+          normalizeSearch(c.customer?.phone || "").includes(q)
+        );
+      })
+    : activeConversations;
+
   return (
-    <div className="flex h-[calc(100vh-10rem)] overflow-hidden rounded-xl border bg-background shadow-sm">
-      {/* ============ LEFT SIDEBAR ============ */}
-      <div className="flex w-80 flex-col border-r">
-        {/* Sidebar Header */}
-        <div className="flex items-center gap-3 border-b px-4 py-3">
-          <MessageCircle className="h-5 w-5 text-amber-500" />
-          <h2 className="text-lg font-semibold">Chat hỗ trợ</h2>
-          {waitingConversations.length > 0 && (
-            <Badge variant="destructive" className="ml-auto">
-              {waitingConversations.length}
-            </Badge>
-          )}
-        </div>
-
-        <ScrollArea className="flex-1">
-          {/* Waiting Section */}
-          {waitingConversations.length > 0 && (
-            <div>
-              <div className="flex items-center gap-2 px-4 py-2 text-xs font-medium uppercase text-muted-foreground">
-                <Clock className="h-3 w-3" />
-                Đang chờ ({waitingConversations.length})
-              </div>
-              {waitingConversations.map((conv) => (
-                <div
-                  key={conv.id}
-                  className="mx-2 mb-1 flex items-center gap-3 rounded-lg border border-amber-200 bg-amber-50 p-3 dark:border-amber-900 dark:bg-amber-950/30"
-                >
-                  <Avatar className="h-9 w-9">
-                    <AvatarFallback className="bg-amber-100 text-amber-700 text-xs dark:bg-amber-900 dark:text-amber-300">
-                      {getInitials(conv.customer?.name)}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-medium">
-                      {conv.customer?.name || "Khách hàng"}
-                    </p>
-                    {firstMessages[conv.id] ? (
-                      <p className="truncate text-xs text-muted-foreground italic">
-                        &ldquo;{firstMessages[conv.id]}&rdquo;
-                      </p>
-                    ) : (
-                      <p className="text-xs text-muted-foreground">
-                        {formatTime(conv.created_at)}
-                      </p>
-                    )}
-                  </div>
-                  <Button
-                    size="sm"
-                    className="h-7 bg-amber-500 text-xs hover:bg-amber-600"
-                    onClick={() => handleAssign(conv)}
-                  >
-                    Nhận
-                  </Button>
-                </div>
-              ))}
-              <Separator className="my-1" />
-            </div>
-          )}
-
-          {/* Active Section */}
-          <div>
-            {activeConversations.length > 0 && (
-              <div className="flex items-center gap-2 px-4 py-2 text-xs font-medium uppercase text-muted-foreground">
-                <Users className="h-3 w-3" />
-                Đang trò chuyện ({activeConversations.length})
-              </div>
-            )}
-            {activeConversations.map((conv) => {
-              const isActive = activeConversation?.id === conv.id;
-              const unread = unreadCounts[conv.id] || 0;
-
-              return (
-                <button
-                  key={conv.id}
-                  onClick={() => selectConversation(conv)}
-                  className={cn(
-                    "mx-2 mb-1 flex w-[calc(100%-1rem)] items-center gap-3 rounded-lg p-3 text-left transition-colors",
-                    isActive ? "bg-accent" : "hover:bg-muted/50",
-                  )}
-                >
-                  <Avatar className="h-9 w-9">
-                    <AvatarFallback className="bg-primary/10 text-primary text-xs">
-                      {getInitials(conv.customer?.name)}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-medium">
-                      {conv.customer?.name || "Khách hàng"}
-                    </p>
-                    <p className="truncate text-xs text-muted-foreground">
-                      {conv.customer?.email}
-                    </p>
-                  </div>
-                  {unread > 0 && (
-                    <Badge
-                      variant="destructive"
-                      className="h-5 min-w-5 justify-center text-[10px]"
-                    >
-                      {unread}
-                    </Badge>
-                  )}
-                </button>
-              );
-            })}
-
-            {conversations.length === 0 && (
-              <div className="flex flex-col items-center justify-center gap-2 py-16 text-center text-muted-foreground">
-                {isLoadingConversations ? (
-                  <Loader2 className="h-10 w-10 animate-spin opacity-30" />
-                ) : (
-                  <>
-                    <MessageCircle className="h-10 w-10 opacity-30" />
-                    <p className="text-sm">Chưa có cuộc trò chuyện nào</p>
-                    <p className="text-xs">
-                      Cuộc hội thoại mới sẽ hiển thị ở đây
-                    </p>
-                  </>
-                )}
-              </div>
+    <>
+      <div className="flex h-[calc(100vh-10rem)] overflow-hidden rounded-xl border bg-background shadow-sm">
+        {/* ============ LEFT SIDEBAR ============ */}
+        <div className="flex w-80 flex-col border-r">
+          {/* Sidebar Header */}
+          <div className="flex items-center gap-3 border-b px-4 py-3">
+            <MessageCircle className="h-5 w-5 text-amber-500" />
+            <h2 className="text-lg font-semibold">Chat hỗ trợ</h2>
+            {waitingConversations.length > 0 && (
+              <Badge variant="destructive" className="ml-auto">
+                {waitingConversations.length}
+              </Badge>
             )}
           </div>
-        </ScrollArea>
-      </div>
 
-      {/* ============ RIGHT CHAT AREA ============ */}
-      <div className="flex flex-1 flex-col">
-        {activeConversation ? (
-          <>
-            {/* Chat Header */}
-            <div className="flex items-center gap-3 border-b px-4 py-3">
-              <Avatar className="h-9 w-9">
-                <AvatarFallback className="bg-primary/10 text-primary text-xs">
-                  {getInitials(activeConversation.customer?.name)}
-                </AvatarFallback>
-              </Avatar>
-              <div className="min-w-0 flex-1">
-                <p className="font-medium">
-                  {activeConversation.customer?.name || "Khách hàng"}
-                </p>
-                <div className="flex items-center gap-2">
-                  <p className="text-xs text-muted-foreground">
-                    {activeConversation.customer?.email}
-                  </p>
-                  {activeConversation.customer?.phone && (
+          {/* Search */}
+          <div className="px-3 py-2 border-b">
+            <div className="relative">
+              <Search className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Tìm kiếm khách hàng..."
+                className="pl-8 h-8 text-sm rounded-full"
+              />
+            </div>
+          </div>
+
+          <ScrollArea className="flex-1">
+            {/* Waiting Section – tất cả staff/admin nhìn thấy */}
+            {filteredWaiting.length > 0 && (
+              <div>
+                <div className="flex items-center gap-2 px-4 py-2 text-xs font-medium uppercase text-muted-foreground">
+                  <Clock className="h-3 w-3" />
+                  Đang chờ ({filteredWaiting.length})
+                </div>
+                {filteredWaiting.map((conv) => (
+                  <div
+                    key={conv.id}
+                    className="mx-2 mb-1 flex items-center gap-3 rounded-lg border border-amber-200 bg-amber-50 p-3 dark:border-amber-900 dark:bg-amber-950/30"
+                  >
+                    <Avatar className="h-9 w-9">
+                      <AvatarFallback className="bg-amber-100 text-amber-700 text-xs dark:bg-amber-900 dark:text-amber-300">
+                        {getInitials(conv.customer?.name)}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-medium">
+                        {conv.customer?.name ||
+                          `Khách #${conv.customer_id?.slice(-4) || "???"}`}
+                      </p>
+                      {lastMessages[conv.id] ? (
+                        <p className="truncate text-xs text-muted-foreground italic">
+                          &ldquo;{lastMessages[conv.id]}&rdquo;
+                        </p>
+                      ) : (
+                        <p className="text-xs text-muted-foreground">
+                          {formatTime(conv.created_at)}
+                        </p>
+                      )}
+                    </div>
+                    <Button
+                      size="sm"
+                      className="h-7 bg-amber-500 text-xs hover:bg-amber-600"
+                      onClick={() => handleAssign(conv)}
+                    >
+                      Nhận
+                    </Button>
+                  </div>
+                ))}
+                <Separator className="my-1" />
+              </div>
+            )}
+
+            {/* Active Section – chỉ hiển thị conversation của staff này */}
+            <div>
+              {filteredActive.length > 0 && (
+                <div className="flex items-center gap-2 px-4 py-2 text-xs font-medium uppercase text-muted-foreground">
+                  <Users className="h-3 w-3" />
+                  Đang trò chuyện ({filteredActive.length})
+                </div>
+              )}
+              {filteredActive.map((conv) => {
+                const isActive = activeConversation?.id === conv.id;
+                const unread = unreadCounts[conv.id] || 0;
+
+                return (
+                  <button
+                    key={conv.id}
+                    onClick={() => selectConversation(conv)}
+                    className={cn(
+                      "mx-2 mb-1 flex w-[calc(100%-1rem)] items-center gap-3 rounded-lg p-3 text-left transition-colors",
+                      isActive ? "bg-accent" : "hover:bg-muted/50",
+                    )}
+                  >
+                    <Avatar className="h-9 w-9">
+                      <AvatarFallback className="bg-primary/10 text-primary text-xs">
+                        {getInitials(conv.customer?.name)}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-medium">
+                        {conv.customer?.name ||
+                          `Khách #${conv.customer_id?.slice(-4) || "???"}`}
+                      </p>
+                      <p className="truncate text-xs text-muted-foreground">
+                        {conv.customer?.email}
+                      </p>
+                    </div>
+                    {unread > 0 && (
+                      <Badge
+                        variant="destructive"
+                        className="h-5 min-w-5 justify-center text-[10px]"
+                      >
+                        {unread}
+                      </Badge>
+                    )}
+                  </button>
+                );
+              })}
+
+              {conversations.length === 0 && (
+                <div className="flex flex-col items-center justify-center gap-2 py-16 text-center text-muted-foreground">
+                  {isLoadingConversations ? (
+                    <Loader2 className="h-10 w-10 animate-spin opacity-30" />
+                  ) : (
                     <>
-                      <span className="text-xs text-muted-foreground">·</span>
-                      <p className="flex items-center gap-1 text-xs text-muted-foreground">
-                        <Phone className="h-3 w-3" />
-                        {activeConversation.customer.phone}
+                      <MessageCircle className="h-10 w-10 opacity-30" />
+                      <p className="text-sm">Chưa có cuộc trò chuyện nào</p>
+                      <p className="text-xs">
+                        Cuộc hội thoại mới sẽ hiển thị ở đây
                       </p>
                     </>
                   )}
                 </div>
-              </div>
-              <Badge
-                variant={
-                  activeConversation.status === ConversationStatus.ACTIVE
-                    ? "default"
-                    : "secondary"
-                }
-                className="text-[10px]"
-              >
-                {activeConversation.status === ConversationStatus.ACTIVE
-                  ? "Đang hỗ trợ"
-                  : activeConversation.status}
-              </Badge>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-8 w-8 text-muted-foreground hover:text-destructive"
-                onClick={() => handleClose(activeConversation.id)}
-                title="Đóng cuộc trò chuyện"
-              >
-                <X className="h-4 w-4" />
-              </Button>
-            </div>
-
-            {/* Messages */}
-            <ScrollArea className="flex-1 px-4 py-3">
-              {isLoadingMessages ? (
-                <div className="flex h-full items-center justify-center">
-                  <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-                </div>
-              ) : messages.length === 0 ? (
-                <div className="flex h-full flex-col items-center justify-center text-center text-muted-foreground">
-                  <MessageCircle className="mb-2 h-10 w-10 opacity-30" />
-                  <p className="text-sm">Chưa có tin nhắn</p>
-                  <p className="text-xs">Hãy bắt đầu cuộc trò chuyện</p>
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  {groupedMessages.map((group) => (
-                    <div key={group.date}>
-                      {/* Date separator */}
-                      <div className="my-4 flex items-center gap-3">
-                        <Separator className="flex-1" />
-                        <span className="text-xs text-muted-foreground">
-                          {group.date}
-                        </span>
-                        <Separator className="flex-1" />
-                      </div>
-
-                      <div className="space-y-2">
-                        {group.messages.map((msg) => {
-                          const isMe = msg.sender_id === user?.id;
-
-                          return (
-                            <div
-                              key={msg.id}
-                              className={cn(
-                                "flex items-end gap-2",
-                                isMe ? "flex-row-reverse" : "flex-row",
-                              )}
-                            >
-                              {!isMe && (
-                                <Avatar className="h-7 w-7">
-                                  <AvatarFallback className="bg-amber-100 text-amber-700 text-[10px] dark:bg-amber-900 dark:text-amber-300">
-                                    {getInitials(msg.sender?.name)}
-                                  </AvatarFallback>
-                                </Avatar>
-                              )}
-                              <div
-                                className={cn(
-                                  "max-w-[65%] rounded-2xl px-3.5 py-2 text-sm",
-                                  isMe
-                                    ? "rounded-br-sm bg-primary text-primary-foreground"
-                                    : "rounded-bl-sm bg-muted",
-                                )}
-                              >
-                                {msg.image_url && (
-                                  <img
-                                    src={msg.image_url}
-                                    alt="Shared image"
-                                    className="mb-1 max-h-48 rounded-lg object-cover"
-                                  />
-                                )}
-                                {msg.content && (
-                                  <p className="whitespace-pre-wrap">
-                                    {msg.content}
-                                  </p>
-                                )}
-                                <div
-                                  className={cn(
-                                    "mt-1 flex items-center gap-1 text-[10px]",
-                                    isMe
-                                      ? "justify-end opacity-70"
-                                      : "opacity-50",
-                                  )}
-                                >
-                                  <span>{formatTime(msg.created_at)}</span>
-                                  {isMe && msg.is_seen && (
-                                    <CheckCheck className="h-3 w-3" />
-                                  )}
-                                </div>
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  ))}
-                  <div ref={messagesEndRef} />
-                </div>
               )}
-            </ScrollArea>
+            </div>
+          </ScrollArea>
+        </div>
 
-            {/* Input Area */}
-            <div className="border-t p-3">
-              <div className="flex items-center gap-2">
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept="image/*"
-                  className="hidden"
-                  onChange={handleImageUpload}
-                />
+        {/* ============ RIGHT CHAT AREA ============ */}
+        <div className="flex flex-1 flex-col">
+          {activeConversation ? (
+            <>
+              {/* Chat Header */}
+              <div className="flex items-center gap-3 border-b px-4 py-3">
+                <Avatar className="h-9 w-9">
+                  <AvatarFallback className="bg-primary/10 text-primary text-xs">
+                    {getInitials(activeConversation.customer?.name)}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="min-w-0 flex-1">
+                  <p className="font-medium">
+                    {activeConversation.customer?.name ||
+                      `Khách #${activeConversation.customer_id?.slice(-4) || "???"}`}
+                  </p>
+                  <div className="flex items-center gap-2">
+                    <p className="text-xs text-muted-foreground">
+                      {activeConversation.customer?.email}
+                    </p>
+                    {activeConversation.customer?.phone && (
+                      <>
+                        <span className="text-xs text-muted-foreground">·</span>
+                        <p className="flex items-center gap-1 text-xs text-muted-foreground">
+                          <Phone className="h-3 w-3" />
+                          {activeConversation.customer.phone}
+                        </p>
+                      </>
+                    )}
+                  </div>
+                </div>
+                <Badge
+                  variant={
+                    activeConversation.status === ConversationStatus.ACTIVE
+                      ? "default"
+                      : "secondary"
+                  }
+                  className="text-[10px]"
+                >
+                  {activeConversation.status === ConversationStatus.ACTIVE
+                    ? "Đang hỗ trợ"
+                    : activeConversation.status}
+                </Badge>
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="h-9 w-9 shrink-0 text-muted-foreground hover:text-primary"
-                  onClick={() => fileInputRef.current?.click()}
-                  disabled={isSending}
+                  className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                  onClick={() => handleClose(activeConversation.id)}
+                  title="Xóa cuộc trò chuyện"
                 >
-                  <ImagePlus className="h-5 w-5" />
-                </Button>
-                <Input
-                  ref={inputRef}
-                  value={inputValue}
-                  onChange={(e) => setInputValue(e.target.value)}
-                  onKeyDown={handleKeyPress}
-                  placeholder="Nhập tin nhắn..."
-                  disabled={isSending}
-                  className="flex-1 rounded-full"
-                />
-                <Button
-                  onClick={handleSend}
-                  disabled={!inputValue.trim() || isSending}
-                  size="icon"
-                  className="h-9 w-9 shrink-0 rounded-full bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700"
-                >
-                  {isSending ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <Send className="h-4 w-4" />
-                  )}
+                  <Trash2 className="h-4 w-4" />
                 </Button>
               </div>
+
+              {/* Messages */}
+              <ScrollArea className="flex-1 px-4 py-3">
+                {isLoadingMessages ? (
+                  <div className="flex h-full items-center justify-center">
+                    <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                  </div>
+                ) : messages.length === 0 ? (
+                  <div className="flex h-full flex-col items-center justify-center text-center text-muted-foreground">
+                    <MessageCircle className="mb-2 h-10 w-10 opacity-30" />
+                    <p className="text-sm">Chưa có tin nhắn</p>
+                    <p className="text-xs">Hãy bắt đầu cuộc trò chuyện</p>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {groupedMessages.map((group) => (
+                      <div key={group.date}>
+                        {/* Date separator */}
+                        <div className="my-4 flex items-center gap-3">
+                          <Separator className="flex-1" />
+                          <span className="text-xs text-muted-foreground">
+                            {group.date}
+                          </span>
+                          <Separator className="flex-1" />
+                        </div>
+
+                        <div className="space-y-2">
+                          {group.messages.map((msg) => {
+                            const isMe = msg.sender_id === user?.id;
+
+                            return (
+                              <div
+                                key={msg.id}
+                                className={cn(
+                                  "group flex items-end gap-2",
+                                  isMe ? "flex-row-reverse" : "flex-row",
+                                )}
+                              >
+                                {!isMe && (
+                                  <Avatar className="h-7 w-7">
+                                    <AvatarFallback className="bg-amber-100 text-amber-700 text-[10px] dark:bg-amber-900 dark:text-amber-300">
+                                      {getInitials(msg.sender?.name)}
+                                    </AvatarFallback>
+                                  </Avatar>
+                                )}
+                                {msg.type === "RECALLED" ? (
+                                  <div
+                                    className={cn(
+                                      "flex max-w-[65%] items-center gap-1.5 rounded-2xl border border-dashed px-3.5 py-2 text-sm italic opacity-60",
+                                      isMe
+                                        ? "rounded-br-sm border-primary/30"
+                                        : "rounded-bl-sm border-muted-foreground/30",
+                                    )}
+                                  >
+                                    <Ban className="h-3.5 w-3.5 shrink-0" />
+                                    <span>Tin nhắn đã bị thu hồi</span>
+                                  </div>
+                                ) : (
+                                  <>
+                                    <div
+                                      className={cn(
+                                        "max-w-[65%] rounded-2xl px-3.5 py-2 text-sm",
+                                        isMe
+                                          ? "rounded-br-sm bg-primary text-primary-foreground"
+                                          : "rounded-bl-sm bg-muted",
+                                      )}
+                                    >
+                                      {msg.image_url && (
+                                        <img
+                                          src={msg.image_url}
+                                          alt="Shared image"
+                                          className="mb-1 max-h-48 cursor-pointer rounded-lg object-cover transition-opacity hover:opacity-80"
+                                          onClick={() =>
+                                            setPreviewImage(msg.image_url)
+                                          }
+                                        />
+                                      )}
+                                      {msg.content && (
+                                        <p className="whitespace-pre-wrap">
+                                          {msg.content}
+                                        </p>
+                                      )}
+                                      <div
+                                        className={cn(
+                                          "mt-1 flex items-center gap-1 text-[10px]",
+                                          isMe
+                                            ? "justify-end opacity-70"
+                                            : "opacity-50",
+                                        )}
+                                      >
+                                        <span>
+                                          {formatTime(msg.created_at)}
+                                        </span>
+                                        {isMe && msg.is_seen && (
+                                          <CheckCheck className="h-3 w-3" />
+                                        )}
+                                      </div>
+                                    </div>
+                                    {isMe && (
+                                      <button
+                                        onClick={() => handleRecall(msg.id)}
+                                        className="mb-1 hidden shrink-0 rounded-full p-1 text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive group-hover:block"
+                                        title="Thu hồi tin nhắn"
+                                      >
+                                        <Undo2 className="h-3.5 w-3.5" />
+                                      </button>
+                                    )}
+                                  </>
+                                )}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    ))}
+                    <div ref={messagesEndRef} />
+                  </div>
+                )}
+              </ScrollArea>
+
+              {/* Input Area */}
+              <div className="border-t p-3">
+                <div className="flex items-center gap-2">
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={handleImageUpload}
+                  />
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-9 w-9 shrink-0 text-muted-foreground hover:text-primary"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={isSending}
+                  >
+                    <ImagePlus className="h-5 w-5" />
+                  </Button>
+                  <Input
+                    ref={inputRef}
+                    value={inputValue}
+                    onChange={(e) => setInputValue(e.target.value)}
+                    onKeyDown={handleKeyPress}
+                    placeholder="Nhập tin nhắn..."
+                    disabled={isSending}
+                    className="flex-1 rounded-full"
+                  />
+                  <Button
+                    onClick={handleSend}
+                    disabled={!inputValue.trim() || isSending}
+                    size="icon"
+                    className="h-9 w-9 shrink-0 rounded-full bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700"
+                  >
+                    {isSending ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <Send className="h-4 w-4" />
+                    )}
+                  </Button>
+                </div>
+              </div>
+            </>
+          ) : (
+            /* No conversation selected */
+            <div className="flex flex-1 flex-col items-center justify-center text-center text-muted-foreground">
+              <div className="rounded-full bg-muted p-6">
+                <MessageCircle className="h-12 w-12 opacity-40" />
+              </div>
+              <h3 className="mt-4 text-lg font-medium">
+                Chat hỗ trợ khách hàng
+              </h3>
+              <p className="mt-1 max-w-sm text-sm">
+                Chọn một cuộc trò chuyện từ danh sách bên trái hoặc chờ khách
+                hàng gửi yêu cầu mới
+              </p>
             </div>
-          </>
-        ) : (
-          /* No conversation selected */
-          <div className="flex flex-1 flex-col items-center justify-center text-center text-muted-foreground">
-            <div className="rounded-full bg-muted p-6">
-              <MessageCircle className="h-12 w-12 opacity-40" />
-            </div>
-            <h3 className="mt-4 text-lg font-medium">Chat hỗ trợ khách hàng</h3>
-            <p className="mt-1 max-w-sm text-sm">
-              Chọn một cuộc trò chuyện từ danh sách bên trái hoặc chờ khách hàng
-              gửi yêu cầu mới
-            </p>
-          </div>
-        )}
+          )}
+        </div>
       </div>
-    </div>
+
+      {/* Image Preview Modal */}
+      {previewImage && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4"
+          onClick={() => setPreviewImage(null)}
+        >
+          <div
+            className="relative max-h-[90vh] max-w-[90vw]"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <img
+              src={previewImage}
+              alt="Preview"
+              className="max-h-[85vh] max-w-full rounded-lg object-contain"
+            />
+            <div className="absolute -top-3 -right-3 flex gap-1">
+              <a
+                href={previewImage}
+                download
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex h-8 w-8 items-center justify-center rounded-full bg-white shadow-lg transition-colors hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700"
+                title="Tải xuống"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <Download className="h-4 w-4 text-gray-700 dark:text-gray-300" />
+              </a>
+              <button
+                onClick={() => setPreviewImage(null)}
+                className="flex h-8 w-8 items-center justify-center rounded-full bg-white shadow-lg transition-colors hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700"
+                title="Đóng"
+              >
+                <X className="h-4 w-4 text-gray-700 dark:text-gray-300" />
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
   );
 }

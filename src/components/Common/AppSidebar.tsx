@@ -6,7 +6,6 @@ import {
   Package,
   PartyPopper,
   FileText,
-  Ticket,
   Settings,
   ChevronRight,
   MessageCircle,
@@ -33,13 +32,6 @@ import {
 } from "@/components/ui/collapsible";
 
 const navItems = [
-  {
-    name: "Tickets",
-    path: "/ticket",
-    icon: Ticket,
-    label: "Mua vé",
-    allow: ["STAFF"],
-  },
   {
     name: "Movies",
     label: "Quản lý phim",
