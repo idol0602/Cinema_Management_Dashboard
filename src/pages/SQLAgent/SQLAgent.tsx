@@ -5,147 +5,204 @@ import {
   User,
   Loader2,
   BarChart3,
-  TrendingUp,
-  PieChart,
-  FileSpreadsheet,
-  X,
+  CheckCircle2,
+  XCircle,
 } from "lucide-react";
 import { chatWithAgent } from "@/services/agent.service";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import rehypeHighlight from "rehype-highlight";
-import type { ChatMessage } from "@/types/chat.type";
-import { DynamicBarChart } from "../../components/charts/DynamicBarChart";
-import { DynamicLineChart } from "../../components/charts/DynamicLineChart";
-import { DynamicPieChart } from "../../components/charts/DynamicPieChart";
-import { AlertDialogDestructive } from "../../components/ui/delete-dialog";
+import type { ChatMessage, AgentResponseData } from "@/types/chat.type";
+import type { ChartInput } from "@/types/chart.type";
+import { ChartRenderer } from "../../components/charts/ChartRenderer";
 import { useAuth } from "@/hooks/useAuth";
+import { socketService } from "@/lib/socket";
 
-// Sample data for movie revenue
-const movieRevenueData = [
-  { month: "Tháng 1", revenue: 450000000, tickets: 15420 },
-  { month: "Tháng 2", revenue: 520000000, tickets: 17680 },
-  { month: "Tháng 3", revenue: 480000000, tickets: 16200 },
-  { month: "Tháng 4", revenue: 610000000, tickets: 20340 },
-  { month: "Tháng 5", revenue: 580000000, tickets: 19450 },
-  { month: "Tháng 6", revenue: 670000000, tickets: 22500 },
-];
+/**
+ * Build a ChartInput from the agent response data.
+ * Auto-detects xField/yFields for bar/line charts and labelField/valueField for pie charts.
+ */
+function buildChartInput(data: AgentResponseData): ChartInput | null {
+  if (!data.chart_type || !data.result?.length) return null;
 
-const movieRevenueSchema = {
-  type: "bar" as const,
-  xField: "month",
-  yFields: ["revenue", "tickets"],
-};
+  const keys = Object.keys(data.result[0]);
+  if (keys.length < 2) return null;
 
-// Sample data for user growth
-const userGrowthData = [
-  { month: "Tháng 1", users: 2500 },
-  { month: "Tháng 2", users: 3200 },
-  { month: "Tháng 3", users: 4100 },
-  { month: "Tháng 4", users: 5300 },
-  { month: "Tháng 5", users: 6800 },
-  { month: "Tháng 6", users: 8500 },
-];
+  // Convert numeric string values to numbers
+  const parsedData = data.result.map((row) => {
+    const parsed: Record<string, unknown> = {};
+    for (const key of keys) {
+      const val = row[key];
+      const num = Number(val);
+      parsed[key] = isNaN(num) ? val : num;
+    }
+    return parsed;
+  });
 
-const userGrowthSchema = {
-  type: "line" as const,
-  xField: "month",
-  yFields: ["users"],
-};
+  if (data.chart_type === "pie") {
+    // First key = label, second key = value
+    return {
+      type: "pie",
+      data: parsedData,
+      labelField: keys[0],
+      valueField: keys[1],
+    };
+  }
 
-// Sample data for movie genres distribution
-const genreDistributionData = [
-  { genre: "Hành động", count: 28 },
-  { genre: "Hài kịch", count: 22 },
-  { genre: "Kinh dị", count: 15 },
-  { genre: "Lãng mạn", count: 18 },
-  { genre: "Khoa học viễn tưởng", count: 12 },
-  { genre: "Phiêu lưu", count: 20 },
-];
-
-const genreDistributionSchema = {
-  type: "pie" as const,
-  labelField: "genre",
-  valueField: "count",
-};
+  // bar or line: first key = xField, remaining keys = yFields
+  return {
+    type: data.chart_type,
+    data: parsedData,
+    xField: keys[0],
+    yFields: keys.slice(1),
+  };
+}
 
 function SQLAgent() {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [sessionId, setSessionId] = useState("");
-  const [showImportModal, setShowImportModal] = useState(false);
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [respondedUrls, setRespondedUrls] = useState<Set<string>>(new Set());
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
   const { user } = useAuth();
 
   useEffect(() => {
-    if (user?.id) {
-      setSessionId(user.id);
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
+
+  useEffect(() => {
+    // Connect socket if not already connected
+    if (!socketService.isConnected()) {
+      socketService.connect();
     }
+
+    // Listen for callbacks from backend
+    const offCallback = socketService.onAgentCallback((rawPayload: any) => {
+      console.log("Agent callback received (raw):", rawPayload);
+      
+      let payload = rawPayload;
+      if (typeof rawPayload === "string") {
+        try {
+          payload = JSON.parse(rawPayload);
+        } catch (e) {
+          console.error("Failed to parse callback payload string", e);
+        }
+      }
+
+      // If it's an array, take the first element (just in case agent format changes)
+      payload = Array.isArray(payload) ? payload[0] : payload;
+
+      let content = "Đã nhận được phản hồi từ hệ thống.";
+      
+      // Determine status from either { status: true } or { data: { status: true } }
+      const status = payload?.status !== undefined ? payload.status : payload?.data?.status;
+      
+      if (status === true) {
+        content = "✅ Xác nhận thành công. Hệ thống đã ghi nhận thiết lập.";
+      } else if (status === false) {
+        content = "❌ Xác nhận thất bại hoặc đã bị từ chối.";
+      } else if (payload?.message) {
+        content = payload.message;
+      }
+
+      const callbackMsg: ChatMessage = {
+        id: user?.id || Date.now().toString(),
+        role: "assistant",
+        content,
+        timestamp: new Date(),
+        // Pass it raw in case there are charts in the payload
+        chartData: typeof payload === "object" ? payload : null,
+      };
+
+      setMessages((prev) => [...prev, callbackMsg]);
+    });
+
+    return () => {
+      offCallback();
+    };
   }, [user]);
-
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      setSelectedFile(file);
-    }
-  };
-
-  const handleImportFile = () => {
-    if (selectedFile) {
-      // TODO: Implement file import logic
-      console.log("Importing file:", selectedFile.name);
-      setShowImportModal(false);
-      setSelectedFile(null);
-    }
-  };
-
-  const handleCancelImport = () => {
-    setShowImportModal(false);
-    setSelectedFile(null);
-    if (fileInputRef.current) {
-      fileInputRef.current.value = "";
-    }
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!input.trim() || isLoading) return;
+
     setIsLoading(true);
-    const MessageRequest: ChatMessage = {
-      id: sessionId,
+    const userMessage: ChatMessage = {
+      id: user?.id || "",
       role: "user",
       content: input,
       timestamp: new Date(),
     };
     setInput("");
-    setMessages((prev) => [...prev, MessageRequest]);
+    setMessages((prev) => [...prev, userMessage]);
+
     try {
       const response = await chatWithAgent({
-        question: input,
-        session_id: sessionId,
+        message: input,
+        user_id: user?.id || "",
       });
 
-      const MessageResonse: ChatMessage = {
-        id: sessionId,
+      // Handle both array and single object responses, with null safety
+      const rawData = response.data;
+      const agentData: AgentResponseData = Array.isArray(rawData)
+        ? rawData[0]
+        : rawData ?? { message: null, confirm_url: null, chart_type: null, result: null };
+
+      const assistantMessage: ChatMessage = {
+        id: user?.id || "",
         role: "assistant",
-        content: response.data,
+        content: agentData?.message || "Không có phản hồi từ hệ thống.",
         timestamp: new Date(),
+        chartData: agentData,
       };
-      setMessages((prev) => [...prev, MessageResonse]);
+      setMessages((prev) => [...prev, assistantMessage]);
     } catch (error) {
       const errorMessage: ChatMessage = {
-        id: sessionId,
+        id: user?.id || "",
         role: "assistant",
         content:
-          "Sorry, there was an error processing your request. Please try again.",
+          "Xin lỗi, có lỗi xảy ra khi xử lý yêu cầu của bạn. Vui lòng thử lại.",
         timestamp: new Date(),
       };
       setMessages((prev) => [...prev, errorMessage]);
       console.error("Chat error:", error);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleConfirm = async (confirmUrl: string, answer: "yes" | "no") => {
+    setRespondedUrls((prev) => new Set(prev).add(confirmUrl));
+    try {
+      const res = await fetch(confirmUrl, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ answer }),
+      });
+      const data = await res.json();
+      // If the webhook returns a follow-up response, append it
+      const followUp: AgentResponseData = Array.isArray(data) ? data[0] : data;
+      if (followUp?.message) {
+        const followUpMessage: ChatMessage = {
+          id: user?.id || "",
+          role: "assistant",
+          content: followUp.message,
+          timestamp: new Date(),
+          chartData: followUp,
+        };
+        setMessages((prev) => [...prev, followUpMessage]);
+      }
+    } catch (error) {
+      console.error("Confirm error:", error);
+      const errMsg: ChatMessage = {
+        id: user?.id || "",
+        role: "assistant",
+        content: answer === "yes"
+          ? "Đã xác nhận, nhưng có lỗi khi nhận phản hồi."
+          : "Đã từ chối, nhưng có lỗi khi nhận phản hồi.",
+        timestamp: new Date(),
+      };
+      setMessages((prev) => [...prev, errMsg]);
     }
   };
 
@@ -166,52 +223,8 @@ function SQLAgent() {
         </div>
       </div>
 
-      {/* Charts Section */}
-      <div className="bg-card border-b border-border px-6 py-6 flex-shrink-0">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Revenue Chart */}
-          <div className="bg-primary/5 rounded-xl p-4 shadow-sm">
-            <div className="flex items-center gap-2 mb-3">
-              <BarChart3 className="w-5 h-5 text-primary" />
-              <h3 className="font-semibold text-foreground">
-                Doanh thu & Vé bán
-              </h3>
-            </div>
-            <DynamicBarChart
-              data={movieRevenueData}
-              schema={movieRevenueSchema}
-            />
-          </div>
-
-          {/* User Growth Chart */}
-          <div className="bg-accent/5 rounded-xl p-4 shadow-sm">
-            <div className="flex items-center gap-2 mb-3">
-              <TrendingUp className="w-5 h-5 text-accent" />
-              <h3 className="font-semibold text-foreground">
-                Tăng trưởng người dùng
-              </h3>
-            </div>
-            <DynamicLineChart data={userGrowthData} schema={userGrowthSchema} />
-          </div>
-
-          {/* Genre Distribution Chart */}
-          <div className="bg-destructive/5 rounded-xl p-4 shadow-sm">
-            <div className="flex items-center gap-2 mb-3">
-              <PieChart className="w-5 h-5 text-destructive" />
-              <h3 className="font-semibold text-foreground">
-                Phân bố thể loại phim
-              </h3>
-            </div>
-            <DynamicPieChart
-              data={genreDistributionData}
-              schema={genreDistributionSchema}
-            />
-          </div>
-        </div>
-      </div>
-
       {/* Messages Container */}
-      <div className="overflow-y-auto px-6 py-4 space-y-4 h-[80vh] bg-background">
+      <div className="overflow-y-auto px-6 py-4 space-y-4 flex-1 bg-background">
         {messages.length === 0 && (
           <div className="flex flex-col items-center justify-center h-full text-center">
             <Bot className="w-16 h-16 text-muted-foreground/50 mb-4" />
@@ -264,67 +277,130 @@ function SQLAgent() {
             </div>
           </div>
         )}
-        {messages.map((message, index) => (
-          <div
-            key={`${message.id}-${index}`}
-            className={`flex gap-3 ${
-              message.role === "user" ? "justify-end" : "justify-start"
-            }`}
-          >
-            {message.role === "assistant" && (
-              <div className="flex-shrink-0">
-                <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center">
-                  <Bot className="w-5 h-5 text-primary" />
-                </div>
-              </div>
-            )}
 
-            {/* MESSAGE BUBBLE */}
+        {messages.map((message, index) => {
+          const chartInput =
+            message.role === "assistant" && message.chartData
+              ? buildChartInput(message.chartData)
+              : null;
+
+          return (
             <div
-              className={`max-w-[70%] rounded-lg px-4 py-3 shadow-sm ${
-                message.role === "user"
-                  ? "bg-primary text-primary-foreground"
-                  : "bg-card border border-border text-foreground"
+              key={`${message.id}-${index}`}
+              className={`flex gap-3 ${
+                message.role === "user" ? "justify-end" : "justify-start"
               }`}
             >
-              {message.role === "assistant" ? (
-                <div className="prose prose-sm max-w-none prose-headings:text-foreground prose-p:text-foreground prose-code:text-primary">
-                  <ReactMarkdown
-                    remarkPlugins={[remarkGfm]}
-                    rehypePlugins={[rehypeHighlight]}
-                  >
-                    {message.content}
-                  </ReactMarkdown>
+              {message.role === "assistant" && (
+                <div className="flex-shrink-0">
+                  <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center">
+                    <Bot className="w-5 h-5 text-primary" />
+                  </div>
                 </div>
-              ) : (
-                <p className="whitespace-pre-wrap break-words">
-                  {message.content}
-                </p>
               )}
 
-              <span
-                className={`text-xs mt-2 block ${
+              {/* MESSAGE BUBBLE */}
+              <div
+                className={`max-w-[70%] rounded-lg px-4 py-3 shadow-sm ${
                   message.role === "user"
-                    ? "text-primary-foreground/70"
-                    : "text-muted-foreground"
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-card border border-border text-foreground"
                 }`}
               >
-                {new Date(message.timestamp).toLocaleTimeString("vi-VN", {
-                  hour: "2-digit",
-                  minute: "2-digit",
-                })}
-              </span>
-            </div>
+                {message.role === "assistant" ? (
+                  <>
+                    {message.content && (
+                      <div className="prose prose-sm max-w-none prose-headings:text-foreground prose-p:text-foreground prose-code:text-primary prose-strong:text-foreground prose-li:text-foreground">
+                        <ReactMarkdown
+                          remarkPlugins={[remarkGfm]}
+                          rehypePlugins={[rehypeHighlight]}
+                        >
+                          {message.content}
+                        </ReactMarkdown>
+                      </div>
+                    )}
 
-            {message.role === "user" && (
-              <div className="flex-shrink-0">
-                <div className="w-8 h-8 bg-muted rounded-full flex items-center justify-center">
-                  <User className="w-5 h-5 text-muted-foreground" />
-                </div>
+                    {/* Confirm / Reject buttons when confirm_url is present */}
+                    {message.chartData?.confirm_url && (
+                      <div className="mt-3 flex gap-2">
+                        {respondedUrls.has(message.chartData.confirm_url) ? (
+                          <span className="text-sm text-muted-foreground italic">
+                            Đã phản hồi
+                          </span>
+                        ) : (
+                          <>
+                            <button
+                              onClick={() =>
+                                handleConfirm(
+                                  message.chartData!.confirm_url!,
+                                  "yes"
+                                )
+                              }
+                              className="flex items-center gap-1.5 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm font-medium shadow-sm"
+                            >
+                              <CheckCircle2 className="w-4 h-4" />
+                              Xác nhận
+                            </button>
+                            <button
+                              onClick={() =>
+                                handleConfirm(
+                                  message.chartData!.confirm_url!,
+                                  "no"
+                                )
+                              }
+                              className="flex items-center gap-1.5 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm font-medium shadow-sm"
+                            >
+                              <XCircle className="w-4 h-4" />
+                              Từ chối
+                            </button>
+                          </>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Chart rendered inline when data is available */}
+                    {chartInput && (
+                      <div className="mt-3 bg-primary/5 rounded-lg p-3">
+                        <div className="flex items-center gap-2 mb-2">
+                          <BarChart3 className="w-4 h-4 text-primary" />
+                          <span className="text-sm font-medium text-foreground">
+                            Biểu đồ
+                          </span>
+                        </div>
+                        <ChartRenderer input={chartInput} />
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <p className="whitespace-pre-wrap break-words">
+                    {message.content}
+                  </p>
+                )}
+
+                <span
+                  className={`text-xs mt-2 block ${
+                    message.role === "user"
+                      ? "text-primary-foreground/70"
+                      : "text-muted-foreground"
+                  }`}
+                >
+                  {new Date(message.timestamp).toLocaleTimeString("vi-VN", {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })}
+                </span>
               </div>
-            )}
-          </div>
-        ))}
+
+              {message.role === "user" && (
+                <div className="flex-shrink-0">
+                  <div className="w-8 h-8 bg-muted rounded-full flex items-center justify-center">
+                    <User className="w-5 h-5 text-muted-foreground" />
+                  </div>
+                </div>
+              )}
+            </div>
+          );
+        })}
 
         {isLoading && (
           <div className="flex gap-3 justify-start">
@@ -348,14 +424,6 @@ function SQLAgent() {
       {/* Input Form */}
       <div className="bg-card border-t border-border px-6 py-4 shadow-lg flex-shrink-0">
         <form onSubmit={handleSubmit} className="flex gap-3">
-          <button
-            type="button"
-            onClick={() => setShowImportModal(true)}
-            className="px-4 py-3 bg-accent text-accent-foreground rounded-lg hover:bg-accent/90 focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2 transition-all flex items-center gap-2 shadow-md"
-            title="Import Excel"
-          >
-            <FileSpreadsheet className="w-5 h-5" />
-          </button>
           <input
             type="text"
             value={input}
@@ -378,64 +446,6 @@ function SQLAgent() {
           </button>
         </form>
       </div>
-
-      {/* Import Excel Modal */}
-      {showImportModal && (
-        <div className="fixed inset-0 bg-foreground/50 flex items-center justify-center z-50">
-          <div className="bg-card rounded-xl shadow-2xl p-6 w-full max-w-md mx-4 border border-border">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-foreground flex items-center gap-2">
-                <FileSpreadsheet className="w-5 h-5 text-accent" />
-                Import File Excel
-              </h3>
-              <button
-                onClick={handleCancelImport}
-                className="text-muted-foreground hover:text-foreground transition-colors"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            <div className="mb-6">
-              <label className="block text-sm font-medium text-foreground mb-2">
-                Chọn file Excel (.xlsx, .xls)
-              </label>
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept=".xlsx,.xls"
-                onChange={handleFileSelect}
-                className="block w-full text-sm text-muted-foreground file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-accent/10 file:text-accent hover:file:bg-accent/20 cursor-pointer border border-border rounded-lg"
-              />
-              {selectedFile && (
-                <p className="mt-2 text-sm text-muted-foreground">
-                  Đã chọn:{" "}
-                  <span className="font-medium text-foreground">
-                    {selectedFile.name}
-                  </span>
-                </p>
-              )}
-            </div>
-
-            <div className="flex gap-3 justify-end">
-              <button
-                onClick={handleCancelImport}
-                className="px-4 py-2 border border-border text-foreground rounded-lg hover:bg-muted focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 transition-all"
-              >
-                Hủy
-              </button>
-              <button
-                onClick={handleImportFile}
-                disabled={!selectedFile}
-                className="px-4 py-2 bg-accent text-accent-foreground rounded-lg hover:bg-accent/90 focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center gap-2"
-              >
-                <FileSpreadsheet className="w-4 h-4" />
-                Import
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

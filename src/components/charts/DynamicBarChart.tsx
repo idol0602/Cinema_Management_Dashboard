@@ -8,7 +8,7 @@ import {
   ResponsiveContainer,
   CartesianGrid,
 } from "recharts";
-import type { chartType } from "../../types/chart.type";
+import type { ChartInput } from "../../types/chart.type";
 
 const COLORS = [
   "#f97316", // orange-500 - primary
@@ -19,21 +19,17 @@ const COLORS = [
   "#ffedd5", // orange-100
 ];
 
-export function DynamicBarChart({
-  data,
-  schema,
-}: {
-  data: [];
-  schema: chartType;
-}) {
-  if (!schema?.xField || !schema?.yFields?.length) return null;
+export function DynamicBarChart({ input }: { input: ChartInput }) {
+  const { data, xField, yFields } = input;
+
+  if (!xField || !yFields?.length || !data?.length) return null;
 
   return (
     <ResponsiveContainer width="100%" height={300}>
       <BarChart data={data} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
         <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
         <XAxis
-          dataKey={schema.xField}
+          dataKey={xField}
           tick={{ fontSize: 12 }}
           stroke="#6b7280"
         />
@@ -48,7 +44,7 @@ export function DynamicBarChart({
         />
         <Legend wrapperStyle={{ fontSize: "12px" }} />
 
-        {schema.yFields.map((field, index) => (
+        {yFields.map((field, index) => (
           <Bar
             key={field}
             dataKey={field}

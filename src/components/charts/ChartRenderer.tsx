@@ -1,22 +1,16 @@
 import { DynamicBarChart } from "./DynamicBarChart";
 import { DynamicLineChart } from "./DynamicLineChart";
 import { DynamicPieChart } from "./DynamicPieChart";
-import type { chartType } from "../../types/chart.type";
+import type { ChartInput } from "../../types/chart.type";
 
-export function ChartRenderer({
-  data,
-  schema,
-}: {
-  data: [];
-  schema: chartType;
-}) {
-  switch (schema.type) {
+export function ChartRenderer({ input }: { input: ChartInput }) {
+  switch (input.type) {
     case "bar":
-      return <DynamicBarChart data={data} schema={schema} />;
+      return <DynamicBarChart input={input} />;
     case "line":
-      return <DynamicLineChart data={data} schema={schema} />;
+      return <DynamicLineChart input={input} />;
     case "pie":
-      return <DynamicPieChart data={data} schema={schema} />;
+      return <DynamicPieChart input={input} />;
     default:
       return null;
   }

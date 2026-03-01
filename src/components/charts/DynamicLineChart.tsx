@@ -8,7 +8,7 @@ import {
   ResponsiveContainer,
   CartesianGrid,
 } from "recharts";
-import type { chartType } from "../../types/chart.type";
+import type { ChartInput } from "../../types/chart.type";
 
 const COLORS = [
   "#10b981",
@@ -19,14 +19,10 @@ const COLORS = [
   "#ec4899",
 ];
 
-export function DynamicLineChart({
-  data,
-  schema,
-}: {
-  data: [];
-  schema: chartType;
-}) {
-  if (!schema?.xField || !schema?.yFields?.length) return null;
+export function DynamicLineChart({ input }: { input: ChartInput }) {
+  const { data, xField, yFields } = input;
+
+  if (!xField || !yFields?.length || !data?.length) return null;
 
   return (
     <ResponsiveContainer width="100%" height={300}>
@@ -36,7 +32,7 @@ export function DynamicLineChart({
       >
         <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
         <XAxis
-          dataKey={schema.xField}
+          dataKey={xField}
           tick={{ fontSize: 12 }}
           stroke="#6b7280"
         />
@@ -51,7 +47,7 @@ export function DynamicLineChart({
         />
         <Legend wrapperStyle={{ fontSize: "12px" }} />
 
-        {schema.yFields.map((field, index) => (
+        {yFields.map((field, index) => (
           <Line
             key={field}
             dataKey={field}

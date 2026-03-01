@@ -6,7 +6,7 @@ import {
   ResponsiveContainer,
   Cell,
 } from "recharts";
-import type { chartType } from "../../types/chart.type";
+import type { ChartInput } from "../../types/chart.type";
 
 const COLORS = [
   "#3b82f6",
@@ -19,22 +19,18 @@ const COLORS = [
   "#84cc16",
 ];
 
-export function DynamicPieChart({
-  data,
-  schema,
-}: {
-  data: [];
-  schema: chartType;
-}) {
-  if (!schema?.labelField || !schema?.valueField) return null;
+export function DynamicPieChart({ input }: { input: ChartInput }) {
+  const { data, labelField, valueField } = input;
+
+  if (!labelField || !valueField || !data?.length) return null;
 
   return (
     <ResponsiveContainer width="100%" height={300}>
       <PieChart>
         <Pie
           data={data}
-          dataKey={schema.valueField}
-          nameKey={schema.labelField}
+          dataKey={valueField}
+          nameKey={labelField}
           cx="50%"
           cy="50%"
           outerRadius={80}

@@ -318,6 +318,15 @@ class SocketService {
       this.socket?.off("message:recalled", callback);
     };
   }
+
+  // Agent callback flow
+  onAgentCallback(callback: (data: any) => void) {
+    if (!this.socket) return () => {};
+    this.socket.on("agent:callback", callback);
+    return () => {
+      this.socket?.off("agent:callback", callback);
+    };
+  }
 }
 
 export const socketService = new SocketService();
