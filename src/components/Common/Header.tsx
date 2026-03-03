@@ -98,14 +98,8 @@ function Header() {
               className="flex items-center gap-3 cursor-pointer"
               onClick={() => navigate("/profile")}
             >
-              <div className="hidden md:block text-right">
-                <p className="text-sm font-medium leading-none">{user.name}</p>
-                <p className="text-xs text-muted-foreground mt-1">
-                  {getRoleName(user.role)}
-                </p>
-              </div>
               <Avatar>
-                <AvatarFallback>{getInitials(user.name)}</AvatarFallback>
+                <AvatarFallback name={user.name}>{getInitials(user.name)}</AvatarFallback>
               </Avatar>
             </div>
           )}

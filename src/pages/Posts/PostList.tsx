@@ -56,6 +56,7 @@ const PostList = () => {
     totalPages: 0,
   });
 
+  console.log(posts);
   // Dialog states
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
@@ -325,7 +326,11 @@ const PostList = () => {
                           )}
                         </TableCell>
                         <TableCell>
-                          <Badge variant="outline">User #{post.user_id}</Badge>
+                          {post.users ? (
+                            <Badge variant="default">{post?.users?.name}</Badge>
+                          ) : (
+                            <Badge variant="outline">N/A</Badge>
+                          )}
                         </TableCell>
                         <TableCell>{formatDate(post.created_at)}</TableCell>
                         <TableCell className="text-center">

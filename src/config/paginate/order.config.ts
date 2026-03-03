@@ -9,6 +9,10 @@ export const orderPaginationConfig = {
     value: "total_price",
     label: "Tổng giá",
   },
+  {
+    value: "requested_at",
+    label: "Ngày yêu cầu",
+  },
 ],
 
 searchableColumns : [

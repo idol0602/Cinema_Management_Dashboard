@@ -7,6 +7,7 @@ import {
   BarChart3,
   CheckCircle2,
   XCircle,
+  Maximize2,
 } from "lucide-react";
 import { chatWithAgent } from "@/services/agent.service";
 import ReactMarkdown from "react-markdown";
@@ -17,6 +18,12 @@ import type { ChartInput } from "@/types/chart.type";
 import { ChartRenderer } from "../../components/charts/ChartRenderer";
 import { useAuth } from "@/hooks/useAuth";
 import { socketService } from "@/lib/socket";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 /**
  * Build a ChartInput from the agent response data.
@@ -63,6 +70,7 @@ function SQLAgent() {
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [respondedUrls, setRespondedUrls] = useState<Set<string>>(new Set());
+  const [zoomedChart, setZoomedChart] = useState<ChartInput | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { user } = useAuth();
 
@@ -360,14 +368,23 @@ function SQLAgent() {
 
                     {/* Chart rendered inline when data is available */}
                     {chartInput && (
-                      <div className="mt-3 bg-primary/5 rounded-lg p-3">
-                        <div className="flex items-center gap-2 mb-2">
-                          <BarChart3 className="w-4 h-4 text-primary" />
-                          <span className="text-sm font-medium text-foreground">
-                            Biểu đồ
-                          </span>
+                      <div
+                        className="mt-3 bg-primary/5 rounded-lg p-3 cursor-pointer hover:bg-primary/10 transition-colors group relative"
+                        onClick={() => setZoomedChart(chartInput)}
+                        title="Nhấn để xem biểu đồ lớn hơn"
+                      >
+                        <div className="flex items-center justify-between mb-2">
+                          <div className="flex items-center gap-2">
+                            <BarChart3 className="w-4 h-4 text-primary" />
+                            <span className="text-sm font-medium text-foreground">
+                              Biểu đồ
+                            </span>
+                          </div>
+                          <Maximize2 className="w-4 h-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
                         </div>
-                        <ChartRenderer input={chartInput} />
+                        <div className="text-foreground [&_text]:!fill-current [&_.recharts-cartesian-axis-tick-value]:!fill-current [&_.recharts-legend-item-text]:!text-foreground">
+                          <ChartRenderer input={chartInput} />
+                        </div>
                       </div>
                     )}
                   </>
@@ -421,6 +438,21 @@ function SQLAgent() {
         <div ref={messagesEndRef} />
       </div>
 
+      {/* Zoomed Chart Dialog */}
+      <Dialog open={!!zoomedChart} onOpenChange={(open) => !open && setZoomedChart(null)}>
+        <DialogContent className="max-w-[90vw] max-h-[90vh] w-full">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-foreground">
+              <BarChart3 className="w-5 h-5 text-primary" />
+              Biểu đồ chi tiết
+            </DialogTitle>
+          </DialogHeader>
+          <div className="p-4 text-foreground [&_text]:!fill-current [&_.recharts-cartesian-axis-tick-value]:!fill-current [&_.recharts-legend-item-text]:!text-foreground">
+            {zoomedChart && <ChartRenderer input={zoomedChart} />}
+          </div>
+        </DialogContent>
+      </Dialog>
+
       {/* Input Form */}
       <div className="bg-card border-t border-border px-6 py-4 shadow-lg flex-shrink-0">
         <form onSubmit={handleSubmit} className="flex gap-3">
@@ -430,7 +462,7 @@ function SQLAgent() {
             onChange={(e) => setInput(e.target.value)}
             placeholder="Đặt câu hỏi về cơ sở dữ liệu của bạn..."
             disabled={isLoading}
-            className="flex-1 px-4 py-3 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent disabled:bg-muted disabled:cursor-not-allowed transition-all"
+            className="flex-1 px-4 py-3 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent disabled:bg-muted disabled:cursor-not-allowed transition-all"
           />
           <button
             type="submit"

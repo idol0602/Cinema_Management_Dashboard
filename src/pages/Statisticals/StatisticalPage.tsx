@@ -388,8 +388,7 @@ const StatisticalPage = () => {
             </div>
           ) : (
             <DynamicBarChart
-              data={chartRevenueData as []}
-              schema={revenueSchema}
+              input={{ ...revenueSchema, data: chartRevenueData as Record<string, unknown>[] }}
             />
           )}
         </CardContent>
@@ -419,8 +418,7 @@ const StatisticalPage = () => {
             </div>
           ) : (
             <DynamicLineChart
-              data={chartRevenueData as []}
-              schema={ticketOrderSchema}
+              input={{ ...ticketOrderSchema, data: chartRevenueData as Record<string, unknown>[] }}
             />
           )}
         </CardContent>
@@ -449,8 +447,7 @@ const StatisticalPage = () => {
               </div>
             ) : topCombos.length > 0 ? (
               <DynamicBarChart
-                data={chartComboData as []}
-                schema={comboSchema}
+                input={{ ...comboSchema, data: chartComboData as Record<string, unknown>[] }}
               />
             ) : (
               <div className="flex items-center justify-center h-[300px] text-muted-foreground">
@@ -481,8 +478,7 @@ const StatisticalPage = () => {
               </div>
             ) : topMenuItems.length > 0 ? (
               <DynamicBarChart
-                data={chartMenuItemData as []}
-                schema={menuItemSchema}
+                input={{ ...menuItemSchema, data: chartMenuItemData as Record<string, unknown>[] }}
               />
             ) : (
               <div className="flex items-center justify-center h-[300px] text-muted-foreground">

@@ -26,9 +26,6 @@ export default function DashboardLayout() {
 
           {/* Footer */}
           <Footer />
-
-          {/* Chatbot */}
-          <ChatBotDialog />
         </div>
       </SidebarInset>
     </SidebarProvider>

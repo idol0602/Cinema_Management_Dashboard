@@ -4,6 +4,7 @@ import { useAuth } from "@/hooks/useAuth";
 import type { User as UserType } from "@/types/user.type";
 import { roleService } from "../../services/role.service";
 import type { RoleType } from "@/types/role.type";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 
 function Profile() {
   const { user, updateProfile } = useAuth();
@@ -104,9 +105,11 @@ function Profile() {
         <div className="bg-card rounded-lg shadow-md p-8 mb-8 border border-border">
           {/* Avatar & Basic Info */}
           <div className="flex items-center gap-6 mb-8 pb-8 border-b border-border">
-            <div className="w-24 h-24 bg-gradient-to-br from-primary to-accent rounded-full flex items-center justify-center text-primary-foreground shadow-lg text-4xl font-bold uppercase">
-              {formData.name?.charAt(0) || "U"}
-            </div>
+            <Avatar className="w-24 h-24">
+              <AvatarFallback name={formData.name} className="text-4xl">
+                {formData.name?.charAt(0) || "U"}
+              </AvatarFallback>
+            </Avatar>
             <div className="flex-1">
               <h2 className="text-2xl font-bold text-foreground">
                 {formData.name || "Người dùng"}
