@@ -114,6 +114,7 @@ export const movieService = {
   },
 
   findAndPaginate: async(query: PaginationQuery): Promise<PaginatedResponse<MovieType>> => {
+    console.log("query: ", query)
     try {
         const response = await api.get("/movies", { params: query });
         return {
@@ -207,3 +208,5 @@ export const movieService = {
     }
   }
 }
+
+
