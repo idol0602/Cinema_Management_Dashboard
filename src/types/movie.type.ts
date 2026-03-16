@@ -12,6 +12,10 @@ export interface MovieType {
     trailer?: string,
     is_active?: boolean,
     created_at?: string,
+    movie_movie_types?: {
+        id: string,
+        movie_type_id: string,
+    }
 }
 
 export interface CreateMovieType {

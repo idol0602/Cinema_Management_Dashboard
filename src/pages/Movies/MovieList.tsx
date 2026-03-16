@@ -271,8 +271,6 @@ const MovieList = () => {
     return `${hours}h ${mins}m`;
   };
 
-  console.log(movies);
-
   return (
     <div className="container mx-auto py-6 space-y-6">
       {/* Header */}
@@ -498,7 +496,7 @@ const MovieList = () => {
                               <span className="font-semibold">
                                 {movie.rating.toFixed(1)}
                               </span>
-                              <span className="text-muted-foreground">/10</span>
+                              <span className="text-muted-foreground">/5</span>
                             </div>
                           ) : (
                             <span className="text-muted-foreground">
