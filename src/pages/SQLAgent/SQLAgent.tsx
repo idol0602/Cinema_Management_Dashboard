@@ -87,7 +87,7 @@ function SQLAgent() {
     // Listen for callbacks from backend
     const offCallback = socketService.onAgentCallback((rawPayload: any) => {
       console.log("Agent callback received (raw):", rawPayload);
-      
+
       let payload = rawPayload;
       if (typeof rawPayload === "string") {
         try {
@@ -101,10 +101,11 @@ function SQLAgent() {
       payload = Array.isArray(payload) ? payload[0] : payload;
 
       let content = "Đã nhận được phản hồi từ hệ thống.";
-      
+
       // Determine status from either { status: true } or { data: { status: true } }
-      const status = payload?.status !== undefined ? payload.status : payload?.data?.status;
-      
+      const status =
+        payload?.status !== undefined ? payload.status : payload?.data?.status;
+
       if (status === true) {
         content = "✅ Xác nhận thành công. Hệ thống đã ghi nhận thiết lập.";
       } else if (status === false) {
@@ -154,12 +155,17 @@ function SQLAgent() {
       const rawData = response.data;
       const agentData: AgentResponseData = Array.isArray(rawData)
         ? rawData[0]
-        : rawData ?? { message: null, confirm_url: null, chart_type: null, result: null };
+        : (rawData ?? {
+            message: null,
+            confirm_url: null,
+            chart_type: null,
+            result: null,
+          });
 
       const assistantMessage: ChatMessage = {
         id: user?.id || "",
         role: "assistant",
-        content: agentData?.message || "Không có phản hồi từ hệ thống.",
+        content: agentData?.message || "Vui lòng xác nhận hành động.",
         timestamp: new Date(),
         chartData: agentData,
       };
@@ -205,9 +211,10 @@ function SQLAgent() {
       const errMsg: ChatMessage = {
         id: user?.id || "",
         role: "assistant",
-        content: answer === "yes"
-          ? "Đã xác nhận, nhưng có lỗi khi nhận phản hồi."
-          : "Đã từ chối, nhưng có lỗi khi nhận phản hồi.",
+        content:
+          answer === "yes"
+            ? "Đã xác nhận, nhưng có lỗi khi nhận phản hồi."
+            : "Đã từ chối, nhưng có lỗi khi nhận phản hồi.",
         timestamp: new Date(),
       };
       setMessages((prev) => [...prev, errMsg]);
@@ -341,7 +348,7 @@ function SQLAgent() {
                               onClick={() =>
                                 handleConfirm(
                                   message.chartData!.confirm_url!,
-                                  "yes"
+                                  "yes",
                                 )
                               }
                               className="flex items-center gap-1.5 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm font-medium shadow-sm"
@@ -353,7 +360,7 @@ function SQLAgent() {
                               onClick={() =>
                                 handleConfirm(
                                   message.chartData!.confirm_url!,
-                                  "no"
+                                  "no",
                                 )
                               }
                               className="flex items-center gap-1.5 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm font-medium shadow-sm"
@@ -439,7 +446,10 @@ function SQLAgent() {
       </div>
 
       {/* Zoomed Chart Dialog */}
-      <Dialog open={!!zoomedChart} onOpenChange={(open) => !open && setZoomedChart(null)}>
+      <Dialog
+        open={!!zoomedChart}
+        onOpenChange={(open) => !open && setZoomedChart(null)}
+      >
         <DialogContent className="max-w-[90vw] max-h-[90vh] w-full">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-foreground">
