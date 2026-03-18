@@ -76,6 +76,24 @@ export const authorizeService = {
     }
   },
 
+  getActionsByRoleId: async (roleId: string): Promise<serviceResponse> => {
+    try {
+      const response = await api.get(`/authorizes/role/${roleId}/actions`);
+      return {
+        data: response.data.data,
+        success: true,
+        error: response.data.error,
+      };
+    } catch (error) {
+      const apiError = handleApiError(error);
+      return {
+        data: [],
+        success: false,
+        error: apiError.message,
+      };
+    }
+  },
+
   update: async (id: string, data: UpdateAuthorizeType): Promise<serviceResponse> => {
     try {
       const response = await api.put(`/authorizes/${id}`, data);

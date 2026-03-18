@@ -229,14 +229,21 @@ const navItems = [
 ];
 
 export function AppSidebar() {
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const { user: _user } = useAuth();
+  const { permissions } = useAuth();
   const location = useLocation();
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const hasAccess = (_item: Record<string, unknown>) => {
-    // item.allow.includes(user?.role as string);
-    return true;
+  const hasAccess = (item: Record<string, unknown>) => {
+    if (!item.path) return true; // Let submenu items decide visibility
+    
+    const uiPath = item.path as string;
+    // Always show Dashboard, Profile, Chat
+    if (['/dashboard', '/profile', '/chat'].includes(uiPath)) return true;
+
+    // Defensive check: if permissions is corrupted or empty
+    if (!Array.isArray(permissions)) return false;
+
+    // Check if any permission starts with /api + uiPath and method is GET
+    return permissions.some(p => p?.path && typeof p.path === 'string' && p.path.startsWith(`/api${uiPath}`) && p.method === 'GET');
   };
 
   // Check if any submenu item is active

@@ -25,4 +25,5 @@ export interface AuthContextType {
     login: (email: string, password: string) => Promise<void>;
     logout: () => void;
     updateProfile: (updatedUser: User) => Promise<void>;
+    permissions: { path: string, method: string }[];
 }

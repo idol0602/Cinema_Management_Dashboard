@@ -1,7 +1,9 @@
 import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
 import type { User } from '@/types/user.type';
 import type { AuthContextType } from '@/types/auth.type';
 import { authService } from '@/services/auth.service';
+import { authorizeService } from '@/services/authorize.service';
 import { socketService } from '@/lib/socket';
 import { toast } from 'sonner';
 
@@ -10,8 +12,11 @@ interface AuthStore extends AuthContextType {
   setError: (error: string | null) => void;
 }
 
-export const useAuth = create<AuthStore>()((set) => ({
-  user: null,
+export const useAuth = create<AuthStore>()(
+  persist(
+    (set) => ({
+      user: null,
+      permissions: [],
   isAuthenticated: false,
   isLoading: false,
   error: null,
@@ -25,11 +30,23 @@ export const useAuth = create<AuthStore>()((set) => ({
         throw new Error(response.error);
       }
       if (response.data) {
+        // Fetch permissions for this role
+        let rolePermissions: {path: string, method: string}[] = [];
+        try {
+          const authResponse = await authorizeService.getActionsByRoleId(response.data.user.role);
+          if (authResponse.success && authResponse.data) {
+            rolePermissions = authResponse.data as any[];
+          }
+        } catch (e) {
+          console.error("Failed to fetch permissions", e);
+        }
+
         set({ 
           user: response.data.user as User, 
           isAuthenticated: true, 
           isLoading: false, 
-          error: null 
+          error: null,
+          permissions: rolePermissions
         });
         socketService.connect();
         toast.success("Đăng nhập thành công!");
@@ -46,7 +63,7 @@ export const useAuth = create<AuthStore>()((set) => ({
     } catch (error) {
       console.error("Error during logout:", error);
     }
-    set({ user: null, isAuthenticated: false, error: null });
+    set({ user: null, isAuthenticated: false, error: null, permissions: [] });
     socketService.disconnect();
     toast.success("Đăng xuất thành công!");
     window.location.href = '/login';
@@ -79,4 +96,9 @@ export const useAuth = create<AuthStore>()((set) => ({
   setError: (error: string | null) => {
     set({ error });
   },
-}));
+}),
+{
+  name: 'auth-storage',
+  partialize: (state) => ({ user: state.user, isAuthenticated: state.isAuthenticated, permissions: state.permissions }),
+}
+));
