@@ -4,8 +4,6 @@ import type { User } from "@/types/user.type.ts";
 
 const domain = import.meta.env.VITE_FRONTEND_URL
 
-console.log("domain", domain)
-
 export const authService = {
     login: async(payload : loginType) : Promise<authResponse> => {
         try {
