@@ -1,73 +1,141 @@
-# React + TypeScript + Vite
+# Dashboard - Trang Quản Trị Rạp Chiếu Phim
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+## 📋 Giới Thiệu
 
-Currently, two official plugins are available:
+Dashboard là ứng dụng quản trị cho hệ thống quản lý rạp chiếu phim META CINEMA. Nó cung cấp giao diện quản lý toàn bộ hoạt động của rạp, từ quản lý phim, suất chiếu, đơn hàng cho đến phân tích doanh số và báo cáo.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## 🛠️ Công Nghệ Sử Dụng
 
-## React Compiler
+### Core Framework
+- **Build Tool**: Vite v7
+- **Framework**: React v19
+- **Language**: TypeScript (strict mode)
+- **Node Version**: 16+
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+### UI & Styling
+- **CSS Framework**: Tailwind CSS v3
+- **UI Components**: Radix UI
+- **Icons**: Lucide React
 
-## Expanding the ESLint configuration
+### Routing & State
+- **Router**: React Router v7
+- **State**: Zustand
+- **Form**: React Hook Form v7
+- **Validation**: Zod v4
+- **API**: TanStack React Query v5
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+### Data & Features
+- **Charts**: Recharts v3
+- **PDF Export**: jsPDF v4
+- **Rich Editor**: TipTap v3
+- **Real-time**: Socket.io Client
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+### Development
+- **Linting**: ESLint v9
+- **Type Checking**: TypeScript v5.9
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+## ⭐ Tính Năng Nổi Bật
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+- ✅ **Dashboard Analytics**: Thống kê doanh số, biểu đồ
+- ✅ **Quản Lý Phim**: CRUD phim, danh mục
+- ✅ **AI Phân Tích Dữ Liệu**: Query, phân tích dữ liệu, tạo biểu đồ trực quan
+- ✅ **Suất Chiếu**: Lịch trình, quản lý room
+- ✅ **Quản Lý Vé**: Giá vé, booking
+- ✅ **Quản Lý Ghế**: Layout, loại ghế
+- ✅ **Combo & Menu**: Tạo, cập nhật bundles
+- ✅ **Sự Kiện**: Quản lý sự kiện
+- ✅ **Giảm Giá**: Mã khuyến mãi
+- ✅ **Đơn Hàng**: Quản lý order, hoàn tiền
+- ✅ **Người Dùng**: Role, permission management
+- ✅ **Báo Cáo**: PDF export, statistics
+- ✅ **Chat Staff**: Real-time communication
+
+## 🚀 Quick Start
+
+```bash
+# Cài đặt
+cd dashboard-app
+npm install
+
+# Chạy dev server
+npm run dev
+
+# Mở http://localhost:5173
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## 📝 Các Lệnh Khả Dụng
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+npm run dev              # Chạy dev server
+npm run build            # Build production
+npm run preview          # Preview build
+npm run lint             # Kiểm tra linting
+npm run lint:fix         # Sửa linting
 ```
+
+## 🔧 Cấu Hình Environment
+
+```bash
+# .env.local
+VITE_API_BASE_URL=http://localhost:5000/api
+VITE_SOCKET_URL=http://localhost:5000
+VITE_ENABLE_AI=true
+VITE_ENABLE_CHAT=true
+```
+
+## 📁 Cấu Trúc Thư Mục
+
+```
+dashboard-app/
+├── src/
+│   ├── pages/           # Admin pages
+│   ├── components/      # Reusable components
+│   ├── hooks/           # Custom hooks
+│   ├── lib/             # Utilities
+│   ├── routes/          # Router setup
+│   ├── schemas/         # Validation schemas
+│   └── types/           # TypeScript types
+├── public/              # Static assets
+└── package.json         # Dependencies
+```
+
+## 📊 Quản Lý Modules
+
+- **Movies**: Create, edit, delete movies
+- **ShowTimes**: Schedule management
+- **Tickets**: Pricing & inventory
+- **Orders**: Order tracking
+- **Users**: User management
+- **Combos**: Bundle management
+- **Events**: Event scheduling
+- **Reports**: Analytics & exports
+
+## 📦 Dependencies Chính
+
+- **vite** - Build tool
+- **react** - UI library
+- **typescript** - Type system
+- **tailwindcss** - Styling
+- **zustand** - State management
+- **react-query** - Data fetching
+- **recharts** - Charting
+- **react-router-dom** - Routing
+
+## 🔐 Security & Permissions
+
+- Role-based access control
+- Permission validation
+- Protected routes
+- Token-based auth
+
+## 📄 License
+
+Private - All rights reserved
+
+---
+
+**Version**: 0.0.0  
+**Last Updated**: 2026-03-26  
+**Build Tool**: Vite v7  
+**Node**: 16+  
+**Package Manager**: npm/yarn
