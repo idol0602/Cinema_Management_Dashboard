@@ -7,7 +7,25 @@ const domain = import.meta.env.VITE_FRONTEND_URL
 export const authService = {
     login: async(payload : loginType) : Promise<authResponse> => {
         try {
-            const response = await api.post("/auth/login", payload);
+            const response = await api.post("/auth/login", payload, {
+                // Bypass 401 interceptor - login trả 401 khi sai mật khẩu là bình thường
+                validateStatus: (status) => status < 500,
+            });
+            if (response.status === 401 || response.status >= 400) {
+                return {
+                    data: {
+                        user: {
+                            name: "",
+                            email: "",
+                            phone: "",
+                            role: "",
+                            is_active: false,
+                            created_at: ""
+                        }
+                    },
+                    error: response.data?.message || "Email hoặc mật khẩu không đúng"
+                };
+            }
             return {
                 data: response.data.data,
                 error: null

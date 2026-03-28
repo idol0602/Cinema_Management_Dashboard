@@ -24,7 +24,24 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      window.location.href = '/login';
+      // Chỉ redirect khi KHÔNG đang ở trang login (tránh loop)
+      const isLoginPage = window.location.pathname === '/login';
+      if (!isLoginPage) {
+        // Clear Zustand persisted auth state trước khi redirect
+        // để Login page không thấy isAuthenticated: true → redirect lại /dashboard
+        try {
+          const authStorage = localStorage.getItem('auth-storage');
+          if (authStorage) {
+            const parsed = JSON.parse(authStorage);
+            parsed.state = { ...parsed.state, user: null, isAuthenticated: false, permissions: [] };
+            localStorage.setItem('auth-storage', JSON.stringify(parsed));
+          }
+        } catch (e) {
+          // Fallback: xóa toàn bộ auth storage
+          localStorage.removeItem('auth-storage');
+        }
+        window.location.href = '/login';
+      }
     }
     return Promise.reject(error);
   }
